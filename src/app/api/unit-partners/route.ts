@@ -58,11 +58,34 @@ export async function GET(request: NextRequest) {
       whereClause.id = { lt: cursor }
     }
 
+    // BEFORE: Include full unit and partner relations (slow)
+    // AFTER: Select only essential fields (fast)
+    
     const unitPartners = await prisma.unitPartner.findMany({
       where: whereClause,
-      include: {
-        unit: true,
-        partner: true
+      select: {
+        id: true,
+        unitId: true,
+        partnerId: true,
+        percentage: true,
+        createdAt: true,
+        updatedAt: true,
+        unit: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            unitType: true,
+            status: true
+          }
+        },
+        partner: {
+          select: {
+            id: true,
+            name: true,
+            phone: true
+          }
+        }
       },
       orderBy: { id: 'desc' },
       take: limit + 1

@@ -55,11 +55,38 @@ export async function GET(request: NextRequest) {
 
     const prisma = getPrismaClient(config)
 
+    // BEFORE: Include full relations (slow)
+    // AFTER: Select only essential fields (fast)
+    
     const vouchers = await prisma.voucher.findMany({
       where: whereClause,
-      include: {
-        safe: true,
-        unit: true
+      select: {
+        id: true,
+        type: true,
+        date: true,
+        amount: true,
+        safeId: true,
+        description: true,
+        payer: true,
+        beneficiary: true,
+        linkedRef: true,
+        createdAt: true,
+        updatedAt: true,
+        safe: {
+          select: {
+            id: true,
+            name: true,
+            balance: true
+          }
+        },
+        unit: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            unitType: true
+          }
+        }
       },
       orderBy: { id: 'desc' },
       take: limit + 1

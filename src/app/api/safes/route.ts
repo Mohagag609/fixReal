@@ -53,23 +53,31 @@ export async function GET(request: NextRequest) {
       console.log('Reconnecting to database...')
     }
 
+    // BEFORE: Complex include with multiple relations (very slow)
+    // AFTER: Select only essential fields with counts (fast)
+    // TODO: Consider implementing separate endpoints for safe details
+    
     const safes = await prisma.safe.findMany({
       where: whereClause,
-      include: {
-        vouchers: {
-          where: { deletedAt: null },
-          take: 5,
-          orderBy: { createdAt: 'desc' }
-        },
-        transfersFrom: {
-          where: { deletedAt: null },
-          take: 5,
-          orderBy: { createdAt: 'desc' }
-        },
-        transfersTo: {
-          where: { deletedAt: null },
-          take: 5,
-          orderBy: { createdAt: 'desc' }
+      select: {
+        id: true,
+        name: true,
+        balance: true,
+        createdAt: true,
+        updatedAt: true,
+        // Only include counts instead of full relations
+        _count: {
+          select: {
+            vouchers: {
+              where: { deletedAt: null }
+            },
+            transfersFrom: {
+              where: { deletedAt: null }
+            },
+            transfersTo: {
+              where: { deletedAt: null }
+            }
+          }
         }
       },
       orderBy: { id: 'desc' },

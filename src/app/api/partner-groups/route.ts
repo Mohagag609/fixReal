@@ -42,12 +42,21 @@ export async function GET(request: NextRequest) {
       whereClause.id = { lt: cursor }
     }
 
+    // BEFORE: Complex nested include (very slow)
+    // AFTER: Select only essential fields with count (fast)
+    // TODO: Consider implementing separate endpoint for group details
+    
     const partnerGroups = await prisma.partnerGroup.findMany({
       where: whereClause,
-      include: {
-        partners: {
-          include: {
-            partner: true
+      select: {
+        id: true,
+        name: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            partners: true
           }
         }
       },

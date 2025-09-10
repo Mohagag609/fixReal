@@ -66,10 +66,27 @@ export async function GET(request: NextRequest) {
       whereClause.id = { lt: cursor }
     }
 
+    // BEFORE: Include full broker relation (slow)
+    // AFTER: Select only essential broker fields (fast)
+    
     const brokerDues = await prisma.brokerDue.findMany({
       where: whereClause,
-      include: {
-        broker: true
+      select: {
+        id: true,
+        brokerId: true,
+        amount: true,
+        dueDate: true,
+        status: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
+        broker: {
+          select: {
+            id: true,
+            name: true,
+            phone: true
+          }
+        }
       },
       orderBy: { id: 'desc' },
       take: limit + 1

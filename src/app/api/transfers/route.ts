@@ -39,11 +39,33 @@ export async function GET(request: NextRequest) {
       whereClause.id = { lt: cursor }
     }
 
+    // BEFORE: Include full safe relations (slow)
+    // AFTER: Select only essential safe fields (fast)
+    
     const transfers = await prisma.transfer.findMany({
       where: whereClause,
-      include: {
-        fromSafe: true,
-        toSafe: true
+      select: {
+        id: true,
+        fromSafeId: true,
+        toSafeId: true,
+        amount: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true,
+        fromSafe: {
+          select: {
+            id: true,
+            name: true,
+            balance: true
+          }
+        },
+        toSafe: {
+          select: {
+            id: true,
+            name: true,
+            balance: true
+          }
+        }
       },
       orderBy: { id: 'desc' },
       take: limit + 1

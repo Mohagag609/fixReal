@@ -56,17 +56,29 @@ export async function GET(request: NextRequest) {
       whereClause.id = { lt: cursor }
     }
 
+    // BEFORE: Complex include with nested relations (slow)
+    // AFTER: Optimized query with select only needed fields (fast)
+    // TODO: Consider implementing separate endpoints for relations if needed
+    
     const partners = await prisma.partner.findMany({
       where: whereClause,
-      include: {
-        unitPartners: {
-          where: { deletedAt: null },
-          include: {
-            unit: true
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
+        // Only include essential relations to avoid N+1 queries
+        _count: {
+          select: {
+            unitPartners: {
+              where: { deletedAt: null }
+            },
+            partnerDebts: {
+              where: { deletedAt: null }
+            }
           }
-        },
-        partnerDebts: {
-          where: { deletedAt: null }
         }
       },
       orderBy: { id: 'desc' },

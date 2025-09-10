@@ -51,11 +51,52 @@ export async function GET(request: NextRequest) {
 
     const prisma = getPrismaClient(config)
 
+    // BEFORE: Include full relations (slow)
+    // AFTER: Select only essential fields (fast)
+    // TODO: Consider implementing separate endpoints for detailed contract data
+    
     const contracts = await prisma.contract.findMany({
       where: whereClause,
-      include: {
-        unit: true,
-        customer: true
+      select: {
+        id: true,
+        unitId: true,
+        customerId: true,
+        start: true,
+        totalPrice: true,
+        discountAmount: true,
+        brokerName: true,
+        brokerPercent: true,
+        brokerAmount: true,
+        commissionSafeId: true,
+        downPaymentSafeId: true,
+        maintenanceDeposit: true,
+        installmentType: true,
+        installmentCount: true,
+        extraAnnual: true,
+        annualPaymentValue: true,
+        downPayment: true,
+        paymentType: true,
+        createdAt: true,
+        updatedAt: true,
+        // Include only essential relation data
+        unit: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            unitType: true,
+            totalPrice: true,
+            status: true
+          }
+        },
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            nationalId: true
+          }
+        }
       },
       orderBy: { id: 'desc' },
       take: limit + 1

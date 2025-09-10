@@ -54,10 +54,29 @@ export async function GET(request: NextRequest) {
 
     const prisma = getPrismaClient(config)
 
+    // BEFORE: Include full unit relation (slow)
+    // AFTER: Select only essential unit fields (fast)
+    
     const installments = await prisma.installment.findMany({
       where: whereClause,
-      include: {
-        unit: true
+      select: {
+        id: true,
+        unitId: true,
+        amount: true,
+        dueDate: true,
+        status: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
+        unit: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            unitType: true,
+            status: true
+          }
+        }
       },
       orderBy: { id: 'desc' },
       take: limit + 1

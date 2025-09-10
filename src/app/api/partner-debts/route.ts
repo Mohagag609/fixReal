@@ -62,10 +62,27 @@ export async function GET(request: NextRequest) {
       whereClause.id = { lt: cursor }
     }
 
+    // BEFORE: Include full partner relation (slow)
+    // AFTER: Select only essential partner fields (fast)
+    
     const partnerDebts = await prisma.partnerDebt.findMany({
       where: whereClause,
-      include: {
-        partner: true
+      select: {
+        id: true,
+        partnerId: true,
+        amount: true,
+        dueDate: true,
+        status: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
+        partner: {
+          select: {
+            id: true,
+            name: true,
+            phone: true
+          }
+        }
       },
       orderBy: { id: 'desc' },
       take: limit + 1
