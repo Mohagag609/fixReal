@@ -1,0 +1,48 @@
+{
+  "validation": {
+    "required": "هذا الحقل مطلوب",
+    "invalid_phone": "رقم الهاتف غير صحيح",
+    "invalid_national_id": "الرقم القومي غير صحيح",
+    "invalid_amount": "المبلغ غير صحيح",
+    "invalid_date": "التاريخ غير صحيح",
+    "invalid_percentage": "النسبة المئوية غير صحيحة"
+  },
+  "business": {
+    "unit_linked_to_contract": "لا يمكن حذف هذه الوحدة لأنها مرتبطة بعقد قائم. يجب حذف العقد أولاً.",
+    "customer_has_contracts": "لا يمكن حذف هذا العميل لأنه مرتبط بعقود قائمة",
+    "insufficient_balance": "الرصيد غير كافي",
+    "duplicate_code": "هذا الكود مستخدم بالفعل",
+    "invalid_due_date": "تاريخ الاستحقاق يجب أن يكون في المستقبل"
+  },
+  "system": {
+    "unauthorized": "غير مخول للوصول",
+    "invalid_credentials": "بيانات الدخول غير صحيحة",
+    "session_expired": "انتهت صلاحية الجلسة",
+    "database_error": "خطأ في قاعدة البيانات",
+    "file_not_found": "الملف غير موجود",
+    "import_failed": "فشل في استيراد البيانات",
+    "export_failed": "فشل في تصدير البيانات"
+  },
+  "confirmation": {
+    "delete_customer": "هل أنت متأكد من حذف العميل \"{name}\"؟ هذا الإجراء لا يمكن التراجع عنه.",
+    "delete_unit": "هل أنت متأكد من حذف الوحدة \"{code}\"؟ هذا الإجراء لا يمكن التراجع عنه.",
+    "delete_contract": "هل أنت متأكد من حذف العقد؟ هذا الإجراء لا يمكن التراجع عنه.",
+    "delete_partner": "هل أنت متأكد من حذف الشريك \"{name}\"؟ هذا الإجراء لا يمكن التراجع عنه.",
+    "delete_safe": "هل أنت متأكد من حذف الخزنة \"{name}\"؟ هذا الإجراء لا يمكن التراجع عنه."
+  },
+  "success": {
+    "customer_added": "تم إضافة العميل بنجاح",
+    "customer_updated": "تم تحديث العميل بنجاح",
+    "customer_deleted": "تم حذف العميل بنجاح",
+    "unit_added": "تم إضافة الوحدة بنجاح",
+    "unit_updated": "تم تحديث الوحدة بنجاح",
+    "unit_deleted": "تم حذف الوحدة بنجاح",
+    "contract_added": "تم إضافة العقد بنجاح",
+    "contract_updated": "تم تحديث العقد بنجاح",
+    "contract_deleted": "تم حذف العقد بنجاح",
+    "data_imported": "تم استيراد البيانات بنجاح",
+    "data_exported": "تم تصدير البيانات بنجاح",
+    "backup_created": "تم إنشاء النسخة الاحتياطية بنجاح",
+    "backup_restored": "تم استرجاع النسخة الاحتياطية بنجاح"
+  }
+}

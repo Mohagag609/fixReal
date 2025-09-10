@@ -1,0 +1,320 @@
+/**
+ * ملف CSS للطباعة - Print Styles
+ * تصميم محسن للطباعة مع دعم RTL
+ */
+
+/* إعدادات الصفحة */
+@page {
+  size: A4;
+  margin: 18mm;
+  direction: rtl;
+}
+
+/* إعدادات عامة */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #333;
+  direction: rtl;
+  margin: 0;
+  padding: 0;
+  background: white;
+}
+
+/* حاوي الطباعة */
+.print-container {
+  max-width: 100%;
+  margin: 0 auto;
+  background: white;
+}
+
+/* رأس التقرير */
+.print-header {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #2E5BBA;
+}
+
+.print-header h1 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2E5BBA;
+  margin: 0 0 10px 0;
+}
+
+.print-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #666;
+  margin-top: 10px;
+}
+
+.print-meta span {
+  background: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+/* الجدول */
+.print-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 11px;
+  direction: rtl;
+}
+
+.print-table th {
+  background: #2E5BBA;
+  color: white;
+  font-weight: bold;
+  padding: 12px 8px;
+  text-align: center;
+  border: 1px solid #1e3a8a;
+  font-size: 11px;
+}
+
+.print-table td {
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  text-align: right;
+  vertical-align: top;
+}
+
+.print-table tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.print-table tr:hover {
+  background-color: #f3f4f6;
+}
+
+/* تنسيق الأعمدة */
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+/* صف الإجماليات */
+.totals-row {
+  background-color: #f0f9ff !important;
+  font-weight: bold;
+  border-top: 2px solid #2E5BBA;
+}
+
+.totals-row td {
+  background-color: #f0f9ff !important;
+  border-top: 2px solid #2E5BBA;
+  font-weight: bold;
+}
+
+/* تذييل التقرير */
+.print-footer {
+  margin-top: 30px;
+  padding-top: 15px;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+  font-size: 10px;
+  color: #666;
+}
+
+/* حالات خاصة */
+.status-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+  min-width: 60px;
+}
+
+.status-mعلق {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.status-مسدد {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #10b981;
+}
+
+.status-متأخر {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #ef4444;
+}
+
+.status-ملغي {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #9ca3af;
+}
+
+/* فئات التأخير */
+.aging-0-30 {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #10b981;
+}
+
+.aging-31-60 {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.aging-61-90 {
+  background-color: #fed7aa;
+  color: #9a3412;
+  border: 1px solid #f97316;
+}
+
+.aging->90 {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #ef4444;
+}
+
+/* تنسيق الأرقام */
+.currency {
+  font-family: 'Courier New', monospace;
+  text-align: left;
+  direction: ltr;
+}
+
+.number {
+  font-family: 'Courier New', monospace;
+  text-align: left;
+  direction: ltr;
+}
+
+/* تنسيق التواريخ */
+.date {
+  text-align: center;
+  font-family: 'Courier New', monospace;
+}
+
+/* إخفاء العناصر غير المرغوبة في الطباعة */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  /* إزالة الخلفيات الملونة */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  /* تحسين المسافات */
+  .print-table th,
+  .print-table td {
+    padding: 6px 4px;
+  }
+  
+  /* تحسين الخط */
+  body {
+    font-size: 11px;
+  }
+  
+  .print-header h1 {
+    font-size: 20px;
+  }
+  
+  /* إزالة الحدود الزائدة */
+  .print-table {
+    border: 1px solid #2E5BBA;
+  }
+  
+  .print-table th:first-child,
+  .print-table td:first-child {
+    border-right: 1px solid #2E5BBA;
+  }
+  
+  .print-table th:last-child,
+  .print-table td:last-child {
+    border-left: 1px solid #2E5BBA;
+  }
+}
+
+/* تحسينات للشاشة */
+@media screen {
+  .print-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+  
+  .print-table {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* تحسينات للهواتف */
+@media (max-width: 768px) {
+  .print-meta {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .print-table {
+    font-size: 10px;
+  }
+  
+  .print-table th,
+  .print-table td {
+    padding: 4px 2px;
+  }
+}
+
+/* تحسينات للطباعة على A4 */
+@media print and (max-width: 210mm) {
+  .print-table {
+    font-size: 10px;
+  }
+  
+  .print-table th,
+  .print-table td {
+    padding: 4px 2px;
+  }
+  
+  .print-header h1 {
+    font-size: 18px;
+  }
+}
+
+/* تحسينات للطباعة على A5 */
+@media print and (max-width: 148mm) {
+  .print-table {
+    font-size: 9px;
+  }
+  
+  .print-table th,
+  .print-table td {
+    padding: 3px 1px;
+  }
+  
+  .print-header h1 {
+    font-size: 16px;
+  }
+}

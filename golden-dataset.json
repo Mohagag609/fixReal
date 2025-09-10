@@ -1,0 +1,103 @@
+{
+  "customers": [
+    {
+      "id": "C-abc123",
+      "name": "أحمد محمد علي",
+      "phone": "01234567890",
+      "nationalId": "12345678901234",
+      "address": "شارع التحرير، القاهرة",
+      "status": "نشط",
+      "notes": "عميل VIP"
+    }
+  ],
+  "units": [
+    {
+      "id": "U-xyz789",
+      "code": "A-101",
+      "name": "شقة 101",
+      "unitType": "سكني",
+      "area": "120",
+      "floor": "1",
+      "building": "A",
+      "totalPrice": 500000,
+      "status": "متاحة",
+      "notes": "شقة مفروشة"
+    }
+  ],
+  "partners": [
+    {
+      "id": "P-def456",
+      "name": "شركة الاستثمار العقاري",
+      "phone": "01111111111",
+      "notes": "شريك رئيسي"
+    }
+  ],
+  "unitPartners": [
+    {
+      "id": "UP-ghi789",
+      "unitId": "U-xyz789",
+      "partnerId": "P-def456",
+      "percentage": 50
+    }
+  ],
+  "contracts": [
+    {
+      "id": "CT-jkl012",
+      "unitId": "U-xyz789",
+      "customerId": "C-abc123",
+      "start": "2024-01-01",
+      "totalPrice": 500000,
+      "discountAmount": 0,
+      "brokerName": "محمد السمسار",
+      "commissionSafeId": "S-main",
+      "brokerAmount": 25000
+    }
+  ],
+  "installments": [
+    {
+      "id": "I-mno345",
+      "unitId": "U-xyz789",
+      "amount": 50000,
+      "dueDate": "2024-02-01",
+      "status": "معلق",
+      "notes": "القسط الأول"
+    }
+  ],
+  "safes": [
+    {
+      "id": "S-main",
+      "name": "الخزنة الرئيسية",
+      "balance": 100000
+    }
+  ],
+  "transfers": [],
+  "auditLog": [],
+  "vouchers": [
+    {
+      "id": "V-pqr678",
+      "type": "receipt",
+      "date": "2024-01-15",
+      "amount": 50000,
+      "safeId": "S-main",
+      "description": "دفعة للوحدة A-101",
+      "payer": "أحمد محمد علي",
+      "linked_ref": "U-xyz789"
+    }
+  ],
+  "brokerDues": [],
+  "brokers": [
+    {
+      "id": "B-stu901",
+      "name": "محمد السمسار",
+      "phone": "01234567890",
+      "notes": "سمسار معتمد"
+    }
+  ],
+  "partnerGroups": [],
+  "settings": {
+    "theme": "dark",
+    "font": 16,
+    "pass": null
+  },
+  "locked": false
+}

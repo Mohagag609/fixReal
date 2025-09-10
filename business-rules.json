@@ -1,0 +1,49 @@
+{
+  "calculation_rules": {
+    "installment_status": {
+      "pending": "مجموع المدفوعات = 0",
+      "partial": "المجموع > 0 وأقل من القيمة",
+      "paid": "المجموع = القيمة (بنفس التقريب)"
+    },
+    "remaining_calculation": {
+      "formula": "totalPrice - discountAmount - paidAmount",
+      "rounding": "2 decimal places"
+    },
+    "collection_percentage": {
+      "formula": "(totalReceipts / totalSales) * 100",
+      "rounding": "2 decimal places"
+    },
+    "net_profit": {
+      "formula": "totalReceipts - totalExpenses"
+    }
+  },
+  "validation_rules": {
+    "phone_format": "^01[0-9]{9}$",
+    "national_id_format": "^[0-9]{14}$",
+    "amount_min": 0,
+    "percentage_min": 0,
+    "percentage_max": 100,
+    "date_format": "YYYY-MM-DD",
+    "unit_code_format": "^[A-Z]-[0-9]+$"
+  },
+  "business_constraints": {
+    "unit_deletion": "لا يمكن حذف وحدة مرتبطة بعقد",
+    "customer_deletion": "لا يمكن حذف عميل مرتبط بعقود",
+    "contract_deletion": "لا يمكن حذف عقد له أقساط مدفوعة",
+    "safe_deletion": "لا يمكن حذف خزنة لها رصيد أو معاملات"
+  },
+  "uniqueness_constraints": {
+    "customer_national_id": "unique",
+    "unit_code": "unique",
+    "safe_name": "unique",
+    "broker_name": "unique"
+  },
+  "relationships": {
+    "contract_to_unit": "one-to-one",
+    "contract_to_customer": "one-to-one",
+    "installment_to_unit": "one-to-many",
+    "voucher_to_safe": "many-to-one",
+    "unit_partner_to_unit": "many-to-one",
+    "unit_partner_to_partner": "many-to-one"
+  }
+}
