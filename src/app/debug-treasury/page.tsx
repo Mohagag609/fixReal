@@ -108,7 +108,7 @@ export default function DebugTreasury() {
 
       <div className="space-y-2">
         <h2 className="text-xl font-semibold">Safes:</h2>
-        {safes.map((safe: any) => (
+        {safes.map((safe: unknown) => (
           <div key={safe.id} className="border p-2 rounded">
             <p><strong>Name:</strong> {safe.name}</p>
             <p><strong>Balance:</strong> {safe.balance}</p>

@@ -10,13 +10,13 @@ import Sidebar from '@/components/Sidebar'
 import NavigationButtons from '@/components/NavigationButtons'
 
 // Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+const ModernCard = ({ children, className = '', ...props }: unknown) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: unknown) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -42,7 +42,7 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
   )
 }
 
-const ModernInput = ({ label, className = '', ...props }: any) => (
+const ModernInput = ({ label, className = '', ...props }: unknown) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <input 
@@ -52,7 +52,7 @@ const ModernInput = ({ label, className = '', ...props }: any) => (
   </div>
 )
 
-const ModernSelect = ({ label, children, className = '', ...props }: any) => (
+const ModernSelect = ({ label, children, className = '', ...props }: unknown) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <select 
@@ -639,7 +639,7 @@ export default function Treasury() {
                   label="اسم الخزنة *"
                   type="text"
                   value={newSafe.name}
-                  onChange={(e: any) => setNewSafe({...newSafe, name: e.target.value})}
+                  onChange={(e: unknown) => setNewSafe({...newSafe, name: e.target.value})}
                   placeholder="اسم الخزنة"
                 />
                 
@@ -647,7 +647,7 @@ export default function Treasury() {
                   label="الرصيد الابتدائي"
                   type="number"
                   value={newSafe.balance}
-                  onChange={(e: any) => setNewSafe({...newSafe, balance: e.target.value})}
+                  onChange={(e: unknown) => setNewSafe({...newSafe, balance: e.target.value})}
                   placeholder="الرصيد الابتدائي"
                 />
               </div>
@@ -703,7 +703,7 @@ export default function Treasury() {
                 <ModernSelect
                   label="من الخزنة *"
                   value={newTransfer.fromSafeId}
-                  onChange={(e: any) => setNewTransfer({...newTransfer, fromSafeId: e.target.value})}
+                  onChange={(e: unknown) => setNewTransfer({...newTransfer, fromSafeId: e.target.value})}
                 >
                   <option value="">اختر الخزنة المصدر...</option>
                   {safes.map((safe) => (
@@ -716,7 +716,7 @@ export default function Treasury() {
                 <ModernSelect
                   label="إلى الخزنة *"
                   value={newTransfer.toSafeId}
-                  onChange={(e: any) => setNewTransfer({...newTransfer, toSafeId: e.target.value})}
+                  onChange={(e: unknown) => setNewTransfer({...newTransfer, toSafeId: e.target.value})}
                 >
                   <option value="">اختر الخزنة الهدف...</option>
                   {safes.map((safe) => (
@@ -730,7 +730,7 @@ export default function Treasury() {
                   label="المبلغ *"
                   type="number"
                   value={newTransfer.amount}
-                  onChange={(e: any) => setNewTransfer({...newTransfer, amount: e.target.value})}
+                  onChange={(e: unknown) => setNewTransfer({...newTransfer, amount: e.target.value})}
                   placeholder="المبلغ المراد تحويله"
                 />
                 
@@ -738,7 +738,7 @@ export default function Treasury() {
                   <label className="text-sm font-medium text-gray-700">الوصف</label>
                   <textarea
                     value={newTransfer.description}
-                    onChange={(e: any) => setNewTransfer({...newTransfer, description: e.target.value})}
+                    onChange={(e: unknown) => setNewTransfer({...newTransfer, description: e.target.value})}
                     placeholder="وصف التحويل"
                     rows={3}
                     className="w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"

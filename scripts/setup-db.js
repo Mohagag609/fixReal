@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
+import { PrismaClient  } from '@prisma/client'
 
 async function setupDatabase() {
   console.log('Setting up database...')
@@ -14,7 +14,7 @@ async function setupDatabase() {
       await prisma.$disconnect()
 
       // تطبيق Schema
-      const { execSync } = require('child_process')
+      import { execSync  } from 'child_process'
       execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' })
 
       console.log('✅ تم إعداد قاعدة البيانات بنجاح!')
@@ -42,9 +42,9 @@ async function setupDatabase() {
     console.log('✅ قاعدة البيانات المحلية متاحة')
     await localPrisma.$disconnect()
 
-    const { execSync } = require('child_process')
+    import { execSync  } from 'child_process'
     // تغيير provider مؤقتاً للتطوير المحلي
-    const fs = require('fs')
+    import fs from 'fs'
     const schemaPath = 'prisma/schema.prisma'
     const schema = fs.readFileSync(schemaPath, 'utf8')
     const tempSchema = schema.replace('provider = "postgresql"', 'provider = "sqlite"')
@@ -73,7 +73,7 @@ async function setupDatabase() {
       console.log('✅ قاعدة البيانات السحابية (Neon) متاحة')
       await cloudPrisma.$disconnect()
 
-      const { execSync } = require('child_process')
+      import { execSync  } from 'child_process'
       process.env.DATABASE_URL = process.env.NEON_DATABASE_URL
       execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' })
 

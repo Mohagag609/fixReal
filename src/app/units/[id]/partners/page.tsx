@@ -7,13 +7,13 @@ import { NotificationSystem, useNotifications } from '@/components/NotificationS
 import Layout from '@/components/Layout'
 
 // Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+const ModernCard = ({ children, className = '', ...props }: unknown) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: unknown) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -82,19 +82,36 @@ export default function UnitPartnersManagement() {
         partnersResponse.json()
       ])
       
-      if (unitData.success) {
-        setUnit(unitData.data)
+      if (unitResponse.ok) {
+        setUnit(unitData)
       } else {
         setError(unitData.error || 'خطأ في تحميل الوحدة')
       }
 
-      if (unitPartnersData.success) {
-        const filteredPartners = unitPartnersData.data.filter((up: UnitPartner) => up.unitId === unitId)
-        setUnitPartners(filteredPartners)
+      if (unitPartnersResponse.ok) {
+        // Check if unitPartnersData is an array
+        if (Array.isArray(unitPartnersData)) {
+          const filteredPartners = unitPartnersData.filter((up: UnitPartner) => up.unitId === unitId)
+          setUnitPartners(filteredPartners)
+        } else if (unitPartnersData && Array.isArray(unitPartnersData.data)) {
+          const filteredPartners = unitPartnersData.data.filter((up: UnitPartner) => up.unitId === unitId)
+          setUnitPartners(filteredPartners)
+        } else {
+          console.log('unitPartnersData is not an array:', unitPartnersData)
+          setUnitPartners([])
+        }
       }
 
-      if (partnersData.success) {
-        setPartners(partnersData.data)
+      if (partnersResponse.ok) {
+        // Check if partnersData is an array
+        if (Array.isArray(partnersData)) {
+          setPartners(partnersData)
+        } else if (partnersData && Array.isArray(partnersData.data)) {
+          setPartners(partnersData.data)
+        } else {
+          console.log('partnersData is not an array:', partnersData)
+          setPartners([])
+        }
       }
     } catch (err) {
       console.error('Error fetching unit data:', err)

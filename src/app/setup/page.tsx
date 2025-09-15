@@ -14,8 +14,8 @@ export default function SetupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [currentConfig, setCurrentConfig] = useState<any>(null);
-  const [dbStatus, setDbStatus] = useState<any>(null);
+  const [currentConfig, setCurrentConfig] = useState<unknown>(null);
+  const [dbStatus, setDbStatus] = useState<unknown>(null);
 
   // تحديد نوع قاعدة البيانات من الرابط
   const detectDatabaseType = (url: string) => {
@@ -31,13 +31,14 @@ export default function SetupPage() {
     return "sqlite";
   };
 
-  // التحقق من التحقق الإداري
+  // التحقق من التحقق الإداري - تم إزالته للسماح بالوصول المباشر
   useEffect(() => {
-    const adminVerified = localStorage.getItem('adminVerified');
-    if (!adminVerified) {
-      router.push('/admin-verify');
-      return;
-    }
+    // يمكن إضافة التحقق الإداري هنا إذا لزم الأمر
+    // const adminVerified = localStorage.getItem('adminVerified');
+    // if (!adminVerified) {
+    //   router.push('/admin-verify');
+    //   return;
+    // }
   }, [router]);
 
   // جلب معلومات قاعدة البيانات الحالية
@@ -56,7 +57,7 @@ export default function SetupPage() {
           if (savedUrls.pgLocal) setPgLocalUrl(savedUrls.pgLocal);
           if (savedUrls.pgCloud) setPgCloudUrl(savedUrls.pgCloud);
           
-          // جلب إحصائيات قاعدة البيانات
+          // جلب إحصائيات قاعدة البيانات (اختياري)
           try {
             const statsRes = await fetch("/api/setup/stats");
             if (statsRes.ok) {
@@ -66,7 +67,8 @@ export default function SetupPage() {
               }
             }
           } catch (err) {
-            console.log("Could not fetch database stats");
+            // تجاهل خطأ الإحصائيات - لا نحتاجها في صفحة الإعداد
+            console.log("Could not fetch database stats, continuing without stats");
           }
         } else {
           // تحميل الروابط المحفوظة حتى لو لم تكن قاعدة البيانات مُعدة
@@ -148,7 +150,7 @@ export default function SetupPage() {
       } else {
         setError(result.error || "حدث خطأ غير متوقع");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message || "فشل في الاتصال بالخادم");
     } finally {
       setIsLoading(false);

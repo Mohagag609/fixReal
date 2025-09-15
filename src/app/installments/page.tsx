@@ -10,13 +10,13 @@ import Sidebar from '@/components/Sidebar'
 import NavigationButtons from '@/components/NavigationButtons'
 
 // Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+const ModernCard = ({ children, className = '', ...props }: unknown) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: unknown) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -42,7 +42,7 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
   )
 }
 
-const ModernInput = ({ label, className = '', ...props }: any) => (
+const ModernInput = ({ label, className = '', ...props }: unknown) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <input 
@@ -52,7 +52,7 @@ const ModernInput = ({ label, className = '', ...props }: any) => (
   </div>
 )
 
-const ModernSelect = ({ label, children, className = '', ...props }: any) => (
+const ModernSelect = ({ label, children, className = '', ...props }: unknown) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <select 
@@ -269,7 +269,7 @@ export default function Installments() {
 
   const handleReschedule = (installment: Installment) => {
     setRescheduleInstallment(installment)
-    setNewDueDate(new Date(installment.dueDate).toISOString().split('T')[0])
+    setNewDueDate(new Date(installment.dueDate)??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد')
     setShowRescheduleModal(true)
   }
 
@@ -330,7 +330,7 @@ export default function Installments() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `installments_${new Date().toISOString().split('T')[0]}.csv`)
+    link.setAttribute('download', `installments_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -534,7 +534,7 @@ export default function Installments() {
               <ModernSelect
                 label="فلتر الحالة"
                 value={statusFilter}
-                onChange={(e: any) => setStatusFilter(e.target.value)}
+                onChange={(e: unknown) => setStatusFilter(e.target.value)}
               >
                 <option value="all">جميع الحالات</option>
                 <option value="مستحق">مستحق</option>
@@ -545,7 +545,7 @@ export default function Installments() {
               <ModernSelect
                 label="فلتر الوحدة"
                 value={unitFilter}
-                onChange={(e: any) => setUnitFilter(e.target.value)}
+                onChange={(e: unknown) => setUnitFilter(e.target.value)}
               >
                 <option value="all">جميع الوحدات</option>
                 {units.map(unit => (
@@ -559,14 +559,14 @@ export default function Installments() {
                 label="من تاريخ"
                 type="date"
                 value={dateFilter.from}
-                onChange={(e: any) => setDateFilter({...dateFilter, from: e.target.value})}
+                onChange={(e: unknown) => setDateFilter({...dateFilter, from: e.target.value})}
               />
 
               <ModernInput
                 label="إلى تاريخ"
                 type="date"
                 value={dateFilter.to}
-                onChange={(e: any) => setDateFilter({...dateFilter, to: e.target.value})}
+                onChange={(e: unknown) => setDateFilter({...dateFilter, to: e.target.value})}
               />
             </div>
 
@@ -863,7 +863,7 @@ export default function Installments() {
                   label="التاريخ الجديد"
                   type="date"
                   value={newDueDate}
-                  onChange={(e: any) => setNewDueDate(e.target.value)}
+                  onChange={(e: unknown) => setNewDueDate(e.target.value)}
                 />
               </div>
 

@@ -9,12 +9,20 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [dbConfigured, setDbConfigured] = useState<boolean | null>(null)
-  const [showCreateUser, setShowCreateUser] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     checkDatabaseStatus()
-  }, [])
+    
+    // توجيه تلقائي لصفحة الإعدادات إذا لم تكن قاعدة البيانات مُعدة
+    const timer = setTimeout(() => {
+      if (dbConfigured === false) {
+        router.push('/setup')
+      }
+    }, 2000) // انتظار ثانيتين
+    
+    return () => clearTimeout(timer)
+  }, [dbConfigured, router])
 
   const checkDatabaseStatus = async () => {
     try {
@@ -22,14 +30,7 @@ export default function Login() {
       const data = await response.json()
       setDbConfigured(data.configured)
       
-      // إذا كانت قاعدة البيانات مُعدة، تحقق من وجود مستخدمين
-      if (data.configured) {
-        const statsResponse = await fetch('/api/setup/stats')
-        const statsData = await statsResponse.json()
-        if (statsData.success && statsData.data.totalUsers === 0) {
-          setShowCreateUser(true)
-        }
-      }
+      console.log('Database status checked:', data.configured)
     } catch (err) {
       console.error('Error checking database status:', err)
       setDbConfigured(false)
@@ -56,7 +57,16 @@ export default function Login() {
         localStorage.setItem('authToken', data.data.token)
         router.push('/')
       } else {
-        setError(data.error || 'خطأ في تسجيل الدخول')
+        // التحقق من وجود redirectTo في الاستجابة
+        if (data.redirectTo === '/setup') {
+          // توجيه تلقائي لصفحة الإعدادات
+          setTimeout(() => {
+            router.push('/setup')
+          }, 2000) // انتظار ثانيتين لإظهار الرسالة
+          setError(data.message || 'سيتم توجيهك لصفحة الإعدادات...')
+        } else {
+          setError(data.error || 'خطأ في تسجيل الدخول')
+        }
       }
     } catch (err) {
       setError('خطأ في الاتصال')
@@ -125,47 +135,6 @@ export default function Login() {
             🔐 نسيت كلمة المرور؟
           </button>
 
-          {showCreateUser && (
-            <div style={{
-              padding: '12px',
-              backgroundColor: '#fef3c7',
-              border: '1px solid #f59e0b',
-              borderRadius: '8px',
-              marginBottom: '8px'
-            }}>
-              <p style={{
-                margin: '0 0 8px 0',
-                fontSize: '14px',
-                color: '#92400e',
-                fontWeight: '500'
-              }}>
-                ⚠️ لا يوجد مستخدمين في النظام
-              </p>
-              <button
-                onClick={() => router.push('/create-first-user')}
-                style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.1)'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.02)'
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)'
-                }}
-              >
-                👤 إنشاء المستخدم الأول
-              </button>
-            </div>
-          )}
 
           {dbConfigured === false && (
             <div style={{
@@ -183,8 +152,16 @@ export default function Login() {
               }}>
                 ❌ قاعدة البيانات غير مُعدة
               </p>
+              <p style={{
+                margin: '0 0 8px 0',
+                fontSize: '12px',
+                color: '#dc2626',
+                fontWeight: '400'
+              }}>
+                سيتم توجيهك تلقائياً لصفحة الإعدادات خلال ثانية واحدة...
+              </p>
               <button
-                onClick={() => router.push('/admin-verify')}
+                onClick={() => router.push('/setup')}
                 style={{
                   background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                   color: 'white',
@@ -204,7 +181,7 @@ export default function Login() {
                   e.currentTarget.style.transform = 'scale(1)'
                 }}
               >
-                ⚙️ إعداد قاعدة البيانات
+                ⚙️ إعداد قاعدة البيانات الآن
               </button>
             </div>
           )}

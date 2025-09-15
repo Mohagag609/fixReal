@@ -1,10 +1,10 @@
-const { execSync } = require('child_process')
+import { execSync  } from 'child_process'
 
 console.log('🔧 إعداد البناء للإنتاج...')
 
 try {
   // تأكد من أن Prisma schema يستخدم PostgreSQL
-  const fs = require('fs')
+  import fs from 'fs'
   const schemaPath = 'prisma/schema.prisma'
   const schema = fs.readFileSync(schemaPath, 'utf8')
   

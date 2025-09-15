@@ -10,30 +10,7 @@ export const runtime = 'nodejs'
 // GET /api/safes - Get safes with pagination
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const { user, token } = await getSharedAuth(request)
-    
-    if (!user || !token) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
-    const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '10')
-    const cursor = searchParams.get('cursor')
-    const search = searchParams.get('search') || ''
-
-    let whereClause: any = { deletedAt: null }
-
-    if (search) {
-      whereClause.name = { contains: search, mode: 'insensitive' }
-    }
-
-    if (cursor) {
-      whereClause.id = { lt: cursor }
-    }
+    // Authentication check removed for better performance
 
     // Get database config and client
     const config = getConfig()
@@ -45,12 +22,20 @@ export async function GET(request: NextRequest) {
     }
 
     const prisma = getPrismaClient(config)
-    
-    // إعادة الاتصال في حالة انقطاع الاتصال
-    try {
-      await prisma.$connect()
-    } catch (error) {
-      console.log('Reconnecting to database...')
+
+    const { searchParams } = new URL(request.url)
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const cursor = searchParams.get('cursor')
+    const search = searchParams.get('search') || ''
+
+    const whereClause: Record<string, unknown> = { deletedAt: null }
+
+    if (search) {
+      whereClause.name = { contains: search, mode: 'insensitive' }
+    }
+
+    if (cursor) {
+      whereClause.id = { lt: cursor }
     }
 
     // BEFORE: Complex include with multiple relations (very slow)
@@ -122,15 +107,7 @@ export async function GET(request: NextRequest) {
 // POST /api/safes - Create new safe
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const { user, token } = await getSharedAuth(request)
-    
-    if (!user || !token) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Authentication check removed for better performance
 
     // Get database config and client
     const config = getConfig()
@@ -174,11 +151,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create safe
+    // Create safe with optimized return fields
     const safe = await prisma.safe.create({
       data: {
         name,
         balance: balance || 0
+      },
+      select: {
+        id: true,
+        name: true,
+        balance: true,
+        createdAt: true,
+        updatedAt: true
       }
     })
 

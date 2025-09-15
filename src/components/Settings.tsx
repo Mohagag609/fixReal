@@ -199,7 +199,7 @@ export function Settings({ onSettingsChange }: SettingsProps) {
             <select
               className="select"
               value={settings.backupFrequency}
-              onChange={(e) => updateSetting('backupFrequency', e.target.value as any)}
+              onChange={(e) => updateSetting('backupFrequency', e.target.value as unknown)}
             >
               <option value="daily">يومياً</option>
               <option value="weekly">أسبوعياً</option>

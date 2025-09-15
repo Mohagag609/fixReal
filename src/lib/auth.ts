@@ -14,9 +14,9 @@ export function generateToken(payload: { id: string; username: string; role: str
 }
 
 // Verify JWT token
-export function verifyToken(token: string): any {
+export function verifyToken(token: string): { id: string; username: string; role: string } | null {
   try {
-    return jwt.verify(token, JWT_SECRET)
+    return jwt.verify(token, JWT_SECRET) as { id: string; username: string; role: string }
   } catch (error) {
     return null
   }
@@ -33,7 +33,7 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 }
 
 // Get user from request
-export function getUserFromRequest(request: NextRequest): any {
+export function getUserFromRequest(request: NextRequest): { id: string; username: string; role: string } | null {
   const authHeader = request.headers.get('authorization')
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null
@@ -44,7 +44,7 @@ export function getUserFromRequest(request: NextRequest): any {
 }
 
 // Get user from token
-export async function getUserFromToken(token: string): Promise<any> {
+export async function getUserFromToken(token: string): Promise<{ id: string; username: string; role: string; email?: string } | null> {
   const decoded = verifyToken(token)
   if (!decoded) {
     return null
@@ -80,7 +80,7 @@ export async function getUserFromToken(token: string): Promise<any> {
 }
 
 // Check if user has permission
-export function hasPermission(user: any, requiredRole: string): boolean {
+export function hasPermission(user: { role: string } | null, requiredRole: string): boolean {
   if (!user) return false
   
   const roleHierarchy = {

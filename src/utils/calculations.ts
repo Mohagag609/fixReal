@@ -1,6 +1,6 @@
 // Calculation utilities مطابقة لـ business-rules.json بالحرف
 
-import { BUSINESS_RULES } from '@/constants/business-rules'
+// import { BUSINESS_RULES } from '@/constants/business-rules'
 
 // حساب حالة القسط
 export function calculateInstallmentStatus(amount: number, paidAmount: number): string {
@@ -32,35 +32,35 @@ export function calculateNetProfit(totalReceipts: number, totalExpenses: number)
 }
 
 // حساب إجمالي المبيعات
-export function calculateTotalSales(contracts: any[]): number {
+export function calculateTotalSales(contracts: { totalPrice: number; discountAmount: number }[]): number {
   return contracts.reduce((total, contract) => {
     return total + (contract.totalPrice - contract.discountAmount)
   }, 0)
 }
 
 // حساب إجمالي المقبوضات
-export function calculateTotalReceipts(vouchers: any[]): number {
+export function calculateTotalReceipts(vouchers: { type: string; amount: number }[]): number {
   return vouchers
     .filter(voucher => voucher.type === 'receipt')
     .reduce((total, voucher) => total + voucher.amount, 0)
 }
 
 // حساب إجمالي المصروفات
-export function calculateTotalExpenses(vouchers: any[]): number {
+export function calculateTotalExpenses(vouchers: { type: string; amount: number }[]): number {
   return vouchers
     .filter(voucher => voucher.type === 'payment')
     .reduce((total, voucher) => total + voucher.amount, 0)
 }
 
 // حساب إجمالي الديون
-export function calculateTotalDebt(installments: any[]): number {
+export function calculateTotalDebt(installments: { status: string; amount: number }[]): number {
   return installments
     .filter(installment => installment.status !== 'مدفوع')
     .reduce((total, installment) => total + installment.amount, 0)
 }
 
 // حساب عدد الوحدات
-export function calculateUnitCounts(units: any[]): {
+export function calculateUnitCounts(units: { status: string }[]): {
   total: number
   available: number
   sold: number
@@ -75,17 +75,17 @@ export function calculateUnitCounts(units: any[]): {
 }
 
 // حساب عدد المستثمرين
-export function calculateInvestorCount(customers: any[]): number {
+export function calculateInvestorCount(customers: { status: string }[]): number {
   return customers.filter(customer => customer.status === 'نشط').length
 }
 
 // حساب Dashboard KPIs
 export function calculateDashboardKPIs(
-  contracts: any[],
-  vouchers: any[],
-  installments: any[],
-  units: any[],
-  customers: any[]
+  contracts: { totalPrice: number; discountAmount: number }[],
+  vouchers: { type: string; amount: number }[],
+  installments: { status: string; amount: number }[],
+  units: { status: string }[],
+  customers: { status: string }[]
 ): {
   totalSales: number
   totalReceipts: number

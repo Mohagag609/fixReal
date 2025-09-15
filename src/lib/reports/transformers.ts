@@ -80,7 +80,7 @@ export const reportColumns: Record<string, ColumnDefinition[]> = {
 /**
  * تنسيق القيم حسب النوع
  */
-export function formatValue(value: any, type: string, format?: string): string {
+export function formatValue(value: unknown, type: string, format?: string): string {
   if (value === null || value === undefined || value === '') {
     return '-'
   }
@@ -106,14 +106,14 @@ export function formatValue(value: any, type: string, format?: string): string {
 /**
  * تنسيق القيم للتصدير (بدون رموز)
  */
-export function formatValueForExport(value: any, type: string, format?: string): string {
+export function formatValueForExport(value: unknown, type: string, format?: string): string {
   if (value === null || value === undefined || value === '') {
     return ''
   }
   
   switch (type) {
     case 'currency':
-      return numeral(value).format('0,0.00')
+      return numeral(value).format(format || '0,0')
     
     case 'number':
       return numeral(value).format(format || '0,0')
@@ -165,11 +165,11 @@ export function getStatusColor(status: string): string {
 /**
  * تحويل البيانات للجدول
  */
-export function transformDataForTable(data: any[], reportType: string) {
+export function transformDataForTable(data: unknown[], reportType: string) {
   const columns = reportColumns[reportType] || []
   
   return data.map(row => {
-    const transformedRow: any = {}
+    const transformedRow: Record<string, unknown> = {}
     
     columns.forEach(column => {
       const value = row[column.key]
@@ -188,7 +188,7 @@ export function transformDataForTable(data: any[], reportType: string) {
 /**
  * حساب الإجماليات
  */
-export function calculateTotals(data: any[], reportType: string) {
+export function calculateTotals(data: unknown[], reportType: string) {
   const columns = reportColumns[reportType] || []
   const totals: Record<string, number> = {}
   
@@ -207,11 +207,11 @@ export function calculateTotals(data: any[], reportType: string) {
 /**
  * تحضير البيانات للتصدير
  */
-export function prepareDataForExport(data: any[], reportType: string) {
+export function prepareDataForExport(data: unknown[], reportType: string) {
   const columns = reportColumns[reportType] || []
   
   return data.map(row => {
-    const exportRow: any = {}
+    const exportRow: Record<string, string> = {}
     
     columns.forEach(column => {
       const value = row[column.key]?.raw || row[column.key]
@@ -233,11 +233,11 @@ export function getExportHeaders(reportType: string): string[] {
 /**
  * تحضير HTML للطباعة
  */
-export function generatePrintHTML(data: any[], reportType: string, title: string): string {
+export function generatePrintHTML(data: unknown[], reportType: string, title: string): string {
   const columns = reportColumns[reportType] || []
   const totals = calculateTotals(data, reportType)
   
-  let html = `
+  const html = `
     <!DOCTYPE html>
     <html dir="rtl" lang="ar">
     <head>

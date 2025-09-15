@@ -23,7 +23,7 @@ export async function POST(
       )
     }
     
-    let data: any[] = []
+    const data: unknown[] = []
     
     // تشغيل التقرير المناسب
     switch (slug) {
@@ -79,12 +79,12 @@ export async function GET(
     
     // تحويل query parameters إلى filters
     const filters: ReportFilters = {
-      projectId: searchParams.get('projectId') || undefined,
-      from: searchParams.get('from') || undefined,
-      to: searchParams.get('to') || undefined,
-      status: searchParams.get('status') || undefined,
-      method: searchParams.get('method') || undefined,
-      q: searchParams.get('q') || undefined
+      projectId: searchParams.get('projectId') || '',
+      from: searchParams.get('from') || '',
+      to: searchParams.get('to') || '',
+      status: searchParams.get('status') || '',
+      method: searchParams.get('method') || '',
+      q: searchParams.get('q') || ''
     }
     
     // إزالة القيم الفارغة
@@ -94,7 +94,7 @@ export async function GET(
       }
     })
     
-    let data: any[] = []
+    const data: unknown[] = []
     
     // تشغيل التقرير المناسب
     switch (slug) {

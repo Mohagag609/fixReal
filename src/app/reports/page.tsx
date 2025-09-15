@@ -11,13 +11,13 @@ import ReportPreview from './components/ReportPreview'
 import { printReport } from './components/PrintButton'
 
 // Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+const ModernCard = ({ children, className = '', ...props }: unknown) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: unknown) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -43,7 +43,7 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
   )
 }
 
-const ReportCard = ({ title, description, icon, color, onClick }: any) => (
+const ReportCard = ({ title, description, icon, color, onClick }: unknown) => (
   <ModernCard 
     className="cursor-pointer hover:scale-105 transition-all duration-200 hover:shadow-2xl"
     onClick={onClick}
@@ -63,18 +63,18 @@ export default function Reports() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState({
-    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-    to: new Date().toISOString().split('T')[0]
+    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1)??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
+    to: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
   })
   
   // حالة نظام التقارير الجديد
   const [currentReport, setCurrentReport] = useState<{
     type: string
-    data: any[]
-    filters: any
+    data: unknown[]
+    filters: unknown
     title: string
-    columns: any[]
-    summary?: any
+    columns: unknown[]
+    summary?: unknown | null
   } | null>(null)
   const [reportLoading, setReportLoading] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
@@ -89,19 +89,53 @@ export default function Reports() {
       return
     }
     
-    fetchKPIs()
+    // Check if database is configured
+    checkDatabaseStatus()
   }, [])
 
-  const fetchKPIs = async () => {
+  const checkDatabaseStatus = async () => {
+    try {
+      const response = await fetch('/api/setup')
+      const data = await response.json()
+      
+      if (!data.success) {
+        // إذا لم تكن قاعدة البيانات مُعدة، فقط أظهر رسالة تحذير
+        // console.log('Database not configured, but continuing to load reports')
+        // إزالة الإشعار المزعج
+        // addNotification({
+        //   type: 'warning',
+        //   title: 'تحذير',
+        //   message: 'قاعدة البيانات غير مُعدة بالكامل، قد لا تعمل بعض الميزات'
+        // })
+      }
+      
+      // تحميل التقارير في جميع الحالات
+      fetchKPIs(true)
+    } catch (error) {
+      console.error('Database check error:', error)
+      // في حالة الخطأ، فقط أظهر رسالة تحذير
+      addNotification({
+        type: 'warning',
+        title: 'تحذير',
+        message: 'لا يمكن التحقق من حالة قاعدة البيانات، جاري تحميل التقارير...'
+      })
+      fetchKPIs(true)
+    }
+  }
+
+  const fetchKPIs = async (forceRefresh = false) => {
     try {
       const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/dashboard', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const url = forceRefresh ? '/api/dashboard?refresh=true' : '/api/dashboard'
+      const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        cache: forceRefresh ? 'no-cache' : 'default'
       })
       
       const data = await response.json()
       if (data.success) {
         setKpis(data.data)
+        console.log(`تم تحميل ${Object.keys(data.data).length} مؤشر أداء`)
       } else {
         setError(data.error || 'خطأ في تحميل البيانات')
       }
@@ -114,7 +148,7 @@ export default function Reports() {
   }
 
   // دوال نظام التقارير الجديد
-  const handleReportGenerated = (reportType: string, data: any[], filters: any) => {
+  const handleReportGenerated = (reportType: string, data: unknown[], filters: unknown) => {
     const reportTitles: Record<string, string> = {
       installments: 'تقرير الأقساط',
       payments: 'تقرير التحصيلات',
@@ -124,7 +158,14 @@ export default function Reports() {
       financial: 'التقرير المالي'
     }
     
-    const report: any = {
+    const report: {
+      type: string;
+      data: unknown[];
+      filters: unknown;
+      title: string;
+      columns: unknown[];
+      summary?: unknown | null;
+    } = {
       type: reportType,
       data,
       filters,
@@ -157,7 +198,7 @@ export default function Reports() {
               title: currentReport.title,
               data: currentReport.data,
               reportType: currentReport.type,
-              fileName: `${currentReport.type}-report-${new Date().toISOString().split('T')[0]}.xlsx`
+              fileName: `${currentReport.type}-report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`
             })
           })
           break
@@ -173,7 +214,7 @@ export default function Reports() {
               title: currentReport.title,
               data: currentReport.data,
               reportType: currentReport.type,
-              fileName: `${currentReport.type}-report-${new Date().toISOString().split('T')[0]}.csv`
+              fileName: `${currentReport.type}-report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`
             })
           })
           break
@@ -189,7 +230,7 @@ export default function Reports() {
               title: currentReport.title,
               data: currentReport.data,
               reportType: currentReport.type,
-              fileName: `${currentReport.type}-report-${new Date().toISOString().split('T')[0]}.pdf`
+              fileName: `${currentReport.type}-report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.pdf`
             })
           })
           break
@@ -203,7 +244,7 @@ export default function Reports() {
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `${currentReport.type}-report-${new Date().toISOString().split('T')[0]}.${format}`
+        a.download = `${currentReport.type}-report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.${format}`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
@@ -263,7 +304,7 @@ export default function Reports() {
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `${reportType}-report-${new Date().toISOString().split('T')[0]}.xlsx`
+        a.download = `${reportType}-report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
@@ -462,7 +503,7 @@ export default function Reports() {
                   className="px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                 />
               </div>
-              <ModernButton onClick={fetchKPIs}>
+              <ModernButton onClick={() => fetchKPIs(true)}>
                 🔄 تحديث البيانات
               </ModernButton>
             </div>

@@ -30,9 +30,9 @@ export interface Metrics {
 export async function performHealthCheck(): Promise<HealthCheckResult> {
   const startTime = Date.now()
   const checks = {
-    database: { status: 'pass' as 'pass' | 'fail', responseTime: 0, error: undefined as string | undefined },
-    memory: { status: 'pass' as 'pass' | 'fail', usage: 0, error: undefined as string | undefined },
-    disk: { status: 'pass' as 'pass' | 'fail', usage: 0, error: undefined as string | undefined }
+    database: { status: 'pass' as 'pass' | 'fail', responseTime: 0, error: undefined as string },
+    memory: { status: 'pass' as 'pass' | 'fail', usage: 0, error: undefined as string },
+    disk: { status: 'pass' as 'pass' | 'fail', usage: 0, error: undefined as string }
   }
   
   // Database check
@@ -160,7 +160,7 @@ async function getActiveUsersCount(): Promise<number> {
 }
 
 // Get last backup date
-async function getLastBackupDate(): Promise<string | undefined> {
+async function getLastBackupDate(): Promise<string> {
   try {
     // This would be stored in settings or a separate backup log table
     const setting = await prisma.settings.findUnique({

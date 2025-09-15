@@ -6,8 +6,8 @@ export interface AuditLogData {
   action: string
   entityType: string
   entityId: string
-  oldValues?: any
-  newValues?: any
+  oldValues?: Record<string, unknown>
+  newValues?: Record<string, unknown>
   userId?: string
   ipAddress?: string
   userAgent?: string
@@ -46,11 +46,11 @@ export async function getAuditLogs(
     fromDate?: string
     toDate?: string
   } = {}
-): Promise<{ data: any[]; total: number; totalPages: number }> {
+): Promise<{ data: unknown[]; total: number; totalPages: number }> {
   try {
     const skip = (page - 1) * limit
     
-    const whereClause: any = {}
+    const whereClause: Record<string, unknown> = {}
     
     if (filters.action) {
       whereClause.action = { contains: filters.action, mode: 'insensitive' }
@@ -103,12 +103,12 @@ export async function getEntityAuditLogs(
   entityId: string,
   page: number = 1,
   limit: number = 50
-): Promise<{ data: any[]; total: number; totalPages: number }> {
+): Promise<{ data: unknown[]; total: number; totalPages: number }> {
   return getAuditLogs(page, limit, { entityType, entityId })
 }
 
 // Get audit log by ID
-export async function getAuditLogById(id: string): Promise<any | null> {
+export async function getAuditLogById(id: string): Promise<unknown | null> {
   try {
     const auditLog = await prisma.auditLog.findUnique({
       where: { id }
@@ -126,7 +126,7 @@ export async function getAuditStats(): Promise<{
   totalLogs: number
   logsByAction: { action: string; count: number }[]
   logsByEntityType: { entityType: string; count: number }[]
-  recentActivity: any[]
+  recentActivity: unknown[]
 }> {
   try {
     const [
@@ -194,7 +194,7 @@ export async function exportAuditLogsToCSV(
   } = {}
 ): Promise<string> {
   try {
-    const whereClause: any = {}
+    const whereClause: Record<string, unknown> = {}
     
     if (filters.action) {
       whereClause.action = { contains: filters.action, mode: 'insensitive' }

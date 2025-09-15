@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { getConfig } from '@/lib/db/config'
+import { getPrismaClient } from '@/lib/prisma-clients'
 
-const prisma = new PrismaClient()
+const config = getConfig()
+const prisma = getPrismaClient(config)
 
 // GET - Get single unit
 export async function GET(
@@ -9,35 +11,47 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    console.log('Fetching unit with ID:', params.id)
+    
+    if (!params.id) {
+      return NextResponse.json(
+        { error: 'معرف الوحدة مطلوب' },
+        { status: 400 }
+      )
+    }
+    
+    // Check if database is configured
+    if (!config) {
+      console.log('Database not configured')
+      return NextResponse.json(
+        { error: 'قاعدة البيانات غير مُعدة' },
+        { status: 500 }
+      )
+    }
+    
     const unit = await prisma.unit.findFirst({
       where: {
         id: params.id,
         deletedAt: null
-      },
-      include: {
-        unitPartners: {
-          include: {
-            partner: true
-          }
-        }
       }
     })
 
+    console.log('Unit found:', unit ? 'Yes' : 'No')
+
     if (!unit) {
+      console.log('Unit not found, returning 404')
       return NextResponse.json(
-        { success: false, error: 'الوحدة غير موجودة' },
+        { error: 'الوحدة غير موجودة' },
         { status: 404 }
       )
     }
 
-    return NextResponse.json({
-      success: true,
-      data: unit
-    })
+    console.log('Returning unit data')
+    return NextResponse.json(unit)
   } catch (error) {
     console.error('Error fetching unit:', error)
     return NextResponse.json(
-      { success: false, error: 'خطأ في تحميل الوحدة' },
+      { error: 'خطأ في تحميل الوحدة' },
       { status: 500 }
     )
   }
@@ -117,12 +131,9 @@ export async function DELETE(
       )
     }
 
-    // Soft delete unit
-    await prisma.unit.update({
-      where: { id: params.id },
-      data: {
-        deletedAt: new Date()
-      }
+    // Hard delete unit (permanent deletion)
+    await prisma.unit.delete({
+      where: { id: params.id }
     })
 
     return NextResponse.json({

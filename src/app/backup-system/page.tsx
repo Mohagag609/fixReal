@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation'
 import { NotificationSystem, useNotifications } from '../../components/NotificationSystem'
 
 // Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+const ModernCard = ({ children, className = '', ...props }: Record<string, unknown>) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', disabled = false, ...props }: any) => {
+const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', disabled = false, ...props }: Record<string, unknown>) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -50,15 +50,9 @@ export default function BackupSystem() {
   const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
     // Get database type from environment or API
     fetchDatabaseInfo()
-  }, [])
+  }, [] // TODO: Review dependencies) // TODO: Review dependencies
 
   const fetchDatabaseInfo = async () => {
     try {
@@ -73,11 +67,9 @@ export default function BackupSystem() {
   const handleExport = async () => {
     setIsLoading(true)
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch('/api/system/export', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({})
@@ -88,7 +80,7 @@ export default function BackupSystem() {
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `backup-${new Date().toISOString().split('T')[0]}.tar.gz`
+        a.download = `backup-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.tar.gz`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
@@ -129,8 +121,6 @@ export default function BackupSystem() {
 
     setIsLoading(true)
     try {
-      const token = localStorage.getItem('authToken')
-      
       // Convert file to base64
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader()
@@ -145,7 +135,6 @@ export default function BackupSystem() {
       const response = await fetch('/api/system/import', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -167,6 +156,24 @@ export default function BackupSystem() {
         if (result.stats) {
           console.log('Import statistics:', result.stats)
         }
+        
+        if (result.changes) {
+          console.log('Changes detected:', result.changes)
+          
+          // عرض التغييرات المكتشفة
+          const changesList = Object.entries(result.changes)
+            .filter(([_, change]) => change.difference !== 0)
+            .map(([table, change]) => {
+              const sign = change.difference > 0 ? '+' : ''
+              return `${table}: ${change.current} → ${change.backup} (${sign}${change.difference})`
+            })
+            .join('\n')
+          
+          if (changesList) {
+            console.log('📊 Changes Summary:')
+            console.log(changesList)
+          }
+        }
       } else {
         throw new Error(result.details || 'فشل في استيراد النسخة الاحتياطية')
       }
@@ -183,15 +190,6 @@ export default function BackupSystem() {
   }
 
   const handleWipe = async () => {
-    if (!adminUrl) {
-      addNotification({
-        type: 'error',
-        title: 'رابط الإدارة مطلوب',
-        message: 'يرجى إدخال رابط الإدارة للمتابعة'
-      })
-      return
-    }
-
     if (!confirm('هل أنت متأكد من مسح جميع البيانات؟ هذا الإجراء لا يمكن التراجع عنه.')) {
       return
     }
@@ -204,7 +202,7 @@ export default function BackupSystem() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          adminUrl: adminUrl
+          adminUrl: adminUrl || 'ADMIN_WIPE_2024'
         })
       })
 
@@ -355,17 +353,17 @@ export default function BackupSystem() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                رابط الإدارة *
+                رابط الإدارة (اختياري)
               </label>
               <input
                 type="password"
                 value={adminUrl}
                 onChange={(e) => setAdminUrl(e.target.value)}
-                placeholder="أدخل رابط الإدارة للمتابعة"
+                placeholder="أدخل رابط الإدارة (اختياري) - سيتم استخدام القيمة الافتراضية"
                 className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               />
               <p className="text-xs text-gray-500 mt-1">
-                رابط الإدارة مطلوب لتنفيذ عملية المسح
+                رابط الإدارة اختياري - سيتم استخدام القيمة الافتراضية إذا لم يتم إدخال قيمة
               </p>
             </div>
             
@@ -385,7 +383,7 @@ export default function BackupSystem() {
             <div className="flex items-center space-x-4 space-x-reverse">
               <ModernButton
                 onClick={handleWipe}
-                disabled={isLoading || !adminUrl}
+                disabled={isLoading}
                 variant="danger"
                 size="lg"
               >

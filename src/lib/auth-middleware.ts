@@ -12,7 +12,7 @@ export interface AuthenticatedRequest extends NextRequest {
 }
 
 export async function authenticateRequest(request: NextRequest): Promise<{
-  user: any | null
+  user: { id: string; username: string; role: string } | null
   error: string | null
 }> {
   try {

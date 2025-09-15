@@ -3,7 +3,7 @@ import { getCachedUser } from './cached-auth'
 
 // Shared authentication state for multiple API calls
 let sharedAuthState: {
-  user: any | null
+  user: { id: string; username: string; role: string } | null
   token: string | null
   timestamp: number
 } | null = null
@@ -21,22 +21,22 @@ export async function getSharedAuth(request: NextRequest) {
     return { user: sharedAuthState.user, token: sharedAuthState.token }
   }
 
-  // Get token from request
+  // Get token from request (optimized)
   let token = null
+  
+  // Try Authorization header first (most common)
   const authHeader = request.headers.get('authorization')
-  if (authHeader && authHeader.startsWith('Bearer ')) {
+  if (authHeader?.startsWith('Bearer ')) {
     token = authHeader.substring(7)
-  }
-
-  if (!token) {
+  } else {
+    // Fallback to cookies (less common, so check only if needed)
     const cookieHeader = request.headers.get('cookie')
     if (cookieHeader) {
-      const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-        const [key, value] = cookie.trim().split('=')
-        acc[key] = value
-        return acc
-      }, {} as Record<string, string>)
-      token = cookies.authToken
+      // Optimized cookie parsing
+      const authTokenMatch = cookieHeader.match(/authToken=([^;]+)/)
+      if (authTokenMatch) {
+        token = authTokenMatch[1]
+      }
     }
   }
 
@@ -44,17 +44,27 @@ export async function getSharedAuth(request: NextRequest) {
     return { user: null, token: null }
   }
 
-  // Get user from cache
-  const user = await getCachedUser(token)
-  
-  // Cache the result
-  sharedAuthState = {
-    user,
-    token,
-    timestamp: now
-  }
+  // Get user from cache (with timeout)
+  try {
+    const user = await Promise.race([
+      getCachedUser(token),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Auth timeout')), 2000)
+      )
+    ]) as { id: string; username: string; role: string } | null
+    
+    // Cache the result
+    sharedAuthState = {
+      user,
+      token,
+      timestamp: now
+    }
 
-  return { user, token }
+    return { user, token }
+  } catch (error) {
+    console.log('Auth error:', error)
+    return { user: null, token: null }
+  }
 }
 
 export function clearSharedAuth() {

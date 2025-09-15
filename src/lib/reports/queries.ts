@@ -61,7 +61,7 @@ export interface AgingRow {
  * استعلام تقرير الأقساط
  */
 export async function getInstallmentsReport(filters: ReportFilters): Promise<InstallmentRow[]> {
-  const where: any = {}
+  const where: Record<string, unknown> = {}
   
   // فلترة حسب الوحدة
   if (filters.projectId) {
@@ -70,15 +70,16 @@ export async function getInstallmentsReport(filters: ReportFilters): Promise<Ins
   
   // فلترة حسب التاريخ
   if (filters.from || filters.to) {
-    where.dueDate = {}
+    const dueDateFilter: Record<string, unknown> = {}
     if (filters.from) {
-      where.dueDate.gte = new Date(filters.from)
+      dueDateFilter.gte = new Date(filters.from)
     }
     if (filters.to) {
       const toDate = new Date(filters.to)
       toDate.setHours(23, 59, 59, 999)
-      where.dueDate.lte = toDate
+      dueDateFilter.lte = toDate
     }
+    where.dueDate = dueDateFilter
   }
   
   // فلترة حسب الحالة
@@ -130,10 +131,10 @@ export async function getInstallmentsReport(filters: ReportFilters): Promise<Ins
     customerName: installment.unit.contracts[0]?.customer.name || '',
     customerPhone: installment.unit.contracts[0]?.customer.phone || '',
     amount: installment.amount,
-    dueDate: installment.dueDate.toISOString().split('T')[0],
+    dueDate: installment.dueDate?.toISOString().split('T')[0] || 'غير محدد',
     status: installment.status,
     notes: installment.notes || '',
-    createdAt: installment.createdAt.toISOString().split('T')[0]
+    createdAt: installment.createdAt?.toISOString().split('T')[0] || 'غير محدد'
   }))
 }
 
@@ -141,21 +142,22 @@ export async function getInstallmentsReport(filters: ReportFilters): Promise<Ins
  * استعلام تقرير التحصيلات
  */
 export async function getPaymentsReport(filters: ReportFilters): Promise<PaymentRow[]> {
-  const where: any = {
+  const where: Record<string, unknown> = {
     type: 'receipt' // سندات القبض فقط
   }
   
   // فلترة حسب التاريخ
   if (filters.from || filters.to) {
-    where.date = {}
+    const dateFilter: Record<string, unknown> = {}
     if (filters.from) {
-      where.date.gte = new Date(filters.from)
+      dateFilter.gte = new Date(filters.from)
     }
     if (filters.to) {
       const toDate = new Date(filters.to)
       toDate.setHours(23, 59, 59, 999)
-      where.date.lte = toDate
+      dateFilter.lte = toDate
     }
+    where.date = dateFilter
   }
   
   // فلترة حسب طريقة الدفع (من الوصف)
@@ -210,11 +212,11 @@ export async function getPaymentsReport(filters: ReportFilters): Promise<Payment
     customerName: voucher.unit?.contracts[0]?.customer.name || voucher.payer || '',
     customerPhone: voucher.unit?.contracts[0]?.customer.phone || '',
     amount: voucher.amount,
-    date: voucher.date.toISOString().split('T')[0],
+    date: voucher.date || 'غير محدد'?.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد' || 'غير محدد',
     method: voucher.description || 'غير محدد',
     description: voucher.description,
     safeName: voucher.safe.name,
-    createdAt: voucher.createdAt.toISOString().split('T')[0]
+    createdAt: voucher.createdAt || 'غير محدد'.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
   }))
 }
 
@@ -222,7 +224,7 @@ export async function getPaymentsReport(filters: ReportFilters): Promise<Payment
  * استعلام تقرير تحليل المتأخرات (Aging)
  */
 export async function getAgingReport(filters: ReportFilters): Promise<AgingRow[]> {
-  const where: any = {
+  const where: Record<string, unknown> = {
     status: { not: 'مسدد' } // الأقساط غير المسددة فقط
   }
   
@@ -233,15 +235,16 @@ export async function getAgingReport(filters: ReportFilters): Promise<AgingRow[]
   
   // فلترة حسب التاريخ (تاريخ الاستحقاق)
   if (filters.from || filters.to) {
-    where.dueDate = {}
+    const dueDateFilter: Record<string, unknown> = {}
     if (filters.from) {
-      where.dueDate.gte = new Date(filters.from)
+      dueDateFilter.gte = new Date(filters.from)
     }
     if (filters.to) {
       const toDate = new Date(filters.to)
       toDate.setHours(23, 59, 59, 999)
-      where.dueDate.lte = toDate
+      dueDateFilter.lte = toDate
     }
+    where.dueDate = dueDateFilter
   }
   
   // فلترة حسب البحث النصي
@@ -302,11 +305,11 @@ export async function getAgingReport(filters: ReportFilters): Promise<AgingRow[]
       customerName: installment.unit.contracts[0]?.customer.name || '',
       customerPhone: installment.unit.contracts[0]?.customer.phone || '',
       amount: installment.amount,
-      dueDate: installment.dueDate.toISOString().split('T')[0],
+      dueDate: installment.dueDate?.toISOString().split('T')[0] || 'غير محدد',
       daysOverdue: Math.max(0, daysOverdue),
       agingCategory,
       status: installment.status,
-      createdAt: installment.createdAt.toISOString().split('T')[0]
+      createdAt: installment.createdAt?.toISOString().split('T')[0] || 'غير محدد'
     }
   })
 }

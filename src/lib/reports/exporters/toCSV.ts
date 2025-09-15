@@ -8,7 +8,7 @@ import { prepareDataForExport, getExportHeaders } from '../transformers'
 
 export interface CSVExportOptions {
   title: string
-  data: any[]
+  data: unknown[]
   reportType: string
   fileName?: string
 }
@@ -45,7 +45,7 @@ export function exportToCSV(options: CSVExportOptions): string {
  */
 export function exportMultipleCSV(sheets: Array<{
   name: string
-  data: any[]
+  data: unknown[]
   reportType: string
 }>): Record<string, string> {
   const results: Record<string, string> = {}
@@ -73,7 +73,7 @@ export function csvToBuffer(csv: string): Buffer {
  */
 export async function createCSVZip(sheets: Array<{
   name: string
-  data: any[]
+  data: unknown[]
   reportType: string
 }>): Promise<Buffer> {
   const JSZip = (await import('jszip')).default

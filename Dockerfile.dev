@@ -1,0 +1,37 @@
+# استخدام Node.js 20 كصورة أساسية للتطوير
+FROM node:20-alpine
+
+# تثبيت المتطلبات الأساسية
+RUN apk add --no-cache libc6-compat curl
+
+# تحديد مجلد العمل
+WORKDIR /app
+
+# نسخ ملفات التبعيات
+COPY package*.json ./
+
+# تثبيت جميع التبعيات
+RUN npm ci
+
+# نسخ الكود المصدري
+COPY . .
+
+# إنشاء مجلدات البيانات
+RUN mkdir -p data var
+
+# إنشاء قاعدة البيانات وتهيئتها
+RUN npx prisma generate
+
+# فحص الأخطاء قبل البناء
+RUN npm run lint && npm run type-check
+
+# فتح المنفذ
+EXPOSE 3000
+
+# متغيرات البيئة للتطوير
+ENV NODE_ENV=development
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# تشغيل التطبيق في وضع التطوير
+CMD ["npm", "run", "dev"]

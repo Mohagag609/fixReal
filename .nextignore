@@ -1,0 +1,53 @@
+# Windows restricted directories
+**/Application Data/**
+**/AppData/**
+**/ProgramData/**
+**/System Volume Information/**
+**/$RECYCLE.BIN/**
+**/Windows/**
+**/Program Files/**
+**/Program Files (x86)/**
+
+# Node modules
+node_modules/
+
+# Git
+.git/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.next/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+backups/
+*.backup
+*.bak
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+

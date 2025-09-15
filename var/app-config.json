@@ -1,12 +1,12 @@
 {
-  "type": "postgresql-cloud",
+  "type": "postgresql-local",
   "sqlite": {
     "file": "./data/dev.db"
   },
   "pgLocal": {
-    "url": "postgresql://postgres:postgres@localhost:5432/estate_db?schema=public"
+    "url": "postgresql://postgres:28709926@localhost:5432/mohagag?schema=public"
   },
   "pgCloud": {
-    "url": "postgresql://neondb_owner:npg_QfIJYmA3VE9x@ep-silent-voice-ad9ywjjv-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+    "url": ""
   }
 }

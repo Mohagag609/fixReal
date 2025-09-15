@@ -77,6 +77,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response)
   } catch (error) {
     console.error('Error during login:', error)
+    
+    // التحقق من نوع الخطأ
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    
+    // إذا كان الخطأ متعلق بقاعدة البيانات غير موجودة
+    if (errorMessage.includes('does not exist') || 
+        errorMessage.includes('Database') || 
+        errorMessage.includes('connection') ||
+        errorMessage.includes('PrismaClientInitializationError')) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'خطأ في قاعدة البيانات',
+          redirectTo: '/setup',
+          message: 'قاعدة البيانات غير مُعدة بشكل صحيح. سيتم توجيهك لصفحة الإعدادات'
+        },
+        { status: 500 }
+      )
+    }
+    
     return NextResponse.json(
       { success: false, error: 'خطأ في قاعدة البيانات' },
       { status: 500 }

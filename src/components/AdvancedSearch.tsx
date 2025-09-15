@@ -125,7 +125,7 @@ export function AdvancedSearch({ fields, onSearch, onClear }: AdvancedSearchProp
                     <select
                       className="select"
                       value={filter.operator}
-                      onChange={(e) => updateFilter(index, { operator: e.target.value as any })}
+                      onChange={(e) => updateFilter(index, { operator: e.target.value as unknown })}
                     >
                       {getOperatorOptions(field.type).map(op => (
                         <option key={op.value} value={op.value}>

@@ -11,13 +11,13 @@ import Sidebar from '@/components/Sidebar'
 import NavigationButtons from '@/components/NavigationButtons'
 
 // Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+const ModernCard = ({ children, className = '', ...props }: unknown) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: unknown) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -43,7 +43,7 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
   )
 }
 
-const ModernInput = ({ label, className = '', ...props }: any) => (
+const ModernInput = ({ label, className = '', ...props }: unknown) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <input 
@@ -53,7 +53,7 @@ const ModernInput = ({ label, className = '', ...props }: any) => (
   </div>
 )
 
-const ModernTextarea = ({ label, className = '', ...props }: any) => (
+const ModernTextarea = ({ label, className = '', ...props }: unknown) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <textarea 

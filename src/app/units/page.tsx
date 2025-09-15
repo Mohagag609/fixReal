@@ -3,19 +3,20 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Unit, UnitPartner, PartnerGroup } from '@/types'
-import { formatCurrency, formatDate } from '@/utils/formatting'
+import { formatCurrency } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
-import { checkDuplicateCode } from '@/utils/duplicateCheck'
-import Layout from '@/components/Layout'
+import SidebarToggle from '@/components/SidebarToggle'
+import Sidebar from '@/components/Sidebar'
+import NavigationButtons from '@/components/NavigationButtons'
 
 // Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+const ModernCard = ({ children, className = '', ...props }: unknown) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: unknown) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -41,7 +42,7 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
   )
 }
 
-const ModernInput = ({ label, className = '', ...props }: any) => (
+const ModernInput = ({ label, className = '', ...props }: unknown) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <input 
@@ -51,7 +52,7 @@ const ModernInput = ({ label, className = '', ...props }: any) => (
   </div>
 )
 
-const ModernSelect = ({ label, children, className = '', ...props }: any) => (
+const ModernSelect = ({ label, children, className = '', ...props }: unknown) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <select 
@@ -67,15 +68,31 @@ export default function Units() {
   const [units, setUnits] = useState<Unit[]>([])
   const [unitPartners, setUnitPartners] = useState<UnitPartner[]>([])
   const [partnerGroups, setPartnerGroups] = useState<PartnerGroup[]>([])
-  const [partners, setPartners] = useState<any[]>([])
+  const [partners, setPartners] = useState<unknown[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [sortBy, setSortBy] = useState('name') // name, unitType, totalPrice, createdAt
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [exportType, setExportType] = useState<'csv' | 'excel' | 'pdf' | 'json'>('csv')
+  const [exportFields, setExportFields] = useState({
+    name: true,
+    unitType: true,
+    area: true,
+    floor: true,
+    building: true,
+    totalPrice: true,
+    status: true,
+    createdAt: true,
+    notes: false
+  })
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null)
   const [deletingUnits, setDeletingUnits] = useState<Set<string>>(new Set())
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const [newUnit, setNewUnit] = useState({
     name: '',
     unitType: 'سكني',
@@ -96,6 +113,10 @@ export default function Units() {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
+          case 'b':
+            e.preventDefault()
+            setSidebarOpen(!sidebarOpen)
+            break
           case 'n':
             e.preventDefault()
             setShowAddModal(true)
@@ -115,17 +136,12 @@ export default function Units() {
 
     document.addEventListener('keydown', handleKeyPress)
     return () => document.removeEventListener('keydown', handleKeyPress)
-  }, [])
+  }, [sidebarOpen])
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
-    fetchData()
-  }, []) // إزالة التكرار - fetchData سيتم استدعاؤه مرة واحدة فقط
+    // Load data when page opens
+    fetchData(true)
+  }, [] // TODO: Review dependencies) // TODO: Review dependencies
 
   useEffect(() => {
     // Check if we need to open edit modal from management page
@@ -142,44 +158,43 @@ export default function Units() {
     }
   }, [units])
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (forceRefresh = false) => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('authToken')
-      
-      // استخدام Promise.all لتحسين الأداء وتقليل التكرار
-      const [unitsResponse, unitPartnersResponse, partnerGroupsResponse, partnersResponse] = await Promise.all([
-        fetch('/api/units', { 
+      // Optimized parallel data fetching with proper error handling
+      const [unitsResponse, unitPartnersResponse, partnerGroupsResponse, partnersResponse] = await Promise.allSettled([
+        fetch(`/api/units${forceRefresh ? '?refresh=true&limit=1000' : '?limit=1000'}`, { 
           headers: { 
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          } 
+          },
+          cache: forceRefresh ? 'no-cache' : 'default'
         }),
-        fetch('/api/unit-partners', { 
+        fetch(`/api/unit-partners${forceRefresh ? '?refresh=true&limit=1000' : '?limit=1000'}`, { 
           headers: { 
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          } 
+          },
+          cache: forceRefresh ? 'no-cache' : 'default'
         }),
-        fetch('/api/partner-groups', { 
+        fetch(`/api/partner-groups${forceRefresh ? '?refresh=true&limit=1000' : '?limit=1000'}`, { 
           headers: { 
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          } 
+          },
+          cache: forceRefresh ? 'no-cache' : 'default'
         }),
-        fetch('/api/partners', { 
+        fetch(`/api/partners${forceRefresh ? '?refresh=true&limit=1000' : '?limit=1000'}`, { 
           headers: { 
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          } 
+          },
+          cache: forceRefresh ? 'no-cache' : 'default'
         })
       ])
       
+      // Process responses with error handling
       const [unitsData, unitPartnersData, partnerGroupsData, partnersData] = await Promise.all([
-        unitsResponse.json(),
-        unitPartnersResponse.json(),
-        partnerGroupsResponse.json(),
-        partnersResponse.json()
+        unitsResponse.status === 'fulfilled' ? unitsResponse.value.json() : { success: false, error: 'Failed to fetch units' },
+        unitPartnersResponse.status === 'fulfilled' ? unitPartnersResponse.value.json() : { success: false, error: 'Failed to fetch unit partners' },
+        partnerGroupsResponse.status === 'fulfilled' ? partnerGroupsResponse.value.json() : { success: false, error: 'Failed to fetch partner groups' },
+        partnersResponse.status === 'fulfilled' ? partnersResponse.value.json() : { success: false, error: 'Failed to fetch partners' }
       ])
       
       if (unitsData.success) {
@@ -291,12 +306,10 @@ export default function Units() {
     })
 
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch('/api/units', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           ...newUnit,
@@ -407,12 +420,10 @@ export default function Units() {
     })
 
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/units/${editingUnit.id}`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           ...newUnit,
@@ -472,10 +483,9 @@ export default function Units() {
     setUnits(prev => prev.filter(unit => unit.id !== unitId))
 
     try {
-      const token = localStorage.getItem('authToken')
       const response = await fetch(`/api/units/${unitId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Content-Type': 'application/json' }
       })
 
       const data = await response.json()
@@ -550,108 +560,704 @@ export default function Units() {
     return unit.totalPrice
   }
 
-  const getUnitDisplayName = (unit: Unit) => {
-    if (!unit) return '—'
-    const name = unit.name ? `اسم الوحدة (${unit.name})` : ''
-    const floor = unit.floor ? `رقم الدور (${unit.floor})` : ''
-    const building = unit.building ? `رقم العمارة (${unit.building})` : ''
-    return [name, floor, building].filter(Boolean).join(' ')
-  }
-
+  // دوال التصدير الاحترافي
   const exportToCSV = () => {
-    const headers = ['كود الوحدة', 'اسم الوحدة', 'الدور', 'البرج', 'نوع الوحدة', 'الشركاء', 'السعر', 'المتبقي', 'الحالة', 'ملاحظات']
-    const rows = units.map(unit => {
-      const unitPartnersList = getUnitPartners(unit.id)
-      const partnersText = unitPartnersList
-        .map(up => `${getPartnerName(up.partnerId)} (${up.percentage}%)`)
-        .join(' | ')
-      
-      return [
-        unit.code,
-        unit.name || '',
-        unit.floor || '',
-        unit.building || '',
-        unit.unitType || '',
-        partnersText || '—',
-        unit.totalPrice,
-        calculateRemainingAmount(unit),
-        unit.status,
-        unit.notes || ''
-      ]
+    const selectedFields = Object.entries(exportFields)
+      .filter(([_, selected]) => selected)
+      .map(([field, _]) => field)
+
+    const filteredUnits = units
+      .filter(unit => {
+        const matchesSearch = !search || 
+          (unit.name && unit.name.toLowerCase().includes(search.toLowerCase())) ||
+          (unit.unitType && unit.unitType.toLowerCase().includes(search.toLowerCase())) ||
+          (unit.building && unit.building.toLowerCase().includes(search.toLowerCase()))
+        
+        const matchesStatus = statusFilter === 'all' || unit.status === statusFilter
+        
+        return matchesSearch && matchesStatus
+      })
+      .sort((a, b) => {
+        let aValue: string | number
+        let bValue: string | number
+        
+        switch (sortBy) {
+          case 'name':
+            aValue = (a.name || '').toLowerCase()
+            bValue = (b.name || '').toLowerCase()
+            break
+          case 'unitType':
+            aValue = a.unitType || ''
+            bValue = b.unitType || ''
+            break
+          case 'totalPrice':
+            aValue = parseFloat((a.totalPrice || 0).toString())
+            bValue = parseFloat((b.totalPrice || 0).toString())
+            break
+          case 'createdAt':
+            aValue = new Date(a.createdAt || new Date()).getTime()
+            bValue = new Date(b.createdAt || new Date()).getTime()
+            break
+          default:
+            aValue = (a.name || '').toLowerCase()
+            bValue = (b.name || '').toLowerCase()
+        }
+        
+        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1
+        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1
+        return 0
+      })
+
+    const headers = selectedFields.map(field => {
+      const fieldNames: { [key: string]: string } = {
+        name: 'الاسم',
+        unitType: 'نوع الوحدة',
+        area: 'المساحة',
+        floor: 'الطابق',
+        building: 'المبنى',
+        totalPrice: 'السعر الإجمالي',
+        status: 'الحالة',
+        createdAt: 'تاريخ الإضافة',
+        notes: 'ملاحظات'
+      }
+      return fieldNames[field] || field
     })
-    
-    const csvContent = [headers, ...rows].map(row => 
-      row.map(field => `"${field}"`).join(',')
-    ).join('\n')
-    
+
+    const csvContent = [
+      '\uFEFF' + headers.join(','),
+      ...filteredUnits.map(unit => 
+        selectedFields.map(field => {
+          let value = ''
+          switch (field) {
+            case 'name': value = unit.name || ''; break
+            case 'unitType': value = unit.unitType || ''; break
+            case 'area': value = unit.area || ''; break
+            case 'floor': value = unit.floor || ''; break
+            case 'building': value = unit.building || ''; break
+            case 'totalPrice': value = (unit.totalPrice || 0).toString(); break
+            case 'status': value = unit.status || ''; break
+            case 'createdAt': value = new Date(unit.createdAt || new Date()).toLocaleDateString('en-US'); break
+            case 'notes': value = unit.notes || ''; break
+          }
+          return `"${value}"`
+        }).join(',')
+      )
+    ].join('\n')
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', 'units.csv')
+    link.setAttribute('download', `وحدات_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    
+    addNotification({
+      type: 'success',
+      title: 'تم التصدير بنجاح',
+      message: 'تم تصدير ملف CSV بنجاح'
+    })
   }
 
-  const printUnits = () => {
-    const printContent = `
-      <html dir="rtl">
-        <head>
-          <title>تقرير الوحدات</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
-            th { background-color: #f2f2f2; font-weight: bold; }
-            .header { text-align: center; margin-bottom: 30px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>تقرير الوحدات</h1>
-            <p>تاريخ التقرير: ${new Date().toLocaleDateString('en-GB')}</p>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>كود الوحدة</th>
-                <th>اسم الوحدة</th>
-                <th>الدور</th>
-                <th>البرج</th>
-                <th>نوع الوحدة</th>
-                <th>السعر</th>
-                <th>المتبقي</th>
-                <th>الحالة</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${units.map(unit => `
-                <tr>
-                  <td>${unit.code}</td>
-                  <td>${unit.name || ''}</td>
-                  <td>${unit.floor || ''}</td>
-                  <td>${unit.building || ''}</td>
-                  <td>${unit.unitType || ''}</td>
-                  <td>${formatCurrency(unit.totalPrice)}</td>
-                  <td>${formatCurrency(calculateRemainingAmount(unit))}</td>
-                  <td>${unit.status}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `
-    
-    const printWindow = window.open('', '_blank')
-    if (printWindow) {
-      printWindow.document.write(printContent)
-      printWindow.document.close()
-      printWindow.print()
+  const exportToExcel = async () => {
+    try {
+      const ExcelJS = await import('exceljs')
+      
+      const filteredUnits = units
+        .filter(unit => {
+          const matchesSearch = !search || 
+            (unit.name && unit.name.toLowerCase().includes(search.toLowerCase())) ||
+            (unit.unitType && unit.unitType.toLowerCase().includes(search.toLowerCase())) ||
+            (unit.building && unit.building.toLowerCase().includes(search.toLowerCase()))
+          
+          const matchesStatus = statusFilter === 'all' || unit.status === statusFilter
+          
+          return matchesSearch && matchesStatus
+        })
+        .sort((a, b) => {
+          let aValue: string | number
+          let bValue: string | number
+          
+          switch (sortBy) {
+            case 'name':
+              aValue = (a.name || '').toLowerCase()
+              bValue = (b.name || '').toLowerCase()
+              break
+            case 'unitType':
+              aValue = a.unitType || ''
+              bValue = b.unitType || ''
+              break
+            case 'totalPrice':
+              aValue = parseFloat((a.totalPrice || 0).toString())
+              bValue = parseFloat((b.totalPrice || 0).toString())
+              break
+            case 'createdAt':
+              aValue = new Date(a.createdAt || new Date()).getTime()
+              bValue = new Date(b.createdAt || new Date()).getTime()
+              break
+            default:
+              aValue = (a.name || '').toLowerCase()
+              bValue = (b.name || '').toLowerCase()
+          }
+          
+          if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1
+          if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1
+          return 0
+        })
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('الوحدات')
+
+      // إعدادات الورقة
+      worksheet.properties.defaultRowHeight = 25
+      worksheet.properties.defaultColWidth = 15
+      
+      // إعداد اتجاه الشيت من اليمين لليسار
+      worksheet.views = [{ rightToLeft: true }]
+
+      // إعداد الأعمدة
+      worksheet.columns = [
+        { header: 'الاسم', key: 'name', width: 20 },
+        { header: 'نوع الوحدة', key: 'unitType', width: 15 },
+        { header: 'المساحة', key: 'area', width: 12 },
+        { header: 'الطابق', key: 'floor', width: 10 },
+        { header: 'المبنى', key: 'building', width: 15 },
+        { header: 'السعر الإجمالي', key: 'totalPrice', width: 15 },
+        { header: 'الحالة', key: 'status', width: 12 },
+        { header: 'تاريخ الإضافة', key: 'createdAt', width: 15 },
+        { header: 'ملاحظات', key: 'notes', width: 20 }
+      ]
+
+      // إضافة العناوين
+      const headerRow = worksheet.getRow(1)
+      headerRow.values = ['الاسم', 'نوع الوحدة', 'المساحة', 'الطابق', 'المبنى', 'السعر الإجمالي', 'الحالة', 'تاريخ الإضافة', 'ملاحظات']
+      headerRow.height = 30
+
+      // تنسيق العناوين
+      headerRow.eachCell((cell) => {
+        cell.font = {
+          name: 'Arial',
+          size: 14,
+          bold: true,
+          color: { argb: 'FFFFFFFF' }
+        }
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4F46E5' }
+        }
+        cell.alignment = {
+          horizontal: 'center',
+          vertical: 'middle',
+          readingOrder: 'rtl'
+        }
+        cell.border = {
+          top: { style: 'thick', color: { argb: 'FF000000' } },
+          bottom: { style: 'thick', color: { argb: 'FF000000' } },
+          left: { style: 'thick', color: { argb: 'FF000000' } },
+          right: { style: 'thick', color: { argb: 'FF000000' } }
+        }
+      })
+
+      // إضافة البيانات
+      filteredUnits
+        .filter(unit => unit.name && unit.name.trim() !== '')
+        .forEach((unit, index) => {
+          const row = worksheet.addRow([
+        unit.name || '',
+            unit.unitType || '',
+            unit.area || '',
+        unit.floor || '',
+        unit.building || '',
+            unit.totalPrice || '',
+            unit.status || 'غير محدد',
+            new Date(unit.createdAt || new Date()).toLocaleDateString('en-US'),
+        unit.notes || ''
+          ])
+          
+          row.height = 25
+          
+          // تنسيق الصف
+          row.eachCell((cell, colNumber) => {
+            const isEvenRow = index % 2 === 0
+            const cellValue = cell.value as string
+            
+            // تنسيق أساسي
+            cell.font = {
+              name: 'Arial',
+              size: 12
+            }
+            cell.alignment = {
+              horizontal: 'center',
+              vertical: 'middle',
+              readingOrder: 'rtl'
+            }
+            cell.border = {
+              top: { style: 'thin', color: { argb: 'FF000000' } },
+              bottom: { style: 'thin', color: { argb: 'FF000000' } },
+              left: { style: 'thin', color: { argb: 'FF000000' } },
+              right: { style: 'thin', color: { argb: 'FF000000' } }
+            }
+            
+            // تنسيق الحالة (العمود السابع)
+            if (colNumber === 7) {
+              if (cellValue === 'متاحة') {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFC6F6D5' }
+                }
+                cell.font = {
+                  name: 'Arial',
+                  size: 12,
+                  bold: true,
+                  color: { argb: 'FF22543D' }
+                }
+              } else if (cellValue === 'محجوزة') {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFFED7D7' }
+                }
+                cell.font = {
+                  name: 'Arial',
+                  size: 12,
+                  bold: true,
+                  color: { argb: 'FFC53030' }
+                }
+              }
+            } else {
+              // ألوان متناوبة
+              if (isEvenRow) {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFF7FAFC' }
+                }
+              } else {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFFFFFFF' }
+                }
+              }
+            }
+          })
+        })
+
+      // إضافة فلتر تلقائي
+      worksheet.autoFilter = {
+        from: 'A1',
+        to: `I${filteredUnits.length + 1}`
+      }
+
+      // تصدير الملف
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+      link.setAttribute('download', `تقرير_الوحدات_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+      
+      addNotification({
+        type: 'success',
+        title: 'تم التصدير بنجاح',
+        message: 'تم تصدير ملف Excel بنجاح'
+      })
+      
+    } catch (error) {
+      console.error('Excel export error:', error)
+      addNotification({
+        type: 'error',
+        title: 'خطأ في التصدير',
+        message: 'فشل في تصدير ملف Excel'
+      })
     }
   }
+
+  const exportToPDF = () => {
+    const selectedFields = Object.entries(exportFields)
+      .filter(([_, selected]) => selected)
+      .map(([field, _]) => field)
+
+    const filteredUnits = units
+      .filter(unit => {
+        const matchesSearch = !search || 
+          (unit.name && unit.name.toLowerCase().includes(search.toLowerCase())) ||
+          (unit.unitType && unit.unitType.toLowerCase().includes(search.toLowerCase())) ||
+          (unit.building && unit.building.toLowerCase().includes(search.toLowerCase()))
+        
+        const matchesStatus = statusFilter === 'all' || unit.status === statusFilter
+        
+        return matchesSearch && matchesStatus
+      })
+      .sort((a, b) => {
+        let aValue: string | number
+        let bValue: string | number
+        
+        switch (sortBy) {
+          case 'name':
+            aValue = (a.name || '').toLowerCase()
+            bValue = (b.name || '').toLowerCase()
+            break
+          case 'unitType':
+            aValue = a.unitType || ''
+            bValue = b.unitType || ''
+            break
+          case 'totalPrice':
+            aValue = parseFloat((a.totalPrice || 0).toString())
+            bValue = parseFloat((b.totalPrice || 0).toString())
+            break
+          case 'createdAt':
+            aValue = new Date(a.createdAt || new Date()).getTime()
+            bValue = new Date(b.createdAt || new Date()).getTime()
+            break
+          default:
+            aValue = (a.name || '').toLowerCase()
+            bValue = (b.name || '').toLowerCase()
+        }
+        
+        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1
+        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1
+        return 0
+      })
+
+    const fieldNames: { [key: string]: string } = {
+      name: 'الاسم',
+      unitType: 'نوع الوحدة',
+      area: 'المساحة',
+      floor: 'الطابق',
+      building: 'المبنى',
+      totalPrice: 'السعر الإجمالي',
+      status: 'الحالة',
+      createdAt: 'تاريخ الإضافة',
+      notes: 'ملاحظات'
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <title>تقرير الوحدات</title>
+        <style>
+          body { font-family: 'Arial', sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+          .header { text-align: center; margin-bottom: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; }
+          .header h1 { margin: 0; font-size: 24px; font-weight: bold; }
+          .header p { margin: 5px 0 0 0; font-size: 14px; opacity: 0.9; }
+          table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          th { background: #4F46E5; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 14px; }
+          td { padding: 12px 15px; text-align: center; border-bottom: 1px solid #e5e7eb; }
+          tr:nth-child(even) { background: #f9fafb; }
+          tr:hover { background: #f3f4f6; }
+          .status-available { background: #d1fae5; color: #065f46; font-weight: bold; }
+          .status-reserved { background: #fee2e2; color: #991b1b; font-weight: bold; }
+          .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 12px; }
+          @media print { body { background: white; } .header { background: #4F46E5 !important; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>تقرير الوحدات</h1>
+          <p>تاريخ التقرير: ${new Date().toLocaleDateString('en-US')}</p>
+          <p>إجمالي الوحدات: ${filteredUnits.length}</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              ${selectedFields.map(field => `<th>${fieldNames[field] || field}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredUnits.map(unit => `
+              <tr>
+                ${selectedFields.map(field => {
+                  let value = ''
+                  let className = ''
+                  switch (field) {
+                    case 'name': value = unit.name || ''; break
+                    case 'unitType': value = unit.unitType || ''; break
+                    case 'area': value = unit.area || ''; break
+                    case 'floor': value = unit.floor || ''; break
+                    case 'building': value = unit.building || ''; break
+                    case 'totalPrice': value = (unit.totalPrice || 0).toString(); break
+                    case 'status': 
+                      value = unit.status || ''
+                      className = unit.status === 'متاحة' ? 'status-available' : unit.status === 'محجوزة' ? 'status-reserved' : ''
+                      break
+                    case 'createdAt': value = new Date(unit.createdAt || new Date()).toLocaleDateString('en-US'); break
+                    case 'notes': value = unit.notes || ''; break
+                  }
+                  return `<td class="${className}">${value}</td>`
+                }).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div class="footer">
+          <p>تم إنشاء التقرير في ${new Date().toLocaleString('ar-SA')}</p>
+        </div>
+      </body>
+      </html>
+    `
+
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(htmlContent)
+      printWindow.document.close()
+      printWindow.focus()
+      setTimeout(() => {
+        printWindow.print()
+        printWindow.close()
+      }, 250)
+    }
+    
+    addNotification({
+      type: 'success',
+      title: 'تم التصدير بنجاح',
+      message: 'تم تصدير ملف PDF بنجاح'
+    })
+  }
+
+  const exportToJSON = () => {
+    const selectedFields = Object.entries(exportFields)
+      .filter(([_, selected]) => selected)
+      .map(([field, _]) => field)
+
+    const filteredUnits = units
+      .filter(unit => {
+        const matchesSearch = !search || 
+          (unit.name && unit.name.toLowerCase().includes(search.toLowerCase())) ||
+          (unit.unitType && unit.unitType.toLowerCase().includes(search.toLowerCase())) ||
+          (unit.building && unit.building.toLowerCase().includes(search.toLowerCase()))
+        
+        const matchesStatus = statusFilter === 'all' || unit.status === statusFilter
+        
+        return matchesSearch && matchesStatus
+      })
+      .sort((a, b) => {
+        let aValue: string | number
+        let bValue: string | number
+        
+        switch (sortBy) {
+          case 'name':
+            aValue = (a.name || '').toLowerCase()
+            bValue = (b.name || '').toLowerCase()
+            break
+          case 'unitType':
+            aValue = a.unitType || ''
+            bValue = b.unitType || ''
+            break
+          case 'totalPrice':
+            aValue = parseFloat((a.totalPrice || 0).toString())
+            bValue = parseFloat((b.totalPrice || 0).toString())
+            break
+          case 'createdAt':
+            aValue = new Date(a.createdAt || new Date()).getTime()
+            bValue = new Date(b.createdAt || new Date()).getTime()
+            break
+          default:
+            aValue = (a.name || '').toLowerCase()
+            bValue = (b.name || '').toLowerCase()
+        }
+        
+        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1
+        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1
+        return 0
+      })
+      .map(unit => {
+        const filteredUnit: Record<string, unknown> = {}
+        selectedFields.forEach(field => {
+          switch (field) {
+            case 'name': filteredUnit.name = unit.name; break
+            case 'unitType': filteredUnit.unitType = unit.unitType; break
+            case 'area': filteredUnit.area = unit.area; break
+            case 'floor': filteredUnit.floor = unit.floor; break
+            case 'building': filteredUnit.building = unit.building; break
+            case 'totalPrice': filteredUnit.totalPrice = unit.totalPrice; break
+            case 'status': filteredUnit.status = unit.status; break
+            case 'createdAt': filteredUnit.createdAt = new Date(unit.createdAt || new Date()).toISOString(); break
+            case 'notes': filteredUnit.notes = unit.notes; break
+          }
+        })
+        return filteredUnit
+      })
+
+    const jsonData = {
+      metadata: {
+        title: 'تقرير الوحدات',
+        exportDate: new Date().toISOString(),
+        totalRecords: filteredUnits.length,
+        exportType: 'JSON',
+        fields: selectedFields
+      },
+      units: filteredUnits
+    }
+
+    const jsonString = JSON.stringify(jsonData, null, 2)
+    const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `وحدات_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.json`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    addNotification({
+      type: 'success',
+      title: 'تم التصدير بنجاح',
+      message: 'تم تصدير ملف JSON بنجاح'
+    })
+  }
+
+
+
+  // استيراد سريع للوحدات من ملف نصي - رقم الوحدة، الطابق، المبنى
+  const handleBulkImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      const text = await file.text()
+      const lines = text.split('\n').filter(line => line.trim())
+      
+      if (lines.length === 0) {
+        addNotification({
+          type: 'error',
+          title: 'خطأ في الملف',
+          message: 'الملف فارغ أو لا يحتوي على بيانات'
+        })
+        return
+      }
+
+      if (lines.length > 500) {
+        addNotification({
+          type: 'error',
+          title: 'خطأ في الملف',
+          message: 'الملف يحتوي على أكثر من 500 وحدة. الحد الأقصى 500'
+        })
+        return
+      }
+
+      // تحضير البيانات للاستيراد السريع - رقم الوحدة، الطابق، المبنى
+      const unitsToImport = lines.map(line => {
+        // تقسيم البيانات بـ Tab
+        const parts = line.split('\t').map(part => part.trim())
+        
+        console.log('Original line:', JSON.stringify(line))
+        console.log('Split parts:', parts)
+        
+        const unitNumber = parts[0] || ''
+        const floor = parts[1] || ''
+        const building = parts[2] || ''
+        
+        console.log('Extracted values:', { unitNumber, floor, building })
+        
+        // التحقق من صحة البيانات
+        if (parts.length < 3) {
+          console.warn('Invalid line format:', line, 'Expected: UnitNumber Floor Building')
+          return null
+        }
+        
+        // استخدام المبنى كاسم الوحدة
+        const name = building
+        
+        // إنشاء كود الوحدة التلقائي
+        const sanitizedBuilding = (building || 'غير محدد').replace(/\s/g, '')
+        const sanitizedFloor = (floor || 'غير محدد').replace(/\s/g, '')
+        const sanitizedUnitNumber = unitNumber.replace(/\s/g, '')
+        const code = `${sanitizedUnitNumber}-${sanitizedFloor}-${sanitizedBuilding}`
+        
+        const unitData = {
+          name,
+          floor,
+          building,
+          code,
+          unitType: 'سكني', // افتراضي
+          area: '', // فارغ
+          totalPrice: 0, // افتراضي
+          status: 'متاحة', // افتراضي
+          notes: 'مستورد تلقائياً - استيراد سريع'
+        }
+        
+        console.log('Final unit data:', unitData)
+        return unitData
+      }).filter(unit => unit !== null && unit.name.trim())
+
+      if (unitsToImport.length === 0) {
+        addNotification({
+          type: 'error',
+          title: 'خطأ في الملف',
+          message: 'لا توجد وحدات صالحة في الملف'
+        })
+        return
+      }
+
+      // فحص تكرار الأكواد
+      const existingCodes = units.map(u => u.code.toLowerCase())
+      const duplicateCodes = unitsToImport.filter(unit => 
+        unit && existingCodes.includes(unit.code.toLowerCase())
+      )
+
+      if (duplicateCodes.length > 0) {
+        addNotification({
+          type: 'error',
+          title: 'خطأ في البيانات',
+          message: `يوجد ${duplicateCodes.length} وحدة مكررة: ${duplicateCodes.map(u => u?.code || '').join(', ')}`
+        })
+        return
+      }
+
+          // استخدام API محسن للاستيراد السريع
+          const response = await fetch('/api/units/bulk', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ units: unitsToImport })
+          })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        addNotification({
+          type: 'success',
+          title: 'تم الاستيراد بنجاح',
+          message: `تم استيراد ${unitsToImport.length} وحدة بنجاح`
+        })
+        
+        // إعادة تحميل قائمة الوحدات
+        fetchData()
+      } else {
+        addNotification({
+          type: 'error',
+          title: 'خطأ في الاستيراد',
+          message: data.error || 'فشل في استيراد الوحدات'
+        })
+      }
+
+    } catch (err) {
+      console.error('Bulk import error:', err)
+      addNotification({
+        type: 'error',
+        title: 'خطأ في الاستيراد',
+        message: 'فشل في قراءة الملف أو الاتصال بالخادم'
+      })
+    }
+
+    // إعادة تعيين input
+    event.target.value = ''
+  }
+
 
   if (loading) {
     return (
@@ -666,9 +1272,17 @@ export default function Units() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-8">
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      
+      {/* Main Content */}
+      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:mr-72' : ''}`}>
+        {/* Header */}
+        <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40 w-full">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4 space-x-reverse">
+                <SidebarToggle onToggle={() => setSidebarOpen(!sidebarOpen)} />
             <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
               <span className="text-white text-xl">🏠</span>
             </div>
@@ -677,12 +1291,20 @@ export default function Units() {
               <p className="text-gray-600">نظام متطور لإدارة الوحدات العقارية</p>
             </div>
           </div>
+              <div className="flex items-center space-x-3 space-x-reverse">
           <ModernButton onClick={() => setShowAddModal(true)}>
             <span className="mr-2">➕</span>
             إضافة وحدة جديدة
             <span className="mr-2 text-xs opacity-70">Ctrl+N</span>
           </ModernButton>
+                <NavigationButtons />
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-6 py-8">
 
       {/* Search and Filters */}
       <ModernCard className="mb-8">
@@ -698,32 +1320,70 @@ export default function Units() {
                 className="w-80 px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal"
               />
             </div>
-            <ModernSelect
+            <select
               value={statusFilter}
-              onChange={(e: any) => setStatusFilter(e.target.value)}
-              className="w-40"
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold"
             >
               <option value="all">جميع الحالات</option>
               <option value="متاحة">متاحة</option>
               <option value="محجوزة">محجوزة</option>
               <option value="مباعة">مباعة</option>
-            </ModernSelect>
-            <ModernButton variant="secondary" size="sm" onClick={exportToCSV}>
-              📊 تصدير CSV
+            </select>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold"
+            >
+              <option value="name">الاسم</option>
+              <option value="unitType">نوع الوحدة</option>
+              <option value="totalPrice">السعر الإجمالي</option>
+              <option value="createdAt">تاريخ الإضافة</option>
+            </select>
+            <button
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold hover:bg-gray-50"
+              title={sortOrder === 'asc' ? 'ترتيب تصاعدي' : 'ترتيب تنازلي'}
+            >
+              {sortOrder === 'asc' ? '↑' : '↓'} {sortOrder === 'asc' ? 'تصاعدي' : 'تنازلي'}
+            </button>
+            <ModernButton variant="secondary" size="sm" onClick={() => setShowExportModal(true)}>
+              📊 تصدير احترافي
             </ModernButton>
-            <ModernButton variant="secondary" size="sm" onClick={printUnits}>
-              🖨️ طباعة PDF
+            <ModernButton variant="info" size="sm" onClick={() => fetchData(true)}>
+              🔄 تحديث القائمة
             </ModernButton>
+            <div className="flex flex-col items-end space-y-2">
+              <label className="cursor-pointer">
+                <div className="px-4 py-2.5 text-sm font-medium bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg shadow-purple-500/25 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95">
+                  📥 استيراد سريع (رقم الوحدة، الطابق، المبنى)
+                </div>
+                <input
+                  type="file"
+                  accept=".txt,.csv"
+                  onChange={handleBulkImport}
+                  className="hidden"
+                />
+              </label>
+              <div className="text-xs text-gray-500 text-right">
+                تنسيق الملف: رقم الوحدة	الطابق	المبنى (مفصول بـ Tab)
+                <br />
+                مثال: 1	7	A
+              </div>
+            </div>
           </div>
           <div className="text-sm text-gray-500">
-            {units.filter(unit => {
-              const matchesSearch = search === '' || 
-                unit.code.toLowerCase().includes(search.toLowerCase()) ||
+            {units
+              .filter(unit => {
+                const matchesSearch = !search || 
                 (unit.name && unit.name.toLowerCase().includes(search.toLowerCase())) ||
-                unit.unitType.toLowerCase().includes(search.toLowerCase())
+                  (unit.unitType && unit.unitType.toLowerCase().includes(search.toLowerCase())) ||
+                  (unit.building && unit.building.toLowerCase().includes(search.toLowerCase()))
+                
               const matchesStatus = statusFilter === 'all' || unit.status === statusFilter
+                
               return matchesSearch && matchesStatus
-            }).length} وحدة
+              }).length} من {units.length} وحدة
           </div>
         </div>
       </ModernCard>
@@ -774,14 +1434,48 @@ export default function Units() {
                 </tr>
               </thead>
               <tbody>
-                {units.filter(unit => {
-                  const matchesSearch = search === '' || 
-                    unit.code.toLowerCase().includes(search.toLowerCase()) ||
+                {units
+                  .filter(unit => {
+                    const matchesSearch = !search || 
                     (unit.name && unit.name.toLowerCase().includes(search.toLowerCase())) ||
-                    unit.unitType.toLowerCase().includes(search.toLowerCase())
+                      (unit.unitType && unit.unitType.toLowerCase().includes(search.toLowerCase())) ||
+                      (unit.building && unit.building.toLowerCase().includes(search.toLowerCase()))
+                    
                   const matchesStatus = statusFilter === 'all' || unit.status === statusFilter
+                    
                   return matchesSearch && matchesStatus
-                }).map((unit) => {
+                  })
+                  .sort((a, b) => {
+                    let aValue: string | number
+                    let bValue: string | number
+                    
+                    switch (sortBy) {
+                      case 'name':
+                        aValue = (a.name || '').toLowerCase()
+                        bValue = (b.name || '').toLowerCase()
+                        break
+                      case 'unitType':
+                        aValue = a.unitType || ''
+                        bValue = b.unitType || ''
+                        break
+                      case 'totalPrice':
+                        aValue = parseFloat((a.totalPrice || 0).toString())
+                        bValue = parseFloat((b.totalPrice || 0).toString())
+                        break
+                      case 'createdAt':
+                        aValue = new Date(a.createdAt || new Date()).getTime()
+                        bValue = new Date(b.createdAt || new Date()).getTime()
+                        break
+                      default:
+                        aValue = (a.name || '').toLowerCase()
+                        bValue = (b.name || '').toLowerCase()
+                    }
+                    
+                    if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1
+                    if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1
+                    return 0
+                  })
+                  .map((unit) => {
                   const partners = getUnitPartners(unit.id)
                   return (
                     <tr 
@@ -878,7 +1572,6 @@ export default function Units() {
             </table>
           </div>
         </ModernCard>
-      </div>
 
       {/* Add/Edit Unit Modal */}
       {showAddModal && (
@@ -927,7 +1620,7 @@ export default function Units() {
                   label="اسم الوحدة * (مطلوب)"
                   type="text"
                   value={newUnit.name}
-                  onChange={(e: any) => setNewUnit({...newUnit, name: e.target.value})}
+                  onChange={(e: unknown) => setNewUnit({...newUnit, name: e.target.value})}
                   placeholder="اسم الوحدة"
                   required
                 />
@@ -936,7 +1629,7 @@ export default function Units() {
                   label="الطابق (اختياري)"
                   type="text"
                   value={newUnit.floor}
-                  onChange={(e: any) => setNewUnit({...newUnit, floor: e.target.value})}
+                  onChange={(e: unknown) => setNewUnit({...newUnit, floor: e.target.value})}
                   placeholder="رقم الطابق"
                 />
                 
@@ -944,7 +1637,7 @@ export default function Units() {
                   label="المبنى (اختياري)"
                   type="text"
                   value={newUnit.building}
-                  onChange={(e: any) => setNewUnit({...newUnit, building: e.target.value})}
+                  onChange={(e: unknown) => setNewUnit({...newUnit, building: e.target.value})}
                   placeholder="اسم المبنى"
                 />
                 
@@ -952,14 +1645,14 @@ export default function Units() {
                   label="السعر الإجمالي (اختياري)"
                   type="number"
                   value={newUnit.totalPrice}
-                  onChange={(e: any) => setNewUnit({...newUnit, totalPrice: e.target.value})}
+                  onChange={(e: unknown) => setNewUnit({...newUnit, totalPrice: e.target.value})}
                   placeholder="السعر الإجمالي"
                 />
                 
                 <ModernSelect
                   label="نوع الوحدة *"
                   value={newUnit.unitType}
-                  onChange={(e: any) => setNewUnit({...newUnit, unitType: e.target.value})}
+                  onChange={(e: unknown) => setNewUnit({...newUnit, unitType: e.target.value})}
                 >
                   <option value="سكني">سكني</option>
                   <option value="تجاري">تجاري</option>
@@ -971,14 +1664,14 @@ export default function Units() {
                   label="المساحة (اختياري)"
                   type="text"
                   value={newUnit.area}
-                  onChange={(e: any) => setNewUnit({...newUnit, area: e.target.value})}
+                  onChange={(e: unknown) => setNewUnit({...newUnit, area: e.target.value})}
                   placeholder="المساحة بالمتر المربع"
                 />
                 
                 <ModernSelect
                   label="مجموعة الشركاء (اختيارية)"
                   value={newUnit.partnerGroupId}
-                  onChange={(e: any) => setNewUnit({...newUnit, partnerGroupId: e.target.value})}
+                  onChange={(e: unknown) => setNewUnit({...newUnit, partnerGroupId: e.target.value})}
                 >
                   <option value="">اختر مجموعة شركاء...</option>
                   {partnerGroups.map(group => {
@@ -995,7 +1688,7 @@ export default function Units() {
                 <ModernSelect
                   label="الحالة"
                   value={newUnit.status}
-                  onChange={(e: any) => setNewUnit({...newUnit, status: e.target.value})}
+                  onChange={(e: unknown) => setNewUnit({...newUnit, status: e.target.value})}
                 >
                   <option value="متاحة">متاحة</option>
                   <option value="محجوزة">محجوزة</option>
@@ -1007,7 +1700,7 @@ export default function Units() {
                     <label className="text-sm font-medium text-gray-700">ملاحظات</label>
                     <textarea
                       value={newUnit.notes}
-                      onChange={(e: any) => setNewUnit({...newUnit, notes: e.target.value})}
+                      onChange={(e: unknown) => setNewUnit({...newUnit, notes: e.target.value})}
                       placeholder="ملاحظات إضافية"
                       rows={3}
                       className="w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
@@ -1044,11 +1737,172 @@ export default function Units() {
           </div>
         </div>
       )}
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900">تصدير احترافي</h3>
+              <p className="text-sm text-gray-500 mt-1">اختر نوع التصدير والحقول المطلوبة</p>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Export Type */}
+              <div>
+                <label className="block text-sm font-bold text-gray-900 mb-3">نوع التصدير</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setExportType('csv')}
+                    className={`p-3 rounded-xl border-2 transition-all duration-200 ${
+                      exportType === 'csv'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-1">📊</div>
+                      <div className="font-bold">CSV</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setExportType('excel')}
+                    className={`p-3 rounded-xl border-2 transition-all duration-200 ${
+                      exportType === 'excel'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-1">📈</div>
+                      <div className="font-bold">Excel</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setExportType('pdf')}
+                    className={`p-3 rounded-xl border-2 transition-all duration-200 ${
+                      exportType === 'pdf'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-1">📄</div>
+                      <div className="font-bold">PDF</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setExportType('json')}
+                    className={`p-3 rounded-xl border-2 transition-all duration-200 ${
+                      exportType === 'json'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-1">🔧</div>
+                      <div className="font-bold">JSON</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Fields Selection */}
+              <div>
+                <label className="block text-sm font-bold text-gray-900 mb-3">الحقول المطلوبة</label>
+                <div className="space-y-2">
+                  {Object.entries(exportFields).map(([field, selected]) => {
+                    const fieldNames: { [key: string]: string } = {
+                      name: 'الاسم',
+                      unitType: 'نوع الوحدة',
+                      area: 'المساحة',
+                      floor: 'الطابق',
+                      building: 'المبنى',
+                      totalPrice: 'السعر الإجمالي',
+                      status: 'الحالة',
+                      createdAt: 'تاريخ الإضافة',
+                      notes: 'ملاحظات'
+                    }
+                    return (
+                      <label key={field} className="flex items-center space-x-3 space-x-reverse">
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={(e) => setExportFields(prev => ({
+                            ...prev,
+                            [field]: e.target.checked
+                          }))}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          {fieldNames[field] || field}
+                        </span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Export Info */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="text-sm text-gray-600 space-y-1">
+                  <div>• عدد الوحدات: {units
+                    .filter(unit => {
+                      const matchesSearch = !search || 
+                        (unit.name && unit.name.toLowerCase().includes(search.toLowerCase())) ||
+                        (unit.unitType && unit.unitType.toLowerCase().includes(search.toLowerCase())) ||
+                        (unit.building && unit.building.toLowerCase().includes(search.toLowerCase()))
+                      
+                      const matchesStatus = statusFilter === 'all' || unit.status === statusFilter
+                      
+                      return matchesSearch && matchesStatus
+                    }).length} وحدة</div>
+                  <div>• نوع الملف: {exportType.toUpperCase()}</div>
+                  <div>• الحقول المحددة: {Object.entries(exportFields).filter(([_, selected]) => selected).length} حقل</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex items-center justify-end space-x-3 space-x-reverse">
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={() => {
+                  switch (exportType) {
+                    case 'csv':
+                      exportToCSV()
+                      break
+                    case 'excel':
+                      exportToExcel()
+                      break
+                    case 'pdf':
+                      exportToPDF()
+                      break
+                    case 'json':
+                      exportToJSON()
+                      break
+                  }
+                  setShowExportModal(false)
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                تصدير
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <NotificationSystem 
         notifications={notifications} 
         onRemove={removeNotification} 
       />
+        </div>
+      </div>
     </div>
   )
 }

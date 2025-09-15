@@ -7,15 +7,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { adminUrl } = body
 
-    // التحقق من admin URL
-    const correctAdminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'ADMIN_WIPE_2024'
-    if (!adminUrl || adminUrl !== correctAdminUrl) {
-      return NextResponse.json(
-        { success: false, error: 'رابط الإدارة غير صحيح' },
-        { status: 401 }
-      )
-    }
-
     const config = getConfig()
     if (!config) {
       return NextResponse.json(

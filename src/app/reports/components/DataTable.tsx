@@ -24,7 +24,7 @@ import ExportMenu from './ExportMenu'
 import { PrintButton } from './PrintButton'
 
 interface DataTableProps {
-  data: any[]
+  data: unknown[]
   reportType: string
   title: string
   onExport: (format: string) => void
@@ -42,7 +42,7 @@ export default function DataTable({ data, reportType, title, onExport, onPrint }
 
   // تعريف الأعمدة
   const columns = useMemo(() => {
-    const columnHelper = createColumnHelper<any>()
+    const columnHelper = createColumnHelper<unknown>()
     const reportCols = reportColumns[reportType] || []
     
     return reportCols.map(col => 

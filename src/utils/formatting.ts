@@ -53,7 +53,7 @@ export function formatDateTime(date: string | Date): string {
 // تنسيق التاريخ للتخزين
 export function formatDateForStorage(date: string | Date): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date
-  return dateObj.toISOString().split('T')[0]
+  return dateObj?.toISOString().split('T')[0] || 'غير محدد'
 }
 
 // تنسيق رقم الهاتف

@@ -10,13 +10,13 @@ import Sidebar from '@/components/Sidebar'
 import NavigationButtons from '@/components/NavigationButtons'
 
 // Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+const ModernCard = ({ children, className = '', ...props }: unknown) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: unknown) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -40,7 +40,7 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
   )
 }
 
-const ModernInput = ({ label, className = '', ...props }: any) => (
+const ModernInput = ({ label, className = '', ...props }: unknown) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <input 
@@ -50,7 +50,7 @@ const ModernInput = ({ label, className = '', ...props }: any) => (
   </div>
 )
 
-const ModernSelect = ({ label, children, className = '', ...props }: any) => (
+const ModernSelect = ({ label, children, className = '', ...props }: unknown) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <select 
@@ -69,19 +69,19 @@ const SmartAutoComplete = ({
   onChange, 
   placeholder = "اكتب للبحث...",
   className = "" 
-}: any) => {
+}: unknown) => {
   const [isOpen, setIsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   
   const filteredOptions = useMemo(() => {
     if (!searchTerm) return options.slice(0, 10)
-    return options.filter((option: any) => 
+    return options.filter((option: unknown) => 
       option.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       option.code?.toLowerCase().includes(searchTerm.toLowerCase())
     ).slice(0, 10)
   }, [options, searchTerm])
   
-  const selectedOption = options.find((opt: any) => opt.id === value)
+  const selectedOption = options.find((opt: unknown) => opt.id === value)
   
   return (
     <div className="space-y-2 relative">
@@ -101,7 +101,7 @@ const SmartAutoComplete = ({
         />
         {isOpen && filteredOptions.length > 0 && (
           <div className="absolute z-50 w-full mt-1 bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-            {filteredOptions.map((option: any) => (
+            {filteredOptions.map((option: unknown) => (
               <div
                 key={option.id}
                 onClick={() => {
@@ -139,11 +139,26 @@ export default function Contracts() {
   const [viewingContract, setViewingContract] = useState<Contract | null>(null)
   const [statusFilter, setStatusFilter] = useState('all')
   const [dateFilter, setDateFilter] = useState({ from: '', to: '' })
+  const [sortBy, setSortBy] = useState('contractNumber') // contractNumber, customerName, totalAmount, createdAt
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [exportType, setExportType] = useState<'csv' | 'excel' | 'pdf' | 'json'>('csv')
+  const [exportFields, setExportFields] = useState({
+    contractNumber: true,
+    customerName: true,
+    unitName: true,
+    totalAmount: true,
+    paidAmount: true,
+    remainingAmount: true,
+    status: true,
+    createdAt: true,
+    notes: false
+  })
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [newContract, setNewContract] = useState({
     unitId: '',
     customerId: '',
-    start: new Date().toISOString().split('T')[0],
+    start: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
     totalPrice: '',
     discountAmount: '',
     brokerName: '',
@@ -204,33 +219,73 @@ export default function Contracts() {
 
   const fetchData = async () => {
     try {
+      setLoading(true)
       const token = localStorage.getItem('authToken')
       
-      const [contractsRes, unitsRes, customersRes, safesRes, brokersRes] = await Promise.all([
-        fetch('/api/contracts', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/units', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/customers', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/safes', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/brokers', { headers: { 'Authorization': `Bearer ${token}` } })
+      // Optimized parallel data fetching with proper error handling
+      const [contractsRes, unitsRes, customersRes, safesRes, brokersRes] = await Promise.allSettled([
+        fetch('/api/contracts?limit=1000', { 
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          cache: 'default'
+        }),
+        fetch('/api/units?limit=1000', { 
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          cache: 'default'
+        }),
+        fetch('/api/customers?limit=1000', { 
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          cache: 'default'
+        }),
+        fetch('/api/safes?limit=1000', { 
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          cache: 'default'
+        }),
+        fetch('/api/brokers?limit=1000', { 
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          cache: 'default'
+        })
       ])
 
+      // Process responses with error handling
       const [contractsData, unitsData, customersData, safesData, brokersData] = await Promise.all([
-        contractsRes.json(),
-        unitsRes.json(),
-        customersRes.json(),
-        safesRes.json(),
-        brokersRes.json()
+        contractsRes.status === 'fulfilled' ? contractsRes.value.json() : { success: false, error: 'Failed to fetch contracts' },
+        unitsRes.status === 'fulfilled' ? unitsRes.value.json() : { success: false, error: 'Failed to fetch units' },
+        customersRes.status === 'fulfilled' ? customersRes.value.json() : { success: false, error: 'Failed to fetch customers' },
+        safesRes.status === 'fulfilled' ? safesRes.value.json() : { success: false, error: 'Failed to fetch safes' },
+        brokersRes.status === 'fulfilled' ? brokersRes.value.json() : { success: false, error: 'Failed to fetch brokers' }
       ])
 
+      // Set data with error handling
       if (contractsData.success) setContracts(contractsData.data)
       if (unitsData.success) setUnits(unitsData.data)
       if (customersData.success) setCustomers(customersData.data)
       if (safesData.success) setSafes(safesData.data)
       if (brokersData.success) setBrokers(brokersData.data)
 
+      // Set error if any critical data failed to load
+      const failedData = [contractsData, unitsData, customersData, safesData, brokersData].filter(d => !d.success)
+      if (failedData.length > 0) {
+        setError(`فشل في تحميل ${failedData.length} من مصادر البيانات`)
+      }
+
     } catch (err) {
       console.error('Error fetching data:', err)
-      setError('خطأ في الاتصال')
+      setError('خطأ في الاتصال بالخادم')
     } finally {
       setLoading(false)
     }
@@ -302,7 +357,7 @@ export default function Contracts() {
         setNewContract({
           unitId: '',
           customerId: '',
-          start: new Date().toISOString().split('T')[0],
+          start: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
           totalPrice: '',
           discountAmount: '',
           brokerName: '',
@@ -387,7 +442,7 @@ export default function Contracts() {
     setNewContract({
       unitId: '',
       customerId: '',
-      start: new Date().toISOString().split('T')[0],
+      start: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
       totalPrice: '',
       discountAmount: contract.discountAmount.toString(),
       brokerName: contract.brokerName || '',
@@ -411,7 +466,7 @@ export default function Contracts() {
     setNewContract({
       unitId: contract.unitId,
       customerId: contract.customerId,
-      start: new Date(contract.start).toISOString().split('T')[0],
+      start: new Date(contract.start)??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
       totalPrice: contract.totalPrice.toString(),
       discountAmount: contract.discountAmount.toString(),
       brokerName: contract.brokerName || '',
@@ -477,95 +532,563 @@ export default function Contracts() {
     }
   }
 
+  // دوال التصدير الاحترافي
   const exportToCSV = () => {
-    const headers = ['كود العقد', 'الوحدة', 'العميل', 'السمسار', 'السعر الكلي', 'المقدم', 'تاريخ البدء', 'نوع الدفع', 'عدد الأقساط']
+    const selectedFields = Object.entries(exportFields)
+      .filter(([_, selected]) => selected)
+      .map(([field, _]) => field)
+
+    const filteredContracts = contracts
+      .filter(contract => {
+        const matchesSearch = !search || 
+          contract.id.toLowerCase().includes(search.toLowerCase()) ||
+          getCustomerName(contract.customerId).toLowerCase().includes(search.toLowerCase()) ||
+          getUnitName(contract.unitId).toLowerCase().includes(search.toLowerCase())
+        
+        const matchesStatus = statusFilter === 'all' || getContractStatus(contract) === statusFilter
+        
+        return matchesSearch && matchesStatus
+      })
+      .sort((a, b) => {
+        let aValue: string | number
+        let bValue: string | number
+        
+        switch (sortBy) {
+          case 'contractNumber':
+            aValue = a.id.toLowerCase()
+            bValue = b.id.toLowerCase()
+            break
+          case 'customerName':
+            aValue = getCustomerName(a.customerId).toLowerCase()
+            bValue = getCustomerName(b.customerId).toLowerCase()
+            break
+          case 'totalAmount':
+            aValue = a.totalPrice || 0
+            bValue = b.totalPrice || 0
+            break
+          case 'createdAt':
+            aValue = new Date(a.createdAt || new Date()).getTime()
+            bValue = new Date(b.createdAt || new Date()).getTime()
+            break
+          default:
+            aValue = a.id.toLowerCase()
+            bValue = b.id.toLowerCase()
+        }
+        
+        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1
+        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1
+        return 0
+      })
+
+    const headers = selectedFields.map(field => {
+      const fieldNames: { [key: string]: string } = {
+        contractNumber: 'رقم العقد',
+        customerName: 'اسم العميل',
+        unitName: 'اسم الوحدة',
+        totalAmount: 'المبلغ الإجمالي',
+        paidAmount: 'المبلغ المدفوع',
+        remainingAmount: 'المبلغ المتبقي',
+        status: 'الحالة',
+        createdAt: 'تاريخ الإضافة',
+        notes: 'ملاحظات'
+      }
+      return fieldNames[field] || field
+    })
+
     const csvContent = [
-      headers.join(','),
-      ...contracts.map(contract => [
-        contract.id,
-        getUnitName(contract.unitId),
-        getCustomerName(contract.customerId),
-        contract.brokerName || '',
-        contract.totalPrice,
-        contract.downPayment,
-        formatDate(contract.start),
-        contract.paymentType === 'installment' ? 'تقسيط' : 'كاش',
-        contract.installmentCount
-      ].join(','))
+      '\uFEFF' + headers.join(','),
+      ...filteredContracts.map(contract => 
+        selectedFields.map(field => {
+          let value = ''
+          switch (field) {
+            case 'contractNumber': value = contract.id || ''; break
+            case 'customerName': value = getCustomerName(contract.customerId); break
+            case 'unitName': value = getUnitName(contract.unitId); break
+            case 'totalAmount': value = (contract.totalPrice || 0).toString(); break
+            case 'paidAmount': value = (contract.downPayment || 0).toString(); break
+            case 'remainingAmount': value = (contract.totalPrice || 0 - contract.downPayment || 0).toString(); break
+            case 'status': value = getContractStatus(contract) || ''; break
+            case 'createdAt': value = new Date(contract.createdAt || new Date()).toLocaleDateString('en-US'); break
+            case 'notes': value = ''; break
+          }
+          return `"${value}"`
+        }).join(',')
+      )
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `contracts_${new Date().toISOString().split('T')[0]}.csv`)
+    link.setAttribute('download', `عقود_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    
+    addNotification({
+      type: 'success',
+      title: 'تم التصدير بنجاح',
+      message: 'تم تصدير ملف CSV بنجاح'
+    })
   }
 
-  const printContracts = () => {
-    const printContent = `
+  const exportToExcel = async () => {
+    try {
+      const ExcelJS = await import('exceljs')
+      
+      const filteredContracts = contracts
+        .filter(contract => {
+          const matchesSearch = !search || 
+            contract.id.toLowerCase().includes(search.toLowerCase()) ||
+            getCustomerName(contract.customerId).toLowerCase().includes(search.toLowerCase()) ||
+            getUnitName(contract.unitId).toLowerCase().includes(search.toLowerCase())
+          
+          const matchesStatus = statusFilter === 'all' || getContractStatus(contract) === statusFilter
+          
+          return matchesSearch && matchesStatus
+        })
+        .sort((a, b) => {
+          let aValue: string | number
+          let bValue: string | number
+          
+          switch (sortBy) {
+            case 'contractNumber':
+              aValue = a.id.toLowerCase()
+              bValue = b.id.toLowerCase()
+              break
+            case 'customerName':
+              aValue = getCustomerName(a.customerId).toLowerCase()
+              bValue = getCustomerName(b.customerId).toLowerCase()
+              break
+            case 'totalAmount':
+              aValue = a.totalPrice || 0
+              bValue = b.totalPrice || 0
+              break
+            case 'createdAt':
+              aValue = new Date(a.createdAt || new Date()).getTime()
+              bValue = new Date(b.createdAt || new Date()).getTime()
+              break
+            default:
+              aValue = a.id.toLowerCase()
+              bValue = b.id.toLowerCase()
+          }
+          
+          if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1
+          if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1
+          return 0
+        })
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('العقود')
+
+      // إعدادات الورقة
+      worksheet.properties.defaultRowHeight = 25
+      worksheet.properties.defaultColWidth = 15
+      
+      // إعداد اتجاه الشيت من اليمين لليسار
+      worksheet.views = [{ rightToLeft: true }]
+
+      // إعداد الأعمدة
+      worksheet.columns = [
+        { header: 'رقم العقد', key: 'contractNumber', width: 20 },
+        { header: 'اسم العميل', key: 'customerName', width: 20 },
+        { header: 'اسم الوحدة', key: 'unitName', width: 20 },
+        { header: 'المبلغ الإجمالي', key: 'totalAmount', width: 15 },
+        { header: 'المبلغ المدفوع', key: 'paidAmount', width: 15 },
+        { header: 'المبلغ المتبقي', key: 'remainingAmount', width: 15 },
+        { header: 'الحالة', key: 'status', width: 12 },
+        { header: 'تاريخ الإضافة', key: 'createdAt', width: 15 },
+        { header: 'ملاحظات', key: 'notes', width: 20 }
+      ]
+
+      // إضافة العناوين
+      const headerRow = worksheet.getRow(1)
+      headerRow.values = ['رقم العقد', 'اسم العميل', 'اسم الوحدة', 'المبلغ الإجمالي', 'المبلغ المدفوع', 'المبلغ المتبقي', 'الحالة', 'تاريخ الإضافة', 'ملاحظات']
+      headerRow.height = 30
+
+      // تنسيق العناوين
+      headerRow.eachCell((cell, colNumber) => {
+        cell.font = {
+          name: 'Arial',
+          size: 14,
+          bold: true,
+          color: { argb: 'FFFFFFFF' }
+        }
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4F46E5' }
+        }
+        cell.alignment = {
+          horizontal: 'center',
+          vertical: 'middle',
+          readingOrder: 'rtl'
+        }
+        cell.border = {
+          top: { style: 'thick', color: { argb: 'FF000000' } },
+          bottom: { style: 'thick', color: { argb: 'FF000000' } },
+          left: { style: 'thick', color: { argb: 'FF000000' } },
+          right: { style: 'thick', color: { argb: 'FF000000' } }
+        }
+      })
+
+      // إضافة البيانات
+      filteredContracts
+        .filter(contract => contract.id && contract.id.trim() !== '')
+        .forEach((contract, index) => {
+          const row = worksheet.addRow([
+            contract.id || '',
+            getCustomerName(contract.customerId),
+            getUnitName(contract.unitId),
+            contract.totalPrice || '',
+            contract.downPayment || '',
+            (contract.totalPrice || 0 - contract.downPayment || 0).toString(),
+            getContractStatus(contract) || 'غير محدد',
+            new Date(contract.createdAt || new Date()).toLocaleDateString('en-US'),
+            ''
+          ])
+          
+          row.height = 25
+          
+          // تنسيق الصف
+          row.eachCell((cell, colNumber) => {
+            const isEvenRow = index % 2 === 0
+            const cellValue = cell.value as string
+            
+            // تنسيق أساسي
+            cell.font = {
+              name: 'Arial',
+              size: 12
+            }
+            cell.alignment = {
+              horizontal: 'center',
+              vertical: 'middle',
+              readingOrder: 'rtl'
+            }
+            cell.border = {
+              top: { style: 'thin', color: { argb: 'FF000000' } },
+              bottom: { style: 'thin', color: { argb: 'FF000000' } },
+              left: { style: 'thin', color: { argb: 'FF000000' } },
+              right: { style: 'thin', color: { argb: 'FF000000' } }
+            }
+            
+            // تنسيق الحالة (العمود السابع)
+            if (colNumber === 7) {
+              if (cellValue === 'نشط') {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFC6F6D5' }
+                }
+                cell.font = {
+                  name: 'Arial',
+                  size: 12,
+                  bold: true,
+                  color: { argb: 'FF22543D' }
+                }
+              } else if (cellValue === 'منتهي') {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFFED7D7' }
+                }
+                cell.font = {
+                  name: 'Arial',
+                  size: 12,
+                  bold: true,
+                  color: { argb: 'FFC53030' }
+                }
+              }
+            } else {
+              // ألوان متناوبة
+              if (isEvenRow) {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFF7FAFC' }
+                }
+              } else {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFFFFFFF' }
+                }
+              }
+            }
+          })
+        })
+
+      // إضافة فلتر تلقائي
+      worksheet.autoFilter = {
+        from: 'A1',
+        to: `I${filteredContracts.length + 1}`
+      }
+
+      // تصدير الملف
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `تقرير_العقود_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      addNotification({
+        type: 'success',
+        title: 'تم التصدير بنجاح',
+        message: 'تم تصدير ملف Excel بنجاح'
+      })
+      
+    } catch (error) {
+      console.error('Excel export error:', error)
+      addNotification({
+        type: 'error',
+        title: 'خطأ في التصدير',
+        message: 'فشل في تصدير ملف Excel'
+      })
+    }
+  }
+
+  const exportToPDF = () => {
+    const selectedFields = Object.entries(exportFields)
+      .filter(([_, selected]) => selected)
+      .map(([field, _]) => field)
+
+    const filteredContracts = contracts
+      .filter(contract => {
+        const matchesSearch = !search || 
+          contract.id.toLowerCase().includes(search.toLowerCase()) ||
+          getCustomerName(contract.customerId).toLowerCase().includes(search.toLowerCase()) ||
+          getUnitName(contract.unitId).toLowerCase().includes(search.toLowerCase())
+        
+        const matchesStatus = statusFilter === 'all' || getContractStatus(contract) === statusFilter
+        
+        return matchesSearch && matchesStatus
+      })
+      .sort((a, b) => {
+        let aValue: string | number
+        let bValue: string | number
+        
+        switch (sortBy) {
+          case 'contractNumber':
+            aValue = a.id.toLowerCase()
+            bValue = b.id.toLowerCase()
+            break
+          case 'customerName':
+            aValue = getCustomerName(a.customerId).toLowerCase()
+            bValue = getCustomerName(b.customerId).toLowerCase()
+            break
+          case 'totalAmount':
+            aValue = a.totalPrice || 0
+            bValue = b.totalPrice || 0
+            break
+          case 'createdAt':
+            aValue = new Date(a.createdAt || new Date()).getTime()
+            bValue = new Date(b.createdAt || new Date()).getTime()
+            break
+          default:
+            aValue = a.id.toLowerCase()
+            bValue = b.id.toLowerCase()
+        }
+        
+        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1
+        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1
+        return 0
+      })
+
+    const fieldNames: { [key: string]: string } = {
+      contractNumber: 'رقم العقد',
+      customerName: 'اسم العميل',
+      unitName: 'اسم الوحدة',
+      totalAmount: 'المبلغ الإجمالي',
+      paidAmount: 'المبلغ المدفوع',
+      remainingAmount: 'المبلغ المتبقي',
+      status: 'الحالة',
+      createdAt: 'تاريخ الإضافة',
+      notes: 'ملاحظات'
+    }
+
+    const htmlContent = `
       <!DOCTYPE html>
       <html dir="rtl" lang="ar">
-        <head>
-          <meta charset="UTF-8">
-          <title>تقرير العقود</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
-            th { background-color: #f2f2f2; }
-            .header { text-align: center; margin-bottom: 30px; }
-            .date { text-align: left; color: #666; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>تقرير العقود</h1>
-            <p class="date">تاريخ الطباعة: ${new Date().toLocaleString('en-GB')}</p>
-          </div>
-          <table>
-            <thead>
+      <head>
+        <meta charset="UTF-8">
+        <title>تقرير العقود</title>
+        <style>
+          body { font-family: 'Arial', sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+          .header { text-align: center; margin-bottom: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; }
+          .header h1 { margin: 0; font-size: 24px; font-weight: bold; }
+          .header p { margin: 5px 0 0 0; font-size: 14px; opacity: 0.9; }
+          table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          th { background: #4F46E5; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 14px; }
+          td { padding: 12px 15px; text-align: center; border-bottom: 1px solid #e5e7eb; }
+          tr:nth-child(even) { background: #f9fafb; }
+          tr:hover { background: #f3f4f6; }
+          .status-active { background: #d1fae5; color: #065f46; font-weight: bold; }
+          .status-expired { background: #fee2e2; color: #991b1b; font-weight: bold; }
+          .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 12px; }
+          @media print { body { background: white; } .header { background: #4F46E5 !important; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>تقرير العقود</h1>
+          <p>تاريخ التقرير: ${new Date().toLocaleDateString('en-US')}</p>
+          <p>إجمالي العقود: ${filteredContracts.length}</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              ${selectedFields.map(field => `<th>${fieldNames[field] || field}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredContracts.map(contract => `
               <tr>
-                <th>كود العقد</th>
-                <th>الوحدة</th>
-                <th>العميل</th>
-                <th>السمسار</th>
-                <th>السعر الكلي</th>
-                <th>المقدم</th>
-                <th>تاريخ البدء</th>
-                <th>نوع الدفع</th>
-                <th>عدد الأقساط</th>
+                ${selectedFields.map(field => {
+                  let value = ''
+                  let className = ''
+                  switch (field) {
+                    case 'contractNumber': value = contract.id || ''; break
+                    case 'customerName': value = getCustomerName(contract.customerId); break
+                    case 'unitName': value = getUnitName(contract.unitId); break
+            case 'totalAmount': value = (contract.totalPrice || 0).toString(); break
+            case 'paidAmount': value = (contract.downPayment || 0).toString(); break
+                    case 'remainingAmount': value = (contract.totalPrice || 0 - contract.downPayment || 0).toString(); break
+                    case 'status': 
+                      value = getContractStatus(contract) || ''
+                      className = getContractStatus(contract) === 'نشط' ? 'status-active' : getContractStatus(contract) === 'منتهي' ? 'status-expired' : ''
+                      break
+                    case 'createdAt': value = new Date(contract.createdAt || new Date()).toLocaleDateString('en-US'); break
+                    case 'notes': value = ''; break
+                  }
+                  return `<td class="${className}">${value}</td>`
+                }).join('')}
               </tr>
-            </thead>
-            <tbody>
-              ${contracts.map(contract => `
-                <tr>
-                  <td>${contract.id}</td>
-                  <td>${getUnitName(contract.unitId)}</td>
-                  <td>${getCustomerName(contract.customerId)}</td>
-                  <td>${contract.brokerName || '-'}</td>
-                  <td>${formatCurrency(contract.totalPrice)}</td>
-                  <td>${formatCurrency(contract.downPayment)}</td>
-                  <td>${formatDate(contract.start)}</td>
-                  <td>${contract.paymentType === 'installment' ? 'تقسيط' : 'كاش'}</td>
-                  <td>${contract.installmentCount}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </body>
+            `).join('')}
+          </tbody>
+        </table>
+        <div class="footer">
+          <p>تم إنشاء التقرير في ${new Date().toLocaleString('ar-SA')}</p>
+        </div>
+      </body>
       </html>
     `
-    
+
     const printWindow = window.open('', '_blank')
     if (printWindow) {
-      printWindow.document.write(printContent)
+      printWindow.document.write(htmlContent)
       printWindow.document.close()
-      printWindow.print()
+      printWindow.focus()
+      setTimeout(() => {
+        printWindow.print()
+        printWindow.close()
+      }, 250)
     }
+    
+    addNotification({
+      type: 'success',
+      title: 'تم التصدير بنجاح',
+      message: 'تم تصدير ملف PDF بنجاح'
+    })
+  }
+
+  const exportToJSON = () => {
+    const selectedFields = Object.entries(exportFields)
+      .filter(([_, selected]) => selected)
+      .map(([field, _]) => field)
+
+    const filteredContracts = contracts
+      .filter(contract => {
+        const matchesSearch = !search || 
+          contract.id.toLowerCase().includes(search.toLowerCase()) ||
+          getCustomerName(contract.customerId).toLowerCase().includes(search.toLowerCase()) ||
+          getUnitName(contract.unitId).toLowerCase().includes(search.toLowerCase())
+        
+        const matchesStatus = statusFilter === 'all' || getContractStatus(contract) === statusFilter
+        
+        return matchesSearch && matchesStatus
+      })
+      .sort((a, b) => {
+        let aValue: string | number
+        let bValue: string | number
+        
+        switch (sortBy) {
+          case 'contractNumber':
+            aValue = a.id.toLowerCase()
+            bValue = b.id.toLowerCase()
+            break
+          case 'customerName':
+            aValue = getCustomerName(a.customerId).toLowerCase()
+            bValue = getCustomerName(b.customerId).toLowerCase()
+            break
+          case 'totalAmount':
+            aValue = a.totalPrice || 0
+            bValue = b.totalPrice || 0
+            break
+          case 'createdAt':
+            aValue = new Date(a.createdAt || new Date()).getTime()
+            bValue = new Date(b.createdAt || new Date()).getTime()
+            break
+          default:
+            aValue = a.id.toLowerCase()
+            bValue = b.id.toLowerCase()
+        }
+        
+        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1
+        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1
+        return 0
+      })
+      .map(contract => {
+        const filteredContract: Record<string, unknown> = {}
+        selectedFields.forEach(field => {
+          switch (field) {
+            case 'contractNumber': filteredContract.contractNumber = contract.id; break
+            case 'customerName': filteredContract.customerName = getCustomerName(contract.customerId); break
+            case 'unitName': filteredContract.unitName = getUnitName(contract.unitId); break
+            case 'totalAmount': filteredContract.totalAmount = contract.totalPrice; break
+            case 'paidAmount': filteredContract.paidAmount = contract.downPayment; break
+            case 'remainingAmount': filteredContract.remainingAmount = (contract.totalPrice || 0 - contract.downPayment || 0).toString(); break
+            case 'status': filteredContract.status = getContractStatus(contract); break
+            case 'createdAt': filteredContract.createdAt = new Date(contract.createdAt || new Date()).toISOString(); break
+            case 'notes': filteredContract.notes = ''; break
+          }
+        })
+        return filteredContract
+      })
+
+    const jsonData = {
+      metadata: {
+        title: 'تقرير العقود',
+        exportDate: new Date().toISOString(),
+        totalRecords: filteredContracts.length,
+        exportType: 'JSON',
+        fields: selectedFields
+      },
+      contracts: filteredContracts
+    }
+
+    const jsonString = JSON.stringify(jsonData, null, 2)
+    const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `عقود_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.json`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    addNotification({
+      type: 'success',
+      title: 'تم التصدير بنجاح',
+      message: 'تم تصدير ملف JSON بنجاح'
+    })
   }
 
   const getContractStatus = (contract: Contract) => {
@@ -651,11 +1174,8 @@ export default function Contracts() {
                     className="w-80 px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal"
                   />
                 </div>
-                <ModernButton variant="secondary" size="sm" onClick={exportToCSV}>
-                  📊 تصدير CSV
-                </ModernButton>
-                <ModernButton variant="secondary" size="sm" onClick={printContracts}>
-                  🖨️ طباعة PDF
+                <ModernButton variant="secondary" size="sm" onClick={() => setShowExportModal(true)}>
+                  📊 تصدير احترافي
                 </ModernButton>
               </div>
               <div className="text-sm text-gray-500">
@@ -664,11 +1184,11 @@ export default function Contracts() {
             </div>
 
             {/* Advanced Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <ModernSelect
                 label="فلتر الحالة"
                 value={statusFilter}
-                onChange={(e: any) => setStatusFilter(e.target.value)}
+                onChange={(e: unknown) => setStatusFilter(e.target.value)}
               >
                 <option value="all">جميع الحالات</option>
                 <option value="نشط">نشط</option>
@@ -680,15 +1200,34 @@ export default function Contracts() {
                 label="من تاريخ"
                 type="date"
                 value={dateFilter.from}
-                onChange={(e: any) => setDateFilter({...dateFilter, from: e.target.value})}
+                onChange={(e: unknown) => setDateFilter({...dateFilter, from: e.target.value})}
               />
 
               <ModernInput
                 label="إلى تاريخ"
                 type="date"
                 value={dateFilter.to}
-                onChange={(e: any) => setDateFilter({...dateFilter, to: e.target.value})}
+                onChange={(e: unknown) => setDateFilter({...dateFilter, to: e.target.value})}
               />
+
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold"
+              >
+                <option value="contractNumber">رقم العقد</option>
+                <option value="customerName">اسم العميل</option>
+                <option value="totalAmount">المبلغ الإجمالي</option>
+                <option value="createdAt">تاريخ الإضافة</option>
+              </select>
+
+              <button
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold hover:bg-gray-50"
+                title={sortOrder === 'asc' ? 'ترتيب تصاعدي' : 'ترتيب تنازلي'}
+              >
+                {sortOrder === 'asc' ? '↑' : '↓'} {sortOrder === 'asc' ? 'تصاعدي' : 'تنازلي'}
+              </button>
             </div>
           </div>
         </ModernCard>
@@ -863,7 +1402,7 @@ export default function Contracts() {
                   <ModernSelect
                     label="نوع الدفع"
                     value={newContract.paymentType}
-                    onChange={(e: any) => {
+                    onChange={(e: unknown) => {
                       setNewContract({...newContract, paymentType: e.target.value})
                       updateFormForPaymentType()
                     }}
@@ -876,14 +1415,14 @@ export default function Contracts() {
                     label="المقدم"
                     type="number"
                     value={newContract.downPayment}
-                    onChange={(e: any) => setNewContract({...newContract, downPayment: e.target.value})}
+                    onChange={(e: unknown) => setNewContract({...newContract, downPayment: e.target.value})}
                     placeholder="مبلغ المقدم"
                   />
 
                   <ModernSelect
                     label="خزنة المقدم"
                     value={newContract.downPaymentSafeId}
-                    onChange={(e: any) => setNewContract({...newContract, downPaymentSafeId: e.target.value})}
+                    onChange={(e: unknown) => setNewContract({...newContract, downPaymentSafeId: e.target.value})}
                   >
                     <option value="">اختر خزنة المقدم...</option>
                     {safes.map((safe) => (
@@ -897,7 +1436,7 @@ export default function Contracts() {
                     label="مبلغ الخصم"
                     type="number"
                     value={newContract.discountAmount}
-                    onChange={(e: any) => setNewContract({...newContract, discountAmount: e.target.value})}
+                    onChange={(e: unknown) => setNewContract({...newContract, discountAmount: e.target.value})}
                     placeholder="مبلغ الخصم"
                   />
 
@@ -905,14 +1444,14 @@ export default function Contracts() {
                     label="وديعة الصيانة"
                     type="number"
                     value={newContract.maintenanceDeposit}
-                    onChange={(e: any) => setNewContract({...newContract, maintenanceDeposit: e.target.value})}
+                    onChange={(e: unknown) => setNewContract({...newContract, maintenanceDeposit: e.target.value})}
                     placeholder="وديعة الصيانة"
                   />
 
                   <ModernSelect
                     label="اسم السمسار"
                     value={newContract.brokerName}
-                    onChange={(e: any) => setNewContract({...newContract, brokerName: e.target.value})}
+                    onChange={(e: unknown) => setNewContract({...newContract, brokerName: e.target.value})}
                   >
                     <option value="">اختر سمسار...</option>
                     {brokers.map((broker) => (
@@ -926,14 +1465,14 @@ export default function Contracts() {
                     label="نسبة العمولة %"
                     type="number"
                     value={newContract.brokerPercent}
-                    onChange={(e: any) => setNewContract({...newContract, brokerPercent: e.target.value})}
+                    onChange={(e: unknown) => setNewContract({...newContract, brokerPercent: e.target.value})}
                     placeholder="نسبة العمولة %"
                   />
 
                   <ModernSelect
                     label="خزنة العمولة"
                     value={newContract.commissionSafeId}
-                    onChange={(e: any) => setNewContract({...newContract, commissionSafeId: e.target.value})}
+                    onChange={(e: unknown) => setNewContract({...newContract, commissionSafeId: e.target.value})}
                   >
                     <option value="">اختر خزنة العمولة...</option>
                     {safes.map((safe) => (
@@ -947,7 +1486,7 @@ export default function Contracts() {
                     label="تاريخ البداية"
                     type="date"
                     value={newContract.start}
-                    onChange={(e: any) => setNewContract({...newContract, start: e.target.value})}
+                    onChange={(e: unknown) => setNewContract({...newContract, start: e.target.value})}
                   />
                 </div>
 
@@ -959,7 +1498,7 @@ export default function Contracts() {
                       <ModernSelect
                         label="نوع الأقساط"
                         value={newContract.installmentType}
-                        onChange={(e: any) => setNewContract({...newContract, installmentType: e.target.value})}
+                        onChange={(e: unknown) => setNewContract({...newContract, installmentType: e.target.value})}
                       >
                         <option value="شهري">شهري</option>
                         <option value="ربع سنوي">ربع سنوي</option>
@@ -971,7 +1510,7 @@ export default function Contracts() {
                         label="عدد الدفعات"
                         type="number"
                         value={newContract.installmentCount}
-                        onChange={(e: any) => setNewContract({...newContract, installmentCount: e.target.value})}
+                        onChange={(e: unknown) => setNewContract({...newContract, installmentCount: e.target.value})}
                         placeholder="عدد الدفعات"
                       />
 
@@ -981,7 +1520,7 @@ export default function Contracts() {
                         min="0"
                         max="3"
                         value={newContract.extraAnnual}
-                        onChange={(e: any) => setNewContract({...newContract, extraAnnual: e.target.value})}
+                        onChange={(e: unknown) => setNewContract({...newContract, extraAnnual: e.target.value})}
                         placeholder="عدد الدفعات السنوية (0-3)"
                       />
 
@@ -989,7 +1528,7 @@ export default function Contracts() {
                         label="قيمة الدفعة السنوية"
                         type="number"
                         value={newContract.annualPaymentValue}
-                        onChange={(e: any) => setNewContract({...newContract, annualPaymentValue: e.target.value})}
+                        onChange={(e: unknown) => setNewContract({...newContract, annualPaymentValue: e.target.value})}
                         placeholder="قيمة الدفعة السنوية"
                       />
                     </div>
@@ -1159,6 +1698,165 @@ export default function Contracts() {
                   ✏️ تعديل العقد
                 </ModernButton>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900">تصدير احترافي</h3>
+              <p className="text-sm text-gray-500 mt-1">اختر نوع التصدير والحقول المطلوبة</p>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Export Type */}
+              <div>
+                <label className="block text-sm font-bold text-gray-900 mb-3">نوع التصدير</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setExportType('csv')}
+                    className={`p-3 rounded-xl border-2 transition-all duration-200 ${
+                      exportType === 'csv'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-1">📊</div>
+                      <div className="font-bold">CSV</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setExportType('excel')}
+                    className={`p-3 rounded-xl border-2 transition-all duration-200 ${
+                      exportType === 'excel'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-1">📈</div>
+                      <div className="font-bold">Excel</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setExportType('pdf')}
+                    className={`p-3 rounded-xl border-2 transition-all duration-200 ${
+                      exportType === 'pdf'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-1">📄</div>
+                      <div className="font-bold">PDF</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setExportType('json')}
+                    className={`p-3 rounded-xl border-2 transition-all duration-200 ${
+                      exportType === 'json'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-1">🔧</div>
+                      <div className="font-bold">JSON</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Fields Selection */}
+              <div>
+                <label className="block text-sm font-bold text-gray-900 mb-3">الحقول المطلوبة</label>
+                <div className="space-y-2">
+                  {Object.entries(exportFields).map(([field, selected]) => {
+                    const fieldNames: { [key: string]: string } = {
+                      contractNumber: 'رقم العقد',
+                      customerName: 'اسم العميل',
+                      unitName: 'اسم الوحدة',
+                      totalAmount: 'المبلغ الإجمالي',
+                      paidAmount: 'المبلغ المدفوع',
+                      remainingAmount: 'المبلغ المتبقي',
+                      status: 'الحالة',
+                      createdAt: 'تاريخ الإضافة',
+                      notes: 'ملاحظات'
+                    }
+                    return (
+                      <label key={field} className="flex items-center space-x-3 space-x-reverse">
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={(e) => setExportFields(prev => ({
+                            ...prev,
+                            [field]: e.target.checked
+                          }))}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          {fieldNames[field] || field}
+                        </span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Export Info */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="text-sm text-gray-600 space-y-1">
+                  <div>• عدد العقود: {contracts
+                    .filter(contract => {
+                      const matchesSearch = !search || 
+                        contract.id.toLowerCase().includes(search.toLowerCase()) ||
+                        getCustomerName(contract.customerId).toLowerCase().includes(search.toLowerCase()) ||
+                        getUnitName(contract.unitId).toLowerCase().includes(search.toLowerCase())
+                      
+                      const matchesStatus = statusFilter === 'all' || getContractStatus(contract) === statusFilter
+                      
+                      return matchesSearch && matchesStatus
+                    }).length} عقد</div>
+                  <div>• نوع الملف: {exportType.toUpperCase()}</div>
+                  <div>• الحقول المحددة: {Object.entries(exportFields).filter(([_, selected]) => selected).length} حقل</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex items-center justify-end space-x-3 space-x-reverse">
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={() => {
+                  switch (exportType) {
+                    case 'csv':
+                      exportToCSV()
+                      break
+                    case 'excel':
+                      exportToExcel()
+                      break
+                    case 'pdf':
+                      exportToPDF()
+                      break
+                    case 'json':
+                      exportToJSON()
+                      break
+                  }
+                  setShowExportModal(false)
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                تصدير
+              </button>
             </div>
           </div>
         </div>

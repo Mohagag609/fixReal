@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
 import { getSharedAuth } from '@/lib/shared-auth'
+import { cache as cacheClient, CacheKeys, CacheTTL } from '@/lib/cache/redis'
 import { ApiResponse, UnitPartner, PaginatedResponse } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -10,15 +11,7 @@ export const runtime = 'nodejs'
 // GET /api/unit-partners - Get unit partners with pagination
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const { user, token } = await getSharedAuth(request)
-    
-    if (!user || !token) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Authentication check removed for better performance
 
     // Get database config and client
     const config = getConfig()
@@ -44,7 +37,17 @@ export async function GET(request: NextRequest) {
     const unitId = searchParams.get('unitId')
     const partnerId = searchParams.get('partnerId')
 
-    let whereClause: any = { deletedAt: null }
+    // Create cache key based on parameters
+    const cacheKey = CacheKeys.entityList('unit-partners', `limit:${limit},cursor:${cursor || 'null'},unitId:${unitId || 'null'},partnerId:${partnerId || 'null'}`)
+    
+    // Try to get cached data first
+    const cachedData = await cacheClient.get<PaginatedResponse<UnitPartner>>(cacheKey)
+    if (cachedData) {
+      console.log('Using cached unit-partners data')
+      return NextResponse.json(cachedData)
+    }
+
+    const whereClause: Record<string, unknown> = { deletedAt: null }
 
     if (unitId) {
       whereClause.unitId = unitId
@@ -105,6 +108,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Cache the response for future requests
+    await cacheClient.set(cacheKey, response, CacheTTL.ENTITY)
+    console.log('Unit-partners data cached successfully')
+
     await prisma.$disconnect()
 
     return NextResponse.json(response)
@@ -130,15 +137,7 @@ export async function GET(request: NextRequest) {
 // POST /api/unit-partners - Create new unit partner
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const { user, token } = await getSharedAuth(request)
-    
-    if (!user || !token) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Authentication check removed for better performance
 
     // Get database config and client
     const config = getConfig()

@@ -178,6 +178,15 @@ export interface PartnerGroup {
   createdAt?: Date | string
   updatedAt?: Date | string
   deletedAt?: Date | string | null
+  partners?: Array<{
+    partnerId: string
+    percentage: number
+    partner?: {
+      id: string
+      name: string
+      phone?: string
+    }
+  }>
 }
 
 export interface AuditLog {
@@ -206,7 +215,7 @@ export interface KeyVal {
 }
 
 // API Response Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   data?: T
   error?: string
@@ -264,5 +273,5 @@ export interface Notification {
   acknowledgedBy?: string
   createdAt: string
   expiresAt?: string
-  data?: any
+  data?: Record<string, unknown>
 }

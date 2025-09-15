@@ -4,21 +4,21 @@ import { prisma } from './db'
 import { createCriticalNotification } from './notifications'
 
 export interface BackupData {
-  customers: any[]
-  units: any[]
-  partners: any[]
-  unitPartners: any[]
-  contracts: any[]
-  installments: any[]
-  partnerDebts: any[]
-  safes: any[]
-  transfers: any[]
-  vouchers: any[]
-  brokers: any[]
-  brokerDues: any[]
-  partnerGroups: any[]
-  settings: any[]
-  keyval: any[]
+  customers: unknown[]
+  units: unknown[]
+  partners: unknown[]
+  unitPartners: unknown[]
+  contracts: unknown[]
+  installments: unknown[]
+  partnerDebts: unknown[]
+  safes: unknown[]
+  transfers: unknown[]
+  vouchers: unknown[]
+  brokers: unknown[]
+  brokerDues: unknown[]
+  partnerGroups: unknown[]
+  settings: unknown[]
+  keyval: unknown[]
   metadata: {
     version: string
     createdAt: string
@@ -225,7 +225,7 @@ export async function restoreBackup(backupData: BackupData): Promise<{ success: 
 }
 
 // Validate backup data
-export function validateBackupData(backupData: any): { isValid: boolean; errors: string[] } {
+export function validateBackupData(backupData: unknown): { isValid: boolean; errors: string[] } {
   const errors: string[] = []
   
   if (!backupData) {

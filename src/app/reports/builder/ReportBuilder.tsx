@@ -10,13 +10,13 @@ import { reportDefinitions, validateFilters, applyDefaultFilters, messages } fro
 import { useNotifications } from '../../../components/NotificationSystem'
 
 interface ReportBuilderProps {
-  onReportGenerated: (reportType: string, data: any[], filters: any) => void
+  onReportGenerated: (reportType: string, data: unknown[], filters: unknown) => void
   onLoadingChange: (loading: boolean) => void
 }
 
 export default function ReportBuilder({ onReportGenerated, onLoadingChange }: ReportBuilderProps) {
   const [selectedReport, setSelectedReport] = useState<string>('')
-  const [filters, setFilters] = useState<Record<string, any>>({})
+  const [filters, setFilters] = useState<Record<string, unknown>>({})
   const [loading, setLoading] = useState(false)
   const [units, setUnits] = useState<Array<{ value: string; label: string }>>([])
   const { addNotification } = useNotifications()
@@ -24,7 +24,7 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
   // تحميل الوحدات عند بدء التطبيق
   useEffect(() => {
     loadUnits()
-  }, [])
+  }, [] // TODO: Review dependencies) // TODO: Review dependencies
 
   // تطبيق الفلاتر الافتراضية عند تغيير نوع التقرير
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
       
       if (response.ok) {
         const data = await response.json()
-        const unitsOptions = data.data?.map((unit: any) => ({
+        const unitsOptions = data.data?.map((unit: unknown) => ({
           value: unit.id,
           label: `${unit.code} - ${unit.name || 'بدون اسم'}`
         })) || []
@@ -67,7 +67,7 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
     setSelectedReport(reportId)
   }
 
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: string, value: unknown) => {
     setFilters(prev => ({
       ...prev,
       [key]: value

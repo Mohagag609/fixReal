@@ -11,13 +11,13 @@ import Sidebar from '@/components/Sidebar'
 import NavigationButtons from '@/components/NavigationButtons'
 
 // Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+const ModernCard = ({ children, className = '', ...props }: Record<string, unknown>) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: Record<string, unknown>) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -43,7 +43,7 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
   )
 }
 
-const ModernInput = ({ label, className = '', ...props }: any) => (
+const ModernInput = ({ label, className = '', ...props }: Record<string, unknown>) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <input 
@@ -53,7 +53,7 @@ const ModernInput = ({ label, className = '', ...props }: any) => (
   </div>
 )
 
-const ModernTextarea = ({ label, className = '', ...props }: any) => (
+const ModernTextarea = ({ label, className = '', ...props }: Record<string, unknown>) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <textarea 
@@ -63,7 +63,7 @@ const ModernTextarea = ({ label, className = '', ...props }: any) => (
   </div>
 )
 
-const ModernSelect = ({ label, children, className = '', ...props }: any) => (
+const ModernSelect = ({ label, children, className = '', ...props }: Record<string, unknown>) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <select 
@@ -77,8 +77,8 @@ const ModernSelect = ({ label, children, className = '', ...props }: any) => (
 
 export default function Brokers() {
   const [brokers, setBrokers] = useState<Broker[]>([])
-  const [brokerDues, setBrokerDues] = useState<any[]>([])
-  const [safes, setSafes] = useState<any[]>([])
+  const [brokerDues, setBrokerDues] = useState<unknown[]>([])
+  const [safes, setSafes] = useState<unknown[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -100,10 +100,10 @@ export default function Brokers() {
   const [showDuesModal, setShowDuesModal] = useState(false)
   const [selectedBroker, setSelectedBroker] = useState<Broker | null>(null)
   const [showPayModal, setShowPayModal] = useState(false)
-  const [selectedDue, setSelectedDue] = useState<any>(null)
+  const [selectedDue, setSelectedDue] = useState<unknown>(null)
   const [paymentData, setPaymentData] = useState({
     safeId: '',
-    paymentDate: new Date().toISOString().split('T')[0],
+    paymentDate: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
     notes: ''
   })
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -471,7 +471,7 @@ export default function Brokers() {
         setError(null)
         setPaymentData({
           safeId: '',
-          paymentDate: new Date().toISOString().split('T')[0],
+          paymentDate: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
           notes: ''
         })
         fetchBrokerDues()
@@ -506,7 +506,7 @@ export default function Brokers() {
     setShowDuesModal(true)
   }
 
-  const openPayModal = (due: any) => {
+  const openPayModal = (due: unknown) => {
     setSelectedDue(due)
     setShowPayModal(true)
   }
@@ -518,8 +518,8 @@ export default function Brokers() {
       ...brokers.map(broker => [
         broker.name,
         broker.phone || '',
-        (broker as any).commissionRate || 0,
-        (broker as any).status || 'نشط',
+        (broker as { commissionRate?: number }).commissionRate || 0,
+        (broker as { status?: string }).status || 'نشط',
         broker.notes || '',
         formatDate(broker.createdAt || new Date())
       ].join(','))
@@ -529,7 +529,7 @@ export default function Brokers() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `brokers_${new Date().toISOString().split('T')[0]}.csv`)
+    link.setAttribute('download', `brokers_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -573,8 +573,8 @@ export default function Brokers() {
                 <tr>
                   <td>${broker.name}</td>
                   <td>${broker.phone || '-'}</td>
-                  <td>${(broker as any).commissionRate || 0}%</td>
-                  <td>${(broker as any).status || 'نشط'}</td>
+                  <td>${(broker as unknown).commissionRate || 0}%</td>
+                  <td>${(broker as unknown).status || 'نشط'}</td>
                   <td>${broker.notes || '-'}</td>
                   <td>${formatDate(broker.createdAt || new Date())}</td>
                 </tr>
@@ -599,7 +599,7 @@ export default function Brokers() {
       (broker.phone && broker.phone.toLowerCase().includes(search.toLowerCase())) ||
       (broker.notes && broker.notes.toLowerCase().includes(search.toLowerCase()))
     
-    const matchesStatus = filterStatus === 'all' || (broker as any).status === filterStatus
+    const matchesStatus = filterStatus === 'all' || (broker as unknown).status === filterStatus
     
     return matchesSearch && matchesStatus
   }).sort((a, b) => {
@@ -615,12 +615,12 @@ export default function Brokers() {
         bValue = b.phone || ''
         break
       case 'commissionRate':
-        aValue = (a as any).commissionRate || 0
-        bValue = (b as any).commissionRate || 0
+        aValue = (a as unknown).commissionRate || 0
+        bValue = (b as unknown).commissionRate || 0
         break
       case 'status':
-        aValue = (a as any).status || 'نشط'
-        bValue = (b as any).status || 'نشط'
+        aValue = (a as unknown).status || 'نشط'
+        bValue = (b as unknown).status || 'نشط'
         break
       case 'createdAt':
         aValue = new Date(a.createdAt || 0).getTime()
@@ -1011,12 +1011,12 @@ export default function Brokers() {
                       </td>
                       <td className="py-4 px-6">
                         <div className="font-semibold text-green-600">
-                          {(broker as any).commissionRate || 0}%
+                          {(broker as unknown).commissionRate || 0}%
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor((broker as any).status || 'نشط')}`}>
-                          {(broker as any).status || 'نشط'}
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor((broker as unknown).status || 'نشط')}`}>
+                          {(broker as unknown).status || 'نشط'}
                         </span>
                       </td>
                       <td className="py-4 px-6">

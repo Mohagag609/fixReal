@@ -26,7 +26,7 @@ export default function AdminVerifyPage() {
       } else {
         setError("URL الإدارة غير صحيح");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError("حدث خطأ في التحقق");
     } finally {
       setIsLoading(false);

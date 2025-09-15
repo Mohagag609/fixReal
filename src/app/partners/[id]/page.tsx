@@ -10,13 +10,13 @@ import Sidebar from '@/components/Sidebar'
 import NavigationButtons from '@/components/NavigationButtons'
 
 // Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: any) => (
+const ModernCard = ({ children, className = '', ...props }: unknown) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: any) => {
+const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: unknown) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -42,7 +42,7 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
   )
 }
 
-const KPICard = ({ title, value, icon, color, trend }: any) => (
+const KPICard = ({ title, value, icon, color, trend }: unknown) => (
   <ModernCard>
     <div className="flex items-center justify-between">
       <div className="flex-1">
@@ -281,7 +281,7 @@ export default function PartnerDetails() {
   }
 
   const getTransactionsByDay = () => {
-    const transactionsByDay = new Map<string, any[]>()
+    const transactionsByDay = new Map<string, unknown[]>()
     
     ledger.transactions.forEach(transaction => {
       const dateKey = transaction.date.split('T')[0]
@@ -458,7 +458,7 @@ export default function PartnerDetails() {
                       {unitPartners.map((up) => (
                         <tr key={up.id} className="border-b border-gray-100 hover:bg-blue-50/50 transition-colors duration-150">
                           <td className="py-3 px-4">
-                            <div className="font-medium text-gray-900">{(up as any).unit?.code || 'غير محدد'}</div>
+                            <div className="font-medium text-gray-900">{(up as unknown).unit?.code || 'غير محدد'}</div>
                           </td>
                           <td className="py-3 px-4">
                             <div className="font-semibold text-blue-600">{up.percentage}%</div>

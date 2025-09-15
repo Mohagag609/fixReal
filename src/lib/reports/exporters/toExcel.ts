@@ -8,7 +8,7 @@ import { prepareDataForExport, getExportHeaders, calculateTotals } from '../tran
 
 export interface ExcelExportOptions {
   title: string
-  data: any[]
+  data: unknown[]
   reportType: string
   fileName?: string
 }
@@ -51,7 +51,7 @@ export async function exportToExcel(options: ExcelExportOptions): Promise<Buffer
   
   // إضافة البيانات
   exportData.forEach((row, index) => {
-    const rowData: any = {}
+    const rowData: Record<string, unknown> = {}
     headers.forEach((header, colIndex) => {
       rowData[`col${colIndex}`] = row[header]
     })
@@ -154,7 +154,7 @@ export async function exportToExcel(options: ExcelExportOptions): Promise<Buffer
  */
 export async function exportMultipleSheets(sheets: Array<{
   name: string
-  data: any[]
+  data: unknown[]
   reportType: string
 }>): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook()
@@ -181,7 +181,7 @@ export async function exportMultipleSheets(sheets: Array<{
     
     // إضافة البيانات
     exportData.forEach((row) => {
-      const rowData: any = {}
+      const rowData: Record<string, unknown> = {}
       headers.forEach((header, colIndex) => {
         rowData[`col${colIndex}`] = row[header]
       })

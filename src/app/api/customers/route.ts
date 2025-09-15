@@ -3,6 +3,7 @@ import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
 import { getSharedAuth } from '@/lib/shared-auth'
 import { validateCustomer } from '@/utils/validation'
+import { cache as cacheClient, CacheKeys, CacheTTL } from '@/lib/cache/redis'
 import { ApiResponse, Customer, PaginatedResponse } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -24,11 +25,31 @@ export async function GET(request: NextRequest) {
     // }
 
     const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const limit = parseInt(searchParams.get('limit') || '1000') // زيادة الحد الأقصى لعرض جميع العملاء
     const cursor = searchParams.get('cursor')
     const search = searchParams.get('search') || ''
+    const refresh = searchParams.get('refresh') === 'true'
 
-    let whereClause: any = { deletedAt: null }
+    // Create cache key based on parameters
+    const cacheKey = CacheKeys.entityList('customers', `limit:${limit},cursor:${cursor || 'null'},search:${search}`)
+    
+    // Try to get cached data first (with error handling) - skip if refresh requested
+    let cachedData = null
+    if (!refresh) {
+      try {
+        cachedData = await cacheClient.get<PaginatedResponse<Customer>>(cacheKey)
+        if (cachedData) {
+          console.log('Using cached customers data')
+          return NextResponse.json(cachedData)
+        }
+      } catch (cacheError) {
+        console.log('Cache error, proceeding without cache:', cacheError)
+      }
+    } else {
+      console.log('Refresh requested, skipping cache')
+    }
+
+    const whereClause: Record<string, unknown> = { deletedAt: null }
 
     if (search) {
       whereClause.OR = [
@@ -60,9 +81,10 @@ export async function GET(request: NextRequest) {
       console.log('Reconnecting to database...')
     }
 
+    // Optimized query with compound indexes for better performance
     const customers = await prisma.customer.findMany({
       where: whereClause,
-      orderBy: { id: 'desc' },
+      orderBy: { createdAt: 'desc' }, // Use indexed column for sorting
       take: limit + 1,
       select: {
         id: true,
@@ -73,7 +95,15 @@ export async function GET(request: NextRequest) {
         status: true,
         notes: true,
         createdAt: true,
-        updatedAt: true
+        updatedAt: true,
+        // Add counts for better UX without heavy joins
+        _count: {
+          select: {
+            contracts: {
+              where: { deletedAt: null }
+            }
+          }
+        }
       }
     })
 
@@ -91,6 +121,14 @@ export async function GET(request: NextRequest) {
         nextCursor,
         hasMore
       }
+    }
+
+    // Cache the response for future requests (with error handling)
+    try {
+      await cacheClient.set(cacheKey, response, { ttl: CacheTTL.ENTITY })
+      console.log('Customers data cached successfully')
+    } catch (cacheError) {
+      console.log('Cache set error:', cacheError)
     }
 
     return NextResponse.json(response)
@@ -128,10 +166,10 @@ export async function POST(request: NextRequest) {
     // }
 
     const body = await request.json()
-    const { name, phone, nationalId, address, status, notes } = body
+    const { name, phone, nationalId, address, email, notes } = body
 
     // Validate customer data
-    const validation = validateCustomer({ name, phone, nationalId, address, status, notes })
+    const validation = validateCustomer({ name, phone, nationalId, email, notes })
     if (!validation.isValid) {
       return NextResponse.json(
         { success: false, error: validation.errors.join(', ') },
@@ -191,7 +229,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create customer
+    // Create customer with optimized return fields
     const customer = await prisma.customer.create({
       data: {
         name,
@@ -200,10 +238,26 @@ export async function POST(request: NextRequest) {
         address: address || null,
         status: status || 'نشط',
         notes: notes || null
+      },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        nationalId: true,
+        address: true,
+        status: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true
       }
     })
 
     await prisma.$disconnect()
+
+    // Invalidate customers cache when new customer is created (async to not block response)
+    cacheClient.invalidatePattern('customers:list:*').catch(err => 
+      console.log('Cache invalidation error:', err)
+    )
 
     const response: ApiResponse<Customer> = {
       success: true,

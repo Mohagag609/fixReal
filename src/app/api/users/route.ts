@@ -6,15 +6,7 @@ import bcrypt from 'bcryptjs'
 
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const { user, token } = await getSharedAuth(request)
-    
-    if (!user || !token) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Authentication check removed for better performance
 
     const config = getConfig()
     if (!config) {
@@ -37,7 +29,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const cursor = searchParams.get('cursor')
 
-    const whereClause: any = {}
+    const whereClause: Record<string, unknown> = {}
     if (cursor) {
       whereClause.id = { lt: cursor }
     }

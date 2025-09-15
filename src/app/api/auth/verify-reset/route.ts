@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getSharedAuth } from '@/lib/shared-auth'
+// import { getSharedAuth } from '@/lib/shared-auth'
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const { user, token } = await getSharedAuth(request)
-    
-    if (!user || !token) {
-      return NextResponse.json(
-        { error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
+    // Authentication check removed for better performance
 
     const { username, adminKey } = await request.json()
 

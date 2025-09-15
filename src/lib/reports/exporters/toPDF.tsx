@@ -8,7 +8,7 @@ import { generatePrintHTML, prepareDataForExport, getExportHeaders } from '../tr
 
 export interface PDFExportOptions {
   title: string
-  data: any[]
+  data: unknown[]
   reportType: string
   fileName?: string
 }
@@ -131,7 +131,7 @@ export async function exportToPDFReact(options: PDFExportOptions): Promise<Buffe
     
     // تحويل ReadableStream إلى Buffer
     const chunks: Uint8Array[] = []
-    const reader = (pdfStream as any).getReader()
+    const reader = (pdfStream as unknown).getReader()
     
     while (true) {
       const { done, value } = await reader.read()

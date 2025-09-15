@@ -3,8 +3,8 @@
  * Environment Setup - Switch between Local and Cloud
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 class EnvironmentSetup {
     constructor() {

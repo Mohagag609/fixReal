@@ -27,6 +27,11 @@ model Customer {
   // Relations
   contracts Contract[]
   
+  // Performance indexes for frequently queried columns
+  @@index([status, deletedAt]) // For filtering active customers
+  @@index([name]) // For name searches
+  @@index([phone]) // For phone lookups
+  @@index([createdAt]) // For date-based queries
   @@map("customers")
 }
 
@@ -47,11 +52,18 @@ model Unit {
   deletedAt DateTime?
   
   // Relations
-  contracts     Contract[]
-  installments  Installment[]
-  vouchers      Voucher[]
-  unitPartners  UnitPartner[]
+  contracts         Contract[]
+  installments      Installment[]
+  vouchers          Voucher[]
+  unitPartners      UnitPartner[]
+  unitPartnerGroups UnitPartnerGroup[]
   
+  // Performance indexes for frequently queried columns
+  @@index([status, deletedAt]) // For filtering available units
+  @@index([unitType, deletedAt]) // For filtering by type
+  @@index([totalPrice]) // For price range queries
+  @@index([createdAt]) // For date-based queries
+  @@index([code]) // For code lookups
   @@map("units")
 }
 
@@ -70,6 +82,10 @@ model Partner {
   partnerDebts         PartnerDebt[]
   partnerGroupPartners PartnerGroupPartner[]
   
+  // Performance indexes
+  @@index([name]) // For name searches
+  @@index([phone]) // For phone lookups
+  @@index([deletedAt]) // For filtering active partners
   @@map("partners")
 }
 
@@ -87,6 +103,9 @@ model UnitPartner {
   unit    Unit    @relation(fields: [unitId], references: [id], onDelete: Cascade)
   partner Partner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
   
+  // Performance indexes
+  @@index([unitId, deletedAt]) // For unit partner lookups
+  @@index([partnerId, deletedAt]) // For partner unit lookups
   @@unique([unitId, partnerId])
   @@map("unit_partners")
 }
@@ -119,6 +138,12 @@ model Contract {
   unit      Unit  @relation(fields: [unitId], references: [id], onDelete: Cascade)
   customer  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   
+  // Performance indexes
+  @@index([unitId, deletedAt]) // For unit contract lookups
+  @@index([customerId, deletedAt]) // For customer contract lookups
+  @@index([start]) // For date range queries
+  @@index([totalPrice]) // For price range queries
+  @@index([createdAt]) // For date-based queries
   @@map("contracts")
 }
 
@@ -137,6 +162,11 @@ model Installment {
   // Relations
   unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
   
+  // Performance indexes
+  @@index([unitId, deletedAt]) // For unit installment lookups
+  @@index([status, deletedAt]) // For status filtering
+  @@index([dueDate]) // For date range queries
+  @@index([amount]) // For amount range queries
   @@map("installments")
 }
 
@@ -259,7 +289,8 @@ model PartnerGroup {
   deletedAt DateTime?
   
   // Relations
-  partners PartnerGroupPartner[]
+  partners         PartnerGroupPartner[]
+  unitPartnerGroups UnitPartnerGroup[]
   
   @@map("partner_groups")
 }
@@ -280,6 +311,23 @@ model PartnerGroupPartner {
   
   @@unique([partnerGroupId, partnerId])
   @@map("partner_group_partners")
+}
+
+// UnitPartnerGroup - ربط الوحدات بمجموعات الشركاء
+model UnitPartnerGroup {
+  id              String   @id @default(cuid())
+  unitId          String
+  partnerGroupId  String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+  
+  // Relations
+  unit         Unit        @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  partnerGroup PartnerGroup @relation(fields: [partnerGroupId], references: [id], onDelete: Cascade)
+  
+  @@unique([unitId, partnerGroupId])
+  @@map("unit_partner_groups")
 }
 
 // AuditLog - مطابق لـ golden-dataset.json

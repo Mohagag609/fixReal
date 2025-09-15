@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx'
 
 export interface ExportData {
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export function exportToExcel(data: ExportData[], filename: string, sheetName: string = 'Sheet1') {
@@ -14,7 +14,7 @@ export function exportToExcel(data: ExportData[], filename: string, sheetName: s
 export function exportToCSV(data: ExportData[], filename: string) {
   if (data.length === 0) return
   
-  const headers = Object.keys(data[0])
+  const headers = Object.keys(data[0] || {})
   const csvContent = [
     headers.join(','),
     ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
@@ -31,7 +31,7 @@ export function exportToCSV(data: ExportData[], filename: string) {
   document.body.removeChild(link)
 }
 
-export function exportDashboardData(kpis: any, installments: any[], transactions: any[]) {
+export function exportDashboardData(kpis: { totalSales: number; totalReceipts: number; totalDebt: number; totalExpenses: number; netProfit: number; collectionPercentage: number; unitCounts: { total: number; available: number; sold: number; reserved: number } }, installments: unknown[], transactions: unknown[]) {
   const wb = XLSX.utils.book_new()
   
   // KPIs Sheet
@@ -68,7 +68,7 @@ export function exportDashboardData(kpis: any, installments: any[], transactions
   XLSX.writeFile(wb, `dashboard_export_${today}.xlsx`)
 }
 
-export function importFromExcel(file: File): Promise<any[]> {
+export function importFromExcel(file: File): Promise<unknown[]> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = (e) => {

@@ -32,7 +32,7 @@ export function PrintButton({ onPrint }: PrintButtonProps) {
 /**
  * دالة طباعة التقرير
  */
-export function printReport(data: any[], reportType: string, title: string) {
+export function printReport(data: unknown[], reportType: string, title: string) {
   const html = generatePrintHTML(data, reportType, title)
   
   // إنشاء نافذة جديدة للطباعة

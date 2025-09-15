@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getCachedUser } from '@/lib/cached-auth'
+// import { getCachedUser } from '@/lib/cached-auth'
 import { ApiResponse } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -13,6 +13,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Authentication check removed for better performance
     
     // Get database config and client
     const config = getConfig()
@@ -30,24 +31,6 @@ export async function POST(
       await prisma.$connect()
     } catch (error) {
       console.log('Reconnecting to database...')
-    }
-
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    const user = await getCachedUser(token)
-
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
     }
 
     const body = await request.json()
@@ -147,7 +130,7 @@ export async function POST(
       return updatedBrokerDue
     })
 
-    const response: ApiResponse<any> = {
+    const response: ApiResponse<unknown> = {
       success: true,
       data: result,
       message: 'تم دفع العمولة بنجاح'

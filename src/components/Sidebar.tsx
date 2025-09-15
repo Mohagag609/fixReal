@@ -11,6 +11,23 @@ interface SidebarProps {
 const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const router = useRouter()
   const pathname = usePathname()
+  const [currentTime, setCurrentTime] = useState('')
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    // تأكد أننا على العميل
+    setIsClient(true)
+    
+    // تحديث الوقت عند تحميل المكون
+    setCurrentTime(new Date().toLocaleString('ar-SA'))
+    
+    // تحديث الوقت كل دقيقة
+    const interval = setInterval(() => {
+      setCurrentTime(new Date().toLocaleString('ar-SA'))
+    }, 60000)
+
+    return () => clearInterval(interval)
+  }, [])
 
   const menuItems = [
     {
@@ -110,6 +127,7 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
         transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : 'translate-x-full'}
         w-80 lg:w-72
+        ${!isClient ? 'hidden' : ''}
       `}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200/50">
@@ -176,7 +194,7 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200/50 bg-white/50">
           <div className="text-center">
             <div className="text-xs text-gray-500 mb-2">
-              آخر تحديث: {new Date().toLocaleString('ar-SA')}
+              آخر تحديث: {currentTime || 'جاري التحميل...'}
             </div>
             <div className="flex items-center justify-center space-x-2 space-x-reverse">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>

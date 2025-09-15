@@ -29,11 +29,11 @@ export async function POST(request: NextRequest) {
         title: title || 'تقرير',
         data,
         reportType: reportType || 'general',
-        fileName: fileName || `report-${new Date().toISOString().split('T')[0]}.xlsx`
+        fileName: fileName || `report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`
       })
     }
     
-    const response = new NextResponse(buffer as any)
+    const response = new NextResponse(buffer as unknown)
     response.headers.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response.headers.set('Content-Disposition', `attachment; filename="${fileName || 'report'}.xlsx"`)
     response.headers.set('Content-Length', buffer.length.toString())
@@ -69,10 +69,10 @@ export async function GET(request: NextRequest) {
       title,
       data: sampleData,
       reportType,
-      fileName: `${reportType}-report-${new Date().toISOString().split('T')[0]}.xlsx`
+      fileName: `${reportType}-report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`
     })
     
-    const response = new NextResponse(buffer as any)
+    const response = new NextResponse(buffer as unknown)
     response.headers.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response.headers.set('Content-Disposition', `attachment; filename="${reportType}-report.xlsx"`)
     response.headers.set('Content-Length', buffer.length.toString())

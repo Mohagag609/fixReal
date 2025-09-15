@@ -25,9 +25,9 @@ export async function POST(request: NextRequest) {
       if (asZip) {
         // تصدير كملف ZIP
         const buffer = await createCSVZip(multipleSheets)
-        response = new NextResponse(buffer as any)
+        response = new NextResponse(buffer as unknown)
         response.headers.set('Content-Type', 'application/zip')
-        response.headers.set('Content-Disposition', `attachment; filename="reports-${new Date().toISOString().split('T')[0]}.zip"`)
+        response.headers.set('Content-Disposition', `attachment; filename="reports-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.zip"`)
         response.headers.set('Content-Length', buffer.length.toString())
       } else {
         // إرجاع JSON مع ملفات CSV متعددة
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
         title: title || 'تقرير',
         data,
         reportType: reportType || 'general',
-        fileName: fileName || `report-${new Date().toISOString().split('T')[0]}.csv`
+        fileName: fileName || `report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`
       })
       
       const buffer = Buffer.from(csv, 'utf-8')
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
       title,
       data: sampleData,
       reportType,
-      fileName: `${reportType}-report-${new Date().toISOString().split('T')[0]}.csv`
+      fileName: `${reportType}-report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`
     })
     
     const buffer = Buffer.from(csv, 'utf-8')

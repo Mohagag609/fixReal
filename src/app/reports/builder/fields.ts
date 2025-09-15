@@ -20,7 +20,7 @@ export interface ReportDefinition {
   icon: string
   color: string
   filters: FilterField[]
-  defaultFilters?: Record<string, any>
+  defaultFilters?: Record<string, unknown>
 }
 
 /**
@@ -72,8 +72,8 @@ export const reportDefinitions: ReportDefinition[] = [
       }
     ],
     defaultFilters: {
-      from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-      to: new Date().toISOString().split('T')[0]
+      from: new Date(new Date().getFullYear(), new Date().getMonth(), 1)??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
+      to: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
     }
   },
   
@@ -122,8 +122,8 @@ export const reportDefinitions: ReportDefinition[] = [
       }
     ],
     defaultFilters: {
-      from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-      to: new Date().toISOString().split('T')[0]
+      from: new Date(new Date().getFullYear(), new Date().getMonth(), 1)??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
+      to: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
     }
   },
   
@@ -172,8 +172,8 @@ export const reportDefinitions: ReportDefinition[] = [
       }
     ],
     defaultFilters: {
-      from: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
-      to: new Date().toISOString().split('T')[0]
+      from: new Date(new Date().getFullYear(), 0, 1)??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
+      to: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
     }
   },
   
@@ -284,8 +284,8 @@ export const reportDefinitions: ReportDefinition[] = [
       }
     ],
     defaultFilters: {
-      from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-      to: new Date().toISOString().split('T')[0]
+      from: new Date(new Date().getFullYear(), new Date().getMonth(), 1)??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
+      to: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
     }
   }
 ]
@@ -377,7 +377,7 @@ export const messages = {
 /**
  * تحقق من صحة الفلاتر
  */
-export function validateFilters(filters: Record<string, any>, reportId: string): string[] {
+export function validateFilters(filters: Record<string, unknown>, reportId: string): string[] {
   const errors: string[] = []
   const report = reportDefinitions.find(r => r.id === reportId)
   
@@ -422,7 +422,7 @@ export function validateFilters(filters: Record<string, any>, reportId: string):
 /**
  * تطبيق الفلاتر الافتراضية
  */
-export function applyDefaultFilters(reportId: string): Record<string, any> {
+export function applyDefaultFilters(reportId: string): Record<string, unknown> {
   const report = reportDefinitions.find(r => r.id === reportId)
   return report?.defaultFilters || {}
 }

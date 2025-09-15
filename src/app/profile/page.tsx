@@ -75,7 +75,7 @@ const ProfilePage = () => {
 
   useEffect(() => {
     fetchProfile()
-  }, [])
+  }, [] // TODO: Review dependencies) // TODO: Review dependencies
 
   // Keyboard shortcuts
   useEffect(() => {

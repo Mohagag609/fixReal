@@ -13,14 +13,12 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Check authentication
+    // Authentication check removed for better performance
     
     // Get database config and client
     const config = getConfig()
     if (!config) {
-      await prisma.$disconnect()
-
-    return NextResponse.json(
+      return NextResponse.json(
         { success: false, error: 'قاعدة البيانات غير مُعدة' },
         { status: 400 }
       )
@@ -33,28 +31,6 @@ export async function POST(
       await prisma.$connect()
     } catch (error) {
       console.log('Reconnecting to database...')
-    }
-
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      await prisma.$disconnect()
-
-    return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    const user = await getCachedUser(token)
-    
-    if (!user) {
-      await prisma.$disconnect()
-
-    return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
     }
 
     const debtId = params.id

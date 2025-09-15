@@ -1,21 +1,17 @@
 import { getConfig } from './db/config'
 import { getPrismaClient } from './prisma-clients'
-import { cache, CacheKeys, CacheTTL } from './cache/redis'
+import { cache as cacheClient, CacheKeys, CacheTTL } from '../lib/cache/redis'
 
 // Fallback in-memory cache for when Redis is not available
-const userCache = new Map<string, { user: any; timestamp: number }>()
+const userCache = new Map<string, { user: { id: string; username: string; role: string }; timestamp: number }>()
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 export async function getCachedUser(token: string) {
-  // Try Redis cache first
-  try {
-    const cachedUser = await cache.get(CacheKeys.userByToken(token))
-    if (cachedUser) {
-      console.log('Using Redis cached user for token:', token.substring(0, 10) + '...')
-      return cachedUser
-    }
-  } catch (error) {
-    console.log('Redis cache unavailable, falling back to memory cache')
+  // Try unified cache first
+  const cachedUser = await cacheClient.get(CacheKeys.userByToken(token))
+  if (cachedUser) {
+    console.log('Using cached user for token:', token.substring(0, 10) + '...')
+    return cachedUser
   }
 
   // Fallback to memory cache
@@ -38,30 +34,23 @@ export async function getCachedUser(token: string) {
     await prisma.$connect()
 
     // Decode JWT token
-    const jwt = require('jsonwebtoken')
+    const jwt = await import('jsonwebtoken')
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key')
 
     // Use raw SQL to avoid type issues
     const userResult = await prisma.$queryRaw`
       SELECT id, username, email, role, "isActive" 
       FROM users 
-      WHERE id = ${decoded.id}
-    ` as any[]
+      WHERE id = ${(decoded as { id: string }).id}
+    ` as { id: string; username: string; email: string; role: string; isActive: boolean }[]
 
     await prisma.$disconnect()
 
     const user = userResult[0] || null
 
     if (user) {
-      // Cache in both Redis and memory
-      try {
-        await cache.set(CacheKeys.userByToken(token), user, { 
-          ttl: CacheTTL.USER,
-          prefix: 'auth' 
-        })
-      } catch (error) {
-        console.log('Failed to cache user in Redis, using memory cache only')
-      }
+      // Cache in unified cache
+      await cacheClient.set(CacheKeys.userByToken(token), user, { ttl: CacheTTL.USER })
 
       // Memory cache fallback
       userCache.set(token, {
@@ -80,21 +69,13 @@ export async function getCachedUser(token: string) {
 
 export async function clearUserCache(token?: string) {
   if (token) {
-    // Clear from Redis
-    try {
-      await cache.del(CacheKeys.userByToken(token), 'auth')
-    } catch (error) {
-      console.log('Failed to clear user from Redis cache')
-    }
+    // Clear from unified cache
+    await cacheClient.del(CacheKeys.userByToken(token))
     // Clear from memory cache
     userCache.delete(token)
   } else {
-    // Clear all users from Redis
-    try {
-      await cache.invalidatePattern('auth:user:token:*')
-    } catch (error) {
-      console.log('Failed to clear all users from Redis cache')
-    }
+    // Clear all users from unified cache
+    await cacheClient.invalidatePattern('user:token:*')
     // Clear all from memory cache
     userCache.clear()
   }

@@ -105,7 +105,7 @@ export function validateDueDate(dueDate: string): { isValid: boolean; error?: st
 }
 
 // التحقق من صحة العميل
-export function validateCustomer(customer: any): { isValid: boolean; errors: string[] } {
+export function validateCustomer(customer: { name?: string; phone?: string; nationalId?: string; email?: string }): { isValid: boolean; errors: string[] } {
   const errors: string[] = []
   
   if (!customer.name) {
@@ -134,7 +134,7 @@ export function validateCustomer(customer: any): { isValid: boolean; errors: str
 }
 
 // التحقق من صحة الوحدة
-export function validateUnit(unit: any): { isValid: boolean; errors: string[] } {
+export function validateUnit(unit: { name?: string; code?: string }): { isValid: boolean; errors: string[] } {
   const errors: string[] = []
   
   // الاسم فقط مطلوب
@@ -165,7 +165,7 @@ export function validateUnit(unit: any): { isValid: boolean; errors: string[] } 
 }
 
 // التحقق من صحة العقد
-export function validateContract(contract: any): { isValid: boolean; errors: string[] } {
+export function validateContract(contract: { unitId?: string; customerId?: string; start?: string; end?: string; totalPrice?: number; discountAmount?: number }): { isValid: boolean; errors: string[] } {
   const errors: string[] = []
   
   if (!contract.unitId) {

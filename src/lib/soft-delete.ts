@@ -1,6 +1,7 @@
 // Soft delete utilities
 
 import { getConfig } from './db/config'
+import { prisma } from './db'
 import { getPrismaClient } from './prisma-clients'
 
 // Check if entity can be deleted (has no related records)
@@ -168,7 +169,7 @@ export async function softDeleteEntity(
     }
     
     // Get the model based on entity type
-    let model: any
+    let model: unknown
     switch (entityType) {
       case 'customer':
         model = prisma.customer
@@ -252,7 +253,7 @@ export async function restoreEntity(
     await prisma.$connect()
 
     // Get the model based on entity type
-    let model: any
+    let model: unknown
     switch (entityType) {
       case 'customer':
         model = prisma.customer
@@ -345,12 +346,12 @@ export async function getSoftDeletedEntities(
   entityType: string,
   page: number = 1,
   limit: number = 50
-): Promise<{ data: any[]; total: number; totalPages: number }> {
+): Promise<{ data: unknown[]; total: number; totalPages: number }> {
   try {
     const skip = (page - 1) * limit
     
     // Get the model based on entity type
-    let model: any
+    let model: unknown
     switch (entityType) {
       case 'customer':
         model = prisma.customer

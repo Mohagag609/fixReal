@@ -60,7 +60,7 @@ const MODELS = [
   'AuditLog'
 ] as const
 
-type ModelName = typeof MODELS[number]
+// type ModelName = typeof MODELS[number]
 
 interface BackupManifest {
   backup_version: string
@@ -116,7 +116,7 @@ export async function runExport(options: ExportOptions = {}): Promise<string> {
     for (const modelName of MODELS) {
       console.log(`📦 Exporting ${modelName}...`)
       
-      const model = (prisma as any)[modelName.toLowerCase()]
+      const model = prisma[modelName.toLowerCase()]
       if (!model) {
         console.warn(`⚠️  Model ${modelName} not found in Prisma client`)
         continue

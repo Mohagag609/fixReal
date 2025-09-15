@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     // Get user
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(userId) }
+      where: { id: userId }
     })
 
     if (!user) {

@@ -1,6 +1,6 @@
 // دالة مساعدة لفحص التكرار
 
-export const checkDuplicateName = (name: string, existingItems: any[], currentId?: string) => {
+export const checkDuplicateName = (name: string, existingItems: { name?: string; id?: string }[], currentId?: string) => {
   if (!name || !name.trim()) return false
   
   const normalizedName = name.trim().toLowerCase()
@@ -11,7 +11,7 @@ export const checkDuplicateName = (name: string, existingItems: any[], currentId
   )
 }
 
-export const checkDuplicateCode = (code: string, existingItems: any[], currentId?: string) => {
+export const checkDuplicateCode = (code: string, existingItems: { code?: string; id?: string }[], currentId?: string) => {
   if (!code || !code.trim()) return false
   
   const normalizedCode = code.trim().toLowerCase()
@@ -22,7 +22,7 @@ export const checkDuplicateCode = (code: string, existingItems: any[], currentId
   )
 }
 
-export const checkDuplicatePhone = (phone: string, existingItems: any[], currentId?: string) => {
+export const checkDuplicatePhone = (phone: string, existingItems: { phone?: string; id?: string }[], currentId?: string) => {
   if (!phone || !phone.trim()) return false
   
   const normalizedPhone = phone.trim().replace(/\s+/g, '')
@@ -33,7 +33,7 @@ export const checkDuplicatePhone = (phone: string, existingItems: any[], current
   )
 }
 
-export const checkDuplicateNationalId = (nationalId: string, existingItems: any[], currentId?: string) => {
+export const checkDuplicateNationalId = (nationalId: string, existingItems: { nationalId?: string; id?: string }[], currentId?: string) => {
   if (!nationalId || !nationalId.trim()) return false
   
   const normalizedNationalId = nationalId.trim()

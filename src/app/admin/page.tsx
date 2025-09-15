@@ -12,7 +12,7 @@ interface User {
 
 export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(false)
+  // const [loading, setLoading] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const router = useRouter()
 
@@ -34,7 +34,7 @@ export default function AdminPage() {
 
   const fetchUsers = async () => {
     try {
-      setLoading(true)
+      // setLoading(true)
       const response = await fetch('/api/users')
       if (response.ok) {
         const data = await response.json()
@@ -43,7 +43,7 @@ export default function AdminPage() {
     } catch (error) {
       console.error('Error fetching users:', error)
     } finally {
-      setLoading(false)
+      // setLoading(false)
     }
   }
 

@@ -111,7 +111,7 @@ const SystemPage = () => {
 
   useEffect(() => {
     fetchSystemStats()
-  }, [])
+  }, [] // TODO: Review dependencies) // TODO: Review dependencies
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -141,7 +141,6 @@ const SystemPage = () => {
     document.addEventListener('keydown', handleKeyPress)
     return () => document.removeEventListener('keydown', handleKeyPress)
   }, [sidebarOpen])
-
 
   const handleOptimize = async () => {
     try {

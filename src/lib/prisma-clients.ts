@@ -1,10 +1,6 @@
 import type { AppDbConfig } from "./db/config";
-import { PrismaClient as PgClient } from "@/prisma/generated/postgres";
-import { PrismaClient as SqlClient } from "@/prisma/generated/sqlite";
+import { PrismaClient } from "@prisma/client";
 import { createPrismaLogger, setupPrismaLogging } from "./prisma-logging";
-
-// Type for the union of all possible Prisma clients
-export type PrismaClient = PgClient | SqlClient;
 
 // Cache for Prisma clients to avoid recreating them
 const clientCache = new Map<string, PrismaClient>();
@@ -21,7 +17,7 @@ export function getPrismaClient(cfg: AppDbConfig): PrismaClient {
 
   if (cfg.type === "sqlite") {
     const url = `file:${cfg.sqlite?.file ?? "./data/dev.db"}`;
-    client = new SqlClient({
+    client = new PrismaClient({
       datasources: { db: { url } },
       log: createPrismaLogger()
     });
@@ -33,17 +29,13 @@ export function getPrismaClient(cfg: AppDbConfig): PrismaClient {
 
     if (!url) throw new Error("DATABASE URL not set for selected Postgres type");
 
-    client = new PgClient({
-      datasources: { db: { url } },
-      log: createPrismaLogger(),
-      // إعدادات إضافية لتحسين الاتصال
-      __internal: {
-        engine: {
-          connectTimeout: 60000,
-          queryTimeout: 60000,
-          poolTimeout: 60000,
-        }
-      }
+    client = new PrismaClient({
+      datasources: { 
+        db: { 
+          url: url
+        } 
+      },
+      log: createPrismaLogger()
     });
   }
 

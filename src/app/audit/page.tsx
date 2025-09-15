@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { formatDate } from '@/utils/formatting'
 
 export default function Audit() {
-  const [auditLogs, setAuditLogs] = useState<any[]>([])
+  const [auditLogs, setAuditLogs] = useState<unknown[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [pagination, setPagination] = useState({

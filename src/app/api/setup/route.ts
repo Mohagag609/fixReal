@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
         `;
       } else {
         // لـ PostgreSQL، استخدم db push لإنشاء الجداول
-        const { execSync } = require('child_process');
+        import { execSync  } from 'child_process';
         const schemaFile = "prisma/postgres.prisma";
         
         try {
@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
       }
       
       await prisma.$disconnect();
-    } catch (connectionError: any) {
+    } catch (connectionError: unknown) {
       console.error("Connection test failed:", connectionError);
       return new Response(JSON.stringify({ 
         ok: false, 
@@ -174,7 +174,7 @@ export async function POST(req: NextRequest) {
     // احفظ الإعداد
     try {
       saveConfig(body);
-    } catch (configError: any) {
+    } catch (configError: unknown) {
       console.error("Config save error:", configError);
       return new Response(JSON.stringify({ ok: false, error: "فشل في حفظ الإعدادات" }), { 
         status: 500,
@@ -194,7 +194,7 @@ export async function POST(req: NextRequest) {
       headers: { "Content-Type": "application/json" }
     });
 
-  } catch (e: any) {
+    } catch (e: unknown) {
     console.error("Setup API error:", e);
     return new Response(JSON.stringify({ 
       ok: false, 
@@ -231,7 +231,7 @@ export async function GET() {
       headers: { "Content-Type": "application/json" }
     });
 
-  } catch (e: any) {
+    } catch (e: unknown) {
     console.error("Setup GET error:", e);
     return new Response(JSON.stringify({ 
       configured: false,

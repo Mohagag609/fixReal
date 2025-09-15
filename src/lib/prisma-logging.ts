@@ -92,7 +92,7 @@ class QueryPerformanceMonitor {
 }
 
 // Enhanced Prisma logging middleware
-export function createPrismaLogger(): any[] {
+export function createPrismaLogger(): unknown[] {
   return [
     {
       level: 'query',
@@ -157,7 +157,7 @@ export function setupPrismaLogging(prisma: PrismaClient) {
 
 // Query deduplication middleware
 export class QueryDeduplication {
-  private static pendingQueries = new Map<string, Promise<any>>()
+  private static pendingQueries = new Map<string, Promise<unknown>>()
 
   static async deduplicate<T>(
     queryKey: string,
@@ -231,4 +231,4 @@ export function checkPrismaHealth() {
 }
 
 // Export the monitor for external use
-export { QueryPerformanceMonitor, QueryDeduplication }
+export { QueryPerformanceMonitor }

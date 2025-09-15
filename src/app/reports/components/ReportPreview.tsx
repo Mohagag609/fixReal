@@ -7,11 +7,11 @@ import { PrintButton } from './PrintButton'
 interface ReportPreviewProps {
   report: {
     type: string
-    data: any[]
-    filters: any
+    data: unknown[]
+    filters: unknown
     title: string
-    columns: any[]
-    summary?: any
+    columns: unknown[]
+    summary?: unknown
   }
   onClose: () => void
   onConfirm: () => void

@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server'
-import { cache, CacheKeys, CacheTTL } from './cache/redis'
+import { cache as cacheClient, CacheKeys } from '../lib/cache/redis'
 import { getCachedUser } from './cached-auth'
 
 // Enhanced authentication with Redis caching and performance optimization
 export interface OptimizedAuthResult {
-  user: any | null
+  user: { id: string; username: string; role: string } | null
   token: string | null
   fromCache: boolean
   cacheHit: boolean
@@ -37,7 +37,9 @@ export async function getOptimizedAuth(request: NextRequest): Promise<OptimizedA
     if (cookieHeader) {
       const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
         const [key, value] = cookie.trim().split('=')
-        acc[key] = value
+        if (key && value) {
+          acc[key] = value
+        }
         return acc
       }, {} as Record<string, string>)
       token = cookies.authToken
@@ -57,20 +59,16 @@ export async function getOptimizedAuth(request: NextRequest): Promise<OptimizedA
     return result
   }
 
-  // Try Redis cache first
+  // Try unified cache first
   let user = null
   let fromCache = false
   let cacheHit = false
 
-  try {
-    user = await cache.get(CacheKeys.userByToken(token))
-    if (user) {
-      fromCache = true
-      cacheHit = true
-      console.log('Using Redis cached user for token:', token.substring(0, 10) + '...')
-    }
-  } catch (error) {
-    console.log('Redis cache unavailable, falling back to database')
+  user = await cacheClient.get(CacheKeys.userByToken(token))
+  if (user) {
+    fromCache = true
+    cacheHit = true
+    console.log('Using cached user for token:', token.substring(0, 10) + '...')
   }
 
   // Fallback to database if not in cache
@@ -81,7 +79,7 @@ export async function getOptimizedAuth(request: NextRequest): Promise<OptimizedA
   }
 
   const result: OptimizedAuthResult = {
-    user,
+    user: user as { id: string; username: string; role: string } | null,
     token,
     fromCache,
     cacheHit
@@ -103,7 +101,7 @@ export async function requireOptimizedAuth(requiredRole: string = 'user') {
   return async (request: NextRequest) => {
     const startTime = Date.now()
     
-    const { user, token, fromCache, cacheHit } = await getOptimizedAuth(request)
+    const { user, cacheHit } = await getOptimizedAuth(request)
     
     const authTime = Date.now() - startTime
     console.log(`Auth completed in ${authTime}ms (cache: ${cacheHit ? 'hit' : 'miss'})`)
@@ -178,22 +176,22 @@ export class AuthPerformanceMonitor {
 }
 
 // Enhanced getUserFromToken with better error handling and performance
-export async function getOptimizedUserFromToken(token: string): Promise<any> {
+export async function getOptimizedUserFromToken(token: string): Promise<{ id: string; username: string; role: string } | null> {
   const startTime = Date.now()
   
   try {
     // Try Redis cache first
-    let user = await cache.get(CacheKeys.userByToken(token))
+    let user = await cacheClient.get(CacheKeys.userByToken(token))
     if (user) {
       AuthPerformanceMonitor.recordAuth(true, Date.now() - startTime)
-      return user
+      return user as { id: string; username: string; role: string }
     }
 
     // Fallback to database
     user = await getCachedUser(token)
     AuthPerformanceMonitor.recordAuth(false, Date.now() - startTime)
     
-    return user
+    return user as { id: string; username: string; role: string } | null
   } catch (error) {
     console.error('Error in getOptimizedUserFromToken:', error)
     AuthPerformanceMonitor.recordAuth(false, Date.now() - startTime)

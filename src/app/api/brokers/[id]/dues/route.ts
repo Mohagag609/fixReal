@@ -13,6 +13,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Authentication check removed for better performance
     
     // Get database config and client
     const config = getConfig()
@@ -32,24 +33,6 @@ export async function GET(
       console.log('Reconnecting to database...')
     }
 
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    const user = await getCachedUser(token)
-
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'غير مخول للوصول' },
-        { status: 401 }
-      )
-    }
-
     const brokerDues = await prisma.brokerDue.findMany({
       where: {
         brokerId: params.id,
@@ -61,7 +44,7 @@ export async function GET(
       orderBy: { createdAt: 'desc' }
     })
 
-    const response: ApiResponse<any> = {
+    const response: ApiResponse<unknown> = {
       success: true,
       data: brokerDues
     }

@@ -4,7 +4,7 @@ import { Redis } from 'ioredis'
 const redisConfig = {
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
-  password: process.env.REDIS_PASSWORD,
+  ...(process.env.REDIS_PASSWORD && { password: process.env.REDIS_PASSWORD }),
   retryDelayOnFailover: 100,
   maxRetriesPerRequest: 3,
   lazyConnect: true,
@@ -159,4 +159,7 @@ export const CacheTTL = {
   ENTITY: 600, // 10 minutes
   API_RESPONSE: 60, // 1 minute
   MATERIALIZED_VIEW: 3600, // 1 hour
+  SHORT: 120, // 2 minutes
+  MEDIUM: 600, // 10 minutes
+  LONG: 1800, // 30 minutes
 }

@@ -123,7 +123,7 @@ export async function runImport(archivePath: string, options: ImportOptions = {}
     for (const [modelName, expectedCount] of Object.entries(manifest.count_by_model)) {
       console.log(`📦 Processing ${modelName}...`)
       
-      const model = (prisma as any)[modelName.toLowerCase()]
+      const model = prisma[modelName.toLowerCase()]
       if (!model) {
         console.warn(`⚠️  Model ${modelName} not found in Prisma client`)
         continue
@@ -135,7 +135,7 @@ export async function runImport(archivePath: string, options: ImportOptions = {}
         continue
       }
 
-      const records: any[] = []
+      const records: unknown[] = []
       const fileContent = fs.readFileSync(filePath, 'utf8')
       
       for (const line of fileContent.trim().split('\n')) {
@@ -156,7 +156,7 @@ export async function runImport(archivePath: string, options: ImportOptions = {}
       if (mode === 'replace') {
         console.log(`   🗑️  Clearing existing ${modelName} records...`)
         await prisma.$transaction(async (tx) => {
-          await (tx as any)[modelName.toLowerCase()].deleteMany({})
+          await (tx as unknown)[modelName.toLowerCase()].deleteMany({})
         })
       }
 
@@ -167,14 +167,14 @@ export async function runImport(archivePath: string, options: ImportOptions = {}
         
         await prisma.$transaction(async (tx) => {
           if (mode === 'replace') {
-            await (tx as any)[modelName.toLowerCase()].createMany({
+            await (tx as unknown)[modelName.toLowerCase()].createMany({
               data: batch,
               skipDuplicates: true
             })
           } else if (mode === 'upsert') {
             for (const record of batch) {
               const { id, ...data } = record
-              await (tx as any)[modelName.toLowerCase()].upsert({
+              await (tx as unknown)[modelName.toLowerCase()].upsert({
                 where: { id },
                 update: data,
                 create: record

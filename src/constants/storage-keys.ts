@@ -51,12 +51,12 @@ export function removeAuthToken(): void {
   localStorage.removeItem(STORAGE_KEYS.sessionStorage_keys.auth_token)
 }
 
-export function getUserPreferences(): any {
+export function getUserPreferences(): Record<string, unknown> | null {
   const prefs = localStorage.getItem(STORAGE_KEYS.localStorage_keys.user_preferences)
   return prefs ? JSON.parse(prefs) : null
 }
 
-export function setUserPreferences(preferences: any): void {
+export function setUserPreferences(preferences: Record<string, unknown>): void {
   localStorage.setItem(STORAGE_KEYS.localStorage_keys.user_preferences, JSON.stringify(preferences))
 }
 

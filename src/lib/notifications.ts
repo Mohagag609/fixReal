@@ -7,7 +7,7 @@ export interface NotificationData {
   title: string
   message: string
   category: string
-  data?: any
+  data?: Record<string, unknown>
   expiresAt?: Date
 }
 
@@ -40,11 +40,11 @@ export async function getNotifications(
     acknowledged?: boolean
     expired?: boolean
   } = {}
-): Promise<{ data: any[]; total: number; totalPages: number }> {
+): Promise<{ data: unknown[]; total: number; totalPages: number }> {
   try {
     const skip = (page - 1) * limit
     
-    const whereClause: any = {}
+    const whereClause: Record<string, unknown> = {}
     
     if (filters.type) {
       whereClause.type = filters.type
@@ -152,7 +152,7 @@ export async function createCriticalNotification(
   title: string,
   message: string,
   category: string,
-  data?: any
+  data?: Record<string, unknown>
 ): Promise<void> {
   await createNotification({
     type: 'critical',
@@ -169,7 +169,7 @@ export async function createImportantNotification(
   title: string,
   message: string,
   category: string,
-  data?: any
+  data?: Record<string, unknown>
 ): Promise<void> {
   await createNotification({
     type: 'important',
@@ -186,7 +186,7 @@ export async function createInfoNotification(
   title: string,
   message: string,
   category: string,
-  data?: any
+  data?: Record<string, unknown>
 ): Promise<void> {
   await createNotification({
     type: 'info',
