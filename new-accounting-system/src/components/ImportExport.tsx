@@ -87,7 +87,7 @@ export const ImportExport = <T,>({
     if (onImport && importData.length > 0) {
       // Convert imported data to the expected format
       const convertedData = importData.map(row => {
-        const converted: any = {}
+        const converted: Record<string, unknown> = {}
         columns.forEach(col => {
           const key = col.accessorKey || col.key
           converted[key] = row[col.label] || row[key] || ''
