@@ -5,6 +5,7 @@
 [build.environment]
   NODE_VERSION = "18"
   NPM_VERSION = "9"
+  PRISMA_GENERATE_DATAPROXY = "true"
 
 [functions]
   node_bundler = "esbuild"
@@ -19,9 +20,13 @@
   port = 3000
   publish = ".next"
 
-# Prisma configuration
-[build.environment]
-  PRISMA_GENERATE_DATAPROXY = "true"
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "origin-when-cross-origin"
 
 # Edge functions for API routes
 [[edge_functions]]
