@@ -24,6 +24,8 @@ async function main() {
     },
   })
 
+  console.log('Created safes:', { safe1: safe1.name, safe2: safe2.name })
+
   // Create sample customers
   const customer1 = await prisma.customer.upsert({
     where: { phone: '01234567890' },
