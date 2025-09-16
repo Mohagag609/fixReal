@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone', // For optimized Docker builds
+  // Remove standalone output for Netlify compatibility
   experimental: {
     typedRoutes: true,
     serverActions: true,
