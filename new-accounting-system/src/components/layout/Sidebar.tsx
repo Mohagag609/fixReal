@@ -51,6 +51,11 @@ const menuItems = [
     icon: Wallet,
   },
   {
+    title: 'الخزينة',
+    href: '/treasury',
+    icon: Wallet,
+  },
+  {
     title: 'الشيكات',
     href: '/vouchers',
     icon: Receipt,
