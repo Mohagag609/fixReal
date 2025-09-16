@@ -1,0 +1,29 @@
+[build]
+  command = "./build.sh"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[dev]
+  command = "npm run dev"
+  port = 3000
+  publish = ".next"
+
+# Prisma configuration
+[build.environment]
+  PRISMA_GENERATE_DATAPROXY = "true"
+
+# Edge functions for API routes
+[[edge_functions]]
+  function = "api"
+  path = "/api/*"

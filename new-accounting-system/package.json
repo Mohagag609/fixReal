@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
@@ -12,12 +12,16 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force && npm run db:seed",
+    "db:setup": "prisma migrate deploy && npm run db:seed",
     "setup": "npm install && npm run db:push && npm run db:seed",
     "clean": "rm -rf .next node_modules package-lock.json",
-    "fresh": "npm run clean && npm run setup"
+    "fresh": "npm run clean && npm run setup",
+    "postbuild": "prisma generate",
+    "netlify:build": "npm run db:generate && npm run build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
