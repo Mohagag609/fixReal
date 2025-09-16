@@ -133,7 +133,7 @@ export default function SafesPage() {
         accessorKey: 'vouchers',
         header: 'عدد الشيكات',
         cell: ({ row }) => {
-          const vouchers = row.getValue('vouchers') as Array<any>
+          const vouchers = row.getValue('vouchers') as Array<Record<string, unknown>>
           return (
             <span className="text-sm text-gray-600">
               {vouchers?.length || 0}
@@ -145,7 +145,7 @@ export default function SafesPage() {
         accessorKey: 'transfersFrom',
         header: 'التحويلات الصادرة',
         cell: ({ row }) => {
-          const transfers = row.getValue('transfersFrom') as Array<any>
+          const transfers = row.getValue('transfersFrom') as Array<Record<string, unknown>>
           return (
             <span className="text-sm text-gray-600">
               {transfers?.length || 0}
@@ -157,7 +157,7 @@ export default function SafesPage() {
         accessorKey: 'transfersTo',
         header: 'التحويلات الواردة',
         cell: ({ row }) => {
-          const transfers = row.getValue('transfersTo') as Array<any>
+          const transfers = row.getValue('transfersTo') as Array<Record<string, unknown>>
           return (
             <span className="text-sm text-gray-600">
               {transfers?.length || 0}
@@ -340,7 +340,7 @@ export default function SafesPage() {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            هل أنت متأكد من حذف الخزينة "{deletingSafe?.name}"؟
+            هل أنت متأكد من حذف الخزينة &quot;{deletingSafe?.name}&quot;؟
           </p>
           <div className="flex justify-end space-x-2 space-x-reverse">
             <Button

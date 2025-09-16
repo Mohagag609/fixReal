@@ -362,7 +362,7 @@ export default function TreasuryPage() {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            هل أنت متأكد من حذف التحويل من "{deletingTransfer?.fromSafe.name}" إلى "{deletingTransfer?.toSafe.name}"؟
+            هل أنت متأكد من حذف التحويل من &quot;{deletingTransfer?.fromSafe.name}&quot; إلى &quot;{deletingTransfer?.toSafe.name}&quot;؟
           </p>
           <div className="flex justify-end space-x-2 space-x-reverse">
             <Button

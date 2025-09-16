@@ -6,7 +6,7 @@ export interface ExportOptions {
     from: string
     to: string
   }
-  filters?: Record<string, any>
+  filters?: Record<string, unknown>
 }
 
 export interface ExportData {
@@ -167,7 +167,7 @@ export const prepareTableDataForExport = <T>(
     key: string
     label: string
     accessorKey?: string
-    cell?: (row: any) => string | number
+    cell?: (row: T) => string | number
   }>,
   title?: string,
   subtitle?: string
@@ -179,7 +179,7 @@ export const prepareTableDataForExport = <T>(
         return col.cell(item)
       }
       const key = col.accessorKey || col.key
-      return (item as any)[key] || ''
+      return (item as Record<string, unknown>)[key] || ''
     })
   )
 

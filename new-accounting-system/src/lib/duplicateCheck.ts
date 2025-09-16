@@ -3,7 +3,7 @@ export interface DuplicateCheckItem {
   name?: string
   phone?: string
   email?: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export const checkDuplicateName = (
@@ -124,7 +124,7 @@ export const getDuplicateSuggestions = (
 }
 
 export const validateUniqueFields = (
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   items: DuplicateCheckItem[],
   fields: string[] = ['name', 'phone', 'email'],
   excludeId?: string

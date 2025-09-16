@@ -367,7 +367,7 @@ export default function InstallmentsPage() {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            هل أنت متأكد من حذف القسط للوحدة "{deletingInstallment?.unit.code}"؟
+            هل أنت متأكد من حذف القسط للوحدة &quot;{deletingInstallment?.unit.code}&quot;؟
           </p>
           <div className="flex justify-end space-x-2 space-x-reverse">
             <Button

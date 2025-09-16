@@ -15,7 +15,7 @@ interface ImportExportProps<T> {
     key: string
     label: string
     accessorKey?: string
-    cell?: (row: any) => string | number
+    cell?: (row: Record<string, unknown>) => string | number
   }>
   title?: string
   subtitle?: string

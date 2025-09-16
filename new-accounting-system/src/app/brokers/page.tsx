@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { motion } from 'framer-motion'
+// import { motion } from 'framer-motion'
 import { Plus, Edit, Trash2, Users, DollarSign, Phone, Calendar, AlertCircle } from 'lucide-react'
 import { DataTable } from '@/components/tables/DataTable'
 import { Button } from '@/components/ui/Button'
@@ -117,7 +117,7 @@ export default function BrokersPage() {
         accessorKey: 'brokerDues',
         header: 'الديون',
         cell: ({ row }) => {
-          const dues = row.getValue('brokerDues') as Array<any>
+          const dues = row.getValue('brokerDues') as Array<{ amount: number }>
           const totalDues = dues?.reduce((sum, due) => sum + due.amount, 0) || 0
           return (
             <div className="flex items-center">
@@ -133,7 +133,7 @@ export default function BrokersPage() {
         accessorKey: 'brokerDues',
         header: 'عدد الديون',
         cell: ({ row }) => {
-          const dues = row.getValue('brokerDues') as Array<any>
+          const dues = row.getValue('brokerDues') as Array<{ dueDate: string; status: string }>
           const overdueCount = dues?.filter(due => 
             new Date(due.dueDate) < new Date() && due.status === 'معلق'
           ).length || 0
@@ -341,7 +341,7 @@ export default function BrokersPage() {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            هل أنت متأكد من حذف الوسيط "{deletingBroker?.name}"؟
+            هل أنت متأكد من حذف الوسيط &quot;{deletingBroker?.name}&quot;؟
           </p>
           <div className="flex justify-end space-x-2 space-x-reverse">
             <Button

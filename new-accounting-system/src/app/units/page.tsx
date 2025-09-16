@@ -187,7 +187,7 @@ export default function UnitsPage() {
         accessorKey: 'contracts',
         header: 'العقود',
         cell: ({ row }) => {
-          const contracts = row.getValue('contracts') as Array<any>
+          const contracts = row.getValue('contracts') as Array<Record<string, unknown>>
           return (
             <span className="text-sm text-gray-600">
               {contracts?.length || 0}
@@ -369,7 +369,7 @@ export default function UnitsPage() {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            هل أنت متأكد من حذف الوحدة "{deletingUnit?.code}"؟
+            هل أنت متأكد من حذف الوحدة &quot;{deletingUnit?.code}&quot;؟
           </p>
           <div className="flex justify-end space-x-2 space-x-reverse">
             <Button

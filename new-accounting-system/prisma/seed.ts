@@ -39,7 +39,7 @@ async function main() {
     },
   })
 
-  const customer2 = await prisma.customer.upsert({
+  await prisma.customer.upsert({
     where: { phone: '01234567891' },
     update: {},
     create: {
@@ -67,7 +67,7 @@ async function main() {
     },
   })
 
-  const unit2 = await prisma.unit.upsert({
+  await prisma.unit.upsert({
     where: { code: 'A102' },
     update: {},
     create: {
@@ -83,7 +83,7 @@ async function main() {
   })
 
   // Create sample partners
-  const partner1 = await prisma.partner.create({
+  await prisma.partner.create({
     data: {
       name: 'شركة البناء الحديث',
       phone: '01234567892',
@@ -92,7 +92,7 @@ async function main() {
   })
 
   // Create sample contracts
-  const contract1 = await prisma.contract.create({
+  await prisma.contract.create({
     data: {
       unitId: unit1.id,
       customerId: customer1.id,

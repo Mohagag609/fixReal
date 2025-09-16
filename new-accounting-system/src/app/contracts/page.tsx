@@ -381,7 +381,7 @@ export default function ContractsPage() {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            هل أنت متأكد من حذف العقد للوحدة "{deletingContract?.unit.code}"؟
+            هل أنت متأكد من حذف العقد للوحدة &quot;{deletingContract?.unit.code}&quot;؟
           </p>
           <div className="flex justify-end space-x-2 space-x-reverse">
             <Button

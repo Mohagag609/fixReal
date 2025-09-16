@@ -2,7 +2,7 @@ export interface BackupData {
   version: string
   timestamp: string
   tables: {
-    [tableName: string]: any[]
+    [tableName: string]: Record<string, unknown>[]
   }
   metadata: {
     totalRecords: number
@@ -28,7 +28,7 @@ export const createBackup = async (options: BackupOptions = {}): Promise<BackupD
 
   try {
     // Get all table data
-    const tableData: { [tableName: string]: any[] } = {}
+    const tableData: { [tableName: string]: Record<string, unknown>[] } = {}
     let totalRecords = 0
 
     // List of all tables in the system

@@ -371,7 +371,7 @@ export default function VouchersPage() {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            هل أنت متأكد من حذف الشيك "{deletingVoucher?.description}"؟
+            هل أنت متأكد من حذف الشيك &quot;{deletingVoucher?.description}&quot;؟
           </p>
           <div className="flex justify-end space-x-2 space-x-reverse">
             <Button

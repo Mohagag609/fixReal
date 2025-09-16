@@ -38,7 +38,7 @@ export const BackupSystem: React.FC<BackupSystemProps> = ({ className = '' }) =>
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [backupData, setBackupData] = useState<BackupData | null>(null)
-  const [backupInfo, setBackupInfo] = useState<any>(null)
+  const [backupInfo, setBackupInfo] = useState<Record<string, unknown> | null>(null)
   const [showPreview, setShowPreview] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 

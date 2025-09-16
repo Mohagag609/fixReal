@@ -54,7 +54,7 @@ export default function PartnersPage() {
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null)
   const [showDetailPanel, setShowDetailPanel] = useState(false)
   const [groupedData, setGroupedData] = useState<Record<string, Partner[]>>({})
-  const [searchFilters, setSearchFilters] = useState<any[]>([])
+  const [searchFilters, setSearchFilters] = useState<Record<string, unknown>[]>([])
   const [dateRange, setDateRange] = useState<{ from: string; to: string } | undefined>()
 
   const { notifications, addNotification, removeNotification } = useNotifications()
@@ -192,12 +192,12 @@ export default function PartnersPage() {
   }
 
   // Handle search
-  const handleSearch = (filters: any[], dateRange?: { from: string; to: string }) => {
+  const handleSearch = (filters: Record<string, unknown>[], dateRange?: { from: string; to: string }) => {
     setSearchFilters(filters)
     setDateRange(dateRange)
     
     // Convert filters to API format
-    const apiFilters: Record<string, any> = {}
+    const apiFilters: Record<string, unknown> = {}
     filters.forEach(filter => {
       apiFilters[filter.field] = filter.value
     })
@@ -260,7 +260,7 @@ export default function PartnersPage() {
         accessorKey: 'unitPartners',
         header: 'الوحدات',
         cell: ({ row }) => {
-          const unitPartners = row.getValue('unitPartners') as Array<any>
+          const unitPartners = row.getValue('unitPartners') as Array<Record<string, unknown>>
           return (
             <div className="text-sm text-gray-600">
               {unitPartners?.length || 0} وحدة
@@ -272,7 +272,7 @@ export default function PartnersPage() {
         accessorKey: 'partnerDebts',
         header: 'الديون',
         cell: ({ row }) => {
-          const debts = row.getValue('partnerDebts') as Array<any>
+          const debts = row.getValue('partnerDebts') as Array<Record<string, unknown>>
           const totalDebts = debts?.reduce((sum, debt) => sum + debt.amount, 0) || 0
           return (
             <div className="flex items-center">
@@ -288,7 +288,7 @@ export default function PartnersPage() {
         accessorKey: 'partnerGroupPartners',
         header: 'المجموعات',
         cell: ({ row }) => {
-          const groups = row.getValue('partnerGroupPartners') as Array<any>
+          const groups = row.getValue('partnerGroupPartners') as Array<Record<string, unknown>>
           return (
             <div className="text-sm text-gray-600">
               {groups?.length || 0} مجموعة
@@ -631,7 +631,7 @@ export default function PartnersPage() {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            هل أنت متأكد من حذف الشريك "{deletingPartner?.name}"؟
+            هل أنت متأكد من حذف الشريك &quot;{deletingPartner?.name}&quot;؟
           </p>
           <div className="flex justify-end space-x-2 space-x-reverse">
             <Button

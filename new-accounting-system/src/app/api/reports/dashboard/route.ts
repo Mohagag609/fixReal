@@ -8,10 +8,11 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
-    const dateFilter = {
-      ...(startDate && { gte: new Date(startDate) }),
-      ...(endDate && { lte: new Date(endDate) }),
-    }
+    // Date filter for future use
+    // const dateFilter = {
+    //   ...(startDate && { gte: new Date(startDate) }),
+    //   ...(endDate && { lte: new Date(endDate) }),
+    // }
 
     // Get basic counts
     const [

@@ -8,7 +8,7 @@ export interface PaginationParams {
   search?: string
   sortBy?: string
   sortOrder?: 'asc' | 'desc'
-  filters?: Record<string, any>
+  filters?: Record<string, unknown>
 }
 
 export interface PaginationResponse<T> {
@@ -41,13 +41,13 @@ export interface UsePaginatedApiReturn<T> {
   setLimit: (limit: number) => void
   setSearch: (search: string) => void
   setSorting: (sortBy: string, sortOrder: 'asc' | 'desc') => void
-  setFilters: (filters: Record<string, any>) => void
+  setFilters: (filters: Record<string, unknown>) => void
   clearFilters: () => void
   hasNextPage: boolean
   hasPrevPage: boolean
 }
 
-const cache = new Map<string, { data: any; timestamp: number; ttl: number }>()
+const cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>()
 
 export const usePaginatedApi = <T>(
   endpoint: string,
@@ -116,7 +116,7 @@ export const usePaginatedApi = <T>(
     return null
   }, [getCacheKey])
 
-  const setCachedData = useCallback((url: string, data: any) => {
+  const setCachedData = useCallback((url: string, data: unknown) => {
     const cacheKey = getCacheKey(url)
     cache.set(cacheKey, {
       data,
@@ -213,7 +213,7 @@ export const usePaginatedApi = <T>(
     setParams(prev => ({ ...prev, sortBy, sortOrder, page: 1 }))
   }, [])
 
-  const setFilters = useCallback((filters: Record<string, any>) => {
+  const setFilters = useCallback((filters: Record<string, unknown>) => {
     setParams(prev => ({ ...prev, filters, page: 1 }))
   }, [])
 

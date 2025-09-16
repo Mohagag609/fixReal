@@ -44,7 +44,7 @@ export const DataGrouping = <T,>({
     const groups: Record<string, T[]> = {}
     
     data.forEach(item => {
-      const value = (item as any)[groupBy]
+      const value = (item as Record<string, unknown>)[groupBy]
       const groupKey = value ? String(value) : 'غير محدد'
       
       if (!groups[groupKey]) {
@@ -60,12 +60,12 @@ export const DataGrouping = <T,>({
     const sorted: Record<string, T[]> = {}
     
     Object.entries(groupedData).forEach(([groupKey, items]) => {
-      let sortedItems = [...items]
+      const sortedItems = [...items]
       
       sorting.forEach(sort => {
         sortedItems.sort((a, b) => {
-          const aValue = (a as any)[sort.key]
-          const bValue = (b as any)[sort.key]
+          const aValue = (a as Record<string, unknown>)[sort.key]
+          const bValue = (b as Record<string, unknown>)[sort.key]
           
           if (aValue === bValue) return 0
           

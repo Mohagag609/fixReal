@@ -36,7 +36,7 @@ export function formatNumber(number: number): string {
   return new Intl.NumberFormat('ar-EG').format(number)
 }
 
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -47,7 +47,7 @@ export function debounce<T extends (...args: any[]) => any>(
   }
 }
 
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {

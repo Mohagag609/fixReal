@@ -173,7 +173,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 
                   <select
                     value={filter.operator}
-                    onChange={(e) => updateFilter(index, { operator: e.target.value as any })}
+                    onChange={(e) => updateFilter(index, { operator: e.target.value as string })}
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="contains">يحتوي على</option>

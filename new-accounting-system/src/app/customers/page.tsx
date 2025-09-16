@@ -147,7 +147,7 @@ export default function CustomersPage() {
         accessorKey: 'contracts',
         header: 'عدد العقود',
         cell: ({ row }) => {
-          const contracts = row.getValue('contracts') as Array<any>
+          const contracts = row.getValue('contracts') as Array<Record<string, unknown>>
           return (
             <span className="text-sm text-gray-600">
               {contracts?.length || 0}
@@ -333,7 +333,7 @@ export default function CustomersPage() {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            هل أنت متأكد من حذف العميل "{deletingCustomer?.name}"؟
+            هل أنت متأكد من حذف العميل &quot;{deletingCustomer?.name}&quot;؟
           </p>
           <div className="flex justify-end space-x-2 space-x-reverse">
             <Button
