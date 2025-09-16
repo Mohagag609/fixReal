@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { DashboardKPIs } from '../../types'
-import { formatCurrency, formatDate } from '../../utils/formatting'
+import { formatCurrency } from '../../utils/formatting'
 import { NotificationSystem, useNotifications } from '../../components/NotificationSystem'
 import ReportBuilder from './builder/ReportBuilder'
 import DataTable from './components/DataTable'
@@ -11,13 +11,28 @@ import ReportPreview from './components/ReportPreview'
 import { printReport } from './components/PrintButton'
 
 // Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: unknown) => (
+interface ModernCardProps {
+  children?: React.ReactNode;
+  className?: string;
+  [key: string]: any;
+}
+
+const ModernCard = ({ children, className = '', ...props }: ModernCardProps) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: unknown) => {
+interface ModernButtonProps {
+  children?: React.ReactNode;
+  variant?: string;
+  size?: string;
+  className?: string;
+  onClick?: () => void;
+  [key: string]: any;
+}
+
+const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: ModernButtonProps) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -43,7 +58,15 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
   )
 }
 
-const ReportCard = ({ title, description, icon, color, onClick }: unknown) => (
+interface ReportCardProps {
+  title: string;
+  description: string;
+  icon: string;
+  color: string;
+  onClick: () => void;
+}
+
+const ReportCard = ({ title, description, icon, color, onClick }: ReportCardProps) => (
   <ModernCard 
     className="cursor-pointer hover:scale-105 transition-all duration-200 hover:shadow-2xl"
     onClick={onClick}
@@ -63,8 +86,8 @@ export default function Reports() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState({
-    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1)??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
-    to: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
+    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0] || 'غير محدد',
+    to: new Date().toISOString().split('T')[0] || 'غير محدد'
   })
   
   // حالة نظام التقارير الجديد
@@ -198,7 +221,7 @@ export default function Reports() {
               title: currentReport.title,
               data: currentReport.data,
               reportType: currentReport.type,
-              fileName: `${currentReport.type}-report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`
+              fileName: `${currentReport.type}-report-${new Date().toISOString().split('T')[0] || 'غير محدد'}.xlsx`
             })
           })
           break
@@ -214,7 +237,7 @@ export default function Reports() {
               title: currentReport.title,
               data: currentReport.data,
               reportType: currentReport.type,
-              fileName: `${currentReport.type}-report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`
+              fileName: `${currentReport.type}-report-${new Date().toISOString().split('T')[0] || 'غير محدد'}.csv`
             })
           })
           break
@@ -230,7 +253,7 @@ export default function Reports() {
               title: currentReport.title,
               data: currentReport.data,
               reportType: currentReport.type,
-              fileName: `${currentReport.type}-report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.pdf`
+              fileName: `${currentReport.type}-report-${new Date().toISOString().split('T')[0] || 'غير محدد'}.pdf`
             })
           })
           break
@@ -244,7 +267,7 @@ export default function Reports() {
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `${currentReport.type}-report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.${format}`
+        a.download = `${currentReport.type}-report-${new Date().toISOString().split('T')[0] || 'غير محدد'}.${format}`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
@@ -304,7 +327,7 @@ export default function Reports() {
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `${reportType}-report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`
+        a.download = `${reportType}-report-${new Date().toISOString().split('T')[0] || 'غير محدد'}.xlsx`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
@@ -439,13 +462,13 @@ export default function Reports() {
 
         {/* مؤشر التحميل */}
         {reportLoading && (
-          <ModernCard className="mb-8">
+          <div className="mb-8">
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
               <h3 className="text-lg font-semibold text-gray-700">جاري إنشاء التقرير...</h3>
               <p className="text-gray-500">يرجى الانتظار</p>
             </div>
-          </ModernCard>
+          </div>
         )}
 
         {/* Report Preview Modal */}
@@ -580,7 +603,7 @@ export default function Reports() {
         </div>
 
         {/* Quick Actions */}
-        <ModernCard>
+        <div>
           <h2 className="text-xl font-bold text-gray-900 mb-6">إجراءات سريعة</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <ModernButton 
@@ -610,7 +633,7 @@ export default function Reports() {
               النسخ الاحتياطية
             </ModernButton>
           </div>
-        </ModernCard>
+        </div>
       </div>
       
       <NotificationSystem 

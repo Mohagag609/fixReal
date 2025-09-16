@@ -158,7 +158,7 @@ export default function Contracts() {
   const [newContract, setNewContract] = useState({
     unitId: '',
     customerId: '',
-    start: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
+    start: new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
     totalPrice: '',
     discountAmount: '',
     brokerName: '',
@@ -357,7 +357,7 @@ export default function Contracts() {
         setNewContract({
           unitId: '',
           customerId: '',
-          start: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
+          start: new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
           totalPrice: '',
           discountAmount: '',
           brokerName: '',
@@ -442,7 +442,7 @@ export default function Contracts() {
     setNewContract({
       unitId: '',
       customerId: '',
-      start: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
+      start: new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
       totalPrice: '',
       discountAmount: contract.discountAmount.toString(),
       brokerName: contract.brokerName || '',
@@ -466,7 +466,7 @@ export default function Contracts() {
     setNewContract({
       unitId: contract.unitId,
       customerId: contract.customerId,
-      start: new Date(contract.start)??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
+      start: new Date(contract.start).toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
       totalPrice: contract.totalPrice.toString(),
       discountAmount: contract.discountAmount.toString(),
       brokerName: contract.brokerName || '',
@@ -620,7 +620,7 @@ export default function Contracts() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `عقود_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`)
+    link.setAttribute('download', `عقود_${new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -832,7 +832,7 @@ export default function Contracts() {
       const link = document.createElement('a')
       const url = URL.createObjectURL(blob)
       link.setAttribute('href', url)
-      link.setAttribute('download', `تقرير_العقود_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`)
+      link.setAttribute('download', `تقرير_العقود_${new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`)
       link.style.visibility = 'hidden'
       document.body.appendChild(link)
       link.click()
@@ -1078,7 +1078,7 @@ export default function Contracts() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `عقود_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.json`)
+    link.setAttribute('download', `عقود_${new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.json`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()

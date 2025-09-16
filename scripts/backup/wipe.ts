@@ -101,7 +101,7 @@ export async function runWipe(options: WipeOptions): Promise<{
       
       // Use Prisma's soft delete if available, otherwise use deleteMany
       for (const modelName of WIPE_ORDER) {
-        const model = prisma[modelName.toLowerCase()]
+        const model = (prisma as any)[modelName.toLowerCase()]
         if (!model) {
           console.warn(`⚠️  Model ${modelName} not found`)
           continue
@@ -130,7 +130,7 @@ export async function runWipe(options: WipeOptions): Promise<{
       // Use transactions to ensure data integrity
       await prisma.$transaction(async (tx) => {
         for (const modelName of WIPE_ORDER) {
-          const model = (tx as unknown)[modelName.toLowerCase()]
+          const model = (tx as any)[modelName.toLowerCase()]
           if (!model) {
             console.warn(`⚠️  Model ${modelName} not found`)
             continue

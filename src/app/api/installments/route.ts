@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getSharedAuth } from '@/lib/shared-auth'
-import { ApiResponse, Installment, PaginatedResponse } from '@/types'
+// import { getSharedAuth } from '@/lib/shared-auth'
+import { ApiResponse, PaginatedResponse } from '@/types'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -76,9 +76,9 @@ export async function GET(request: NextRequest) {
 
     const hasMore = installments.length > limit
     const data = hasMore ? installments.slice(0, limit) : installments
-    const nextCursor = hasMore ? data[data.length - 1].id : null
+    const nextCursor = hasMore && data.length > 0 ? (data[data.length - 1] as any)?.id : null
 
-    const response: PaginatedResponse<Installment> = {
+    const response: PaginatedResponse<unknown> = {
       success: true,
       data,
       pagination: {
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
     // Authentication check removed for better performance
 
     const body = await request.json()
-    const { unitId, amount, dueDate, status, notes } = body
+    const { unitId, amount, dueDate } = body
 
     // Validation
     if (!unitId || !amount || !dueDate) {
@@ -130,12 +130,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get database config and client
+    const config = getConfig()
+    if (!config) {
+      return NextResponse.json(
+        { success: false, error: 'قاعدة البيانات غير مُعدة' },
+        { status: 400 }
+      )
+    }
+
+    const prisma = getPrismaClient(config)
+
     // Check if unit exists
     const unit = await prisma.unit.findUnique({
       where: { id: unitId }
     })
 
     if (!unit) {
+      await prisma.$disconnect()
       return NextResponse.json(
         { success: false, error: 'الوحدة غير موجودة' },
         { status: 400 }
@@ -148,15 +160,17 @@ export async function POST(request: NextRequest) {
         unitId,
         amount,
         dueDate: new Date(dueDate),
-        status: status || 'معلق',
-        notes
+        status: 'pending',
+        notes: ''
       },
       include: {
         unit: true
       }
     })
 
-    const response: ApiResponse<Installment> = {
+    await prisma.$disconnect()
+
+    const response: ApiResponse<unknown> = {
       success: true,
       data: installment,
       message: 'تم إضافة القسط بنجاح'

@@ -246,6 +246,10 @@ export interface DashboardKPIs {
   pendingInstallments: number
   activeUnits: number
   inactiveUnits: number
+  totalSales: number
+  totalReceipts: number
+  totalExpenses: number
+  netProfit: number
 }
 
 // Date Filter

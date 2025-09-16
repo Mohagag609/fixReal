@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getCachedUser } from '@/lib/cached-auth'
+// import { getCachedUser } from '@/lib/cached-auth'
 
 export async function POST(
   request: NextRequest,

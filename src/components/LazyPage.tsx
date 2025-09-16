@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, ComponentType } from 'react'
-import { ModernCard } from './ui/ModernCard'
+import ModernCard from './ui/ModernCard'
 
 interface LazyPageProps {
   fallback?: React.ReactNode
@@ -96,11 +96,11 @@ export class LazyErrorBoundary extends React.Component<
     return { hasError: true, error }
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('Lazy component error:', error, errorInfo)
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       return (
         this.props.fallback || (

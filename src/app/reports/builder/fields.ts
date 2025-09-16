@@ -72,8 +72,8 @@ export const reportDefinitions: ReportDefinition[] = [
       }
     ],
     defaultFilters: {
-      from: new Date(new Date().getFullYear(), new Date().getMonth(), 1)??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
-      to: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
+      from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0] || 'غير محدد',
+      to: new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
     }
   },
   
@@ -122,8 +122,8 @@ export const reportDefinitions: ReportDefinition[] = [
       }
     ],
     defaultFilters: {
-      from: new Date(new Date().getFullYear(), new Date().getMonth(), 1)??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
-      to: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
+      from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0] || 'غير محدد',
+      to: new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
     }
   },
   
@@ -172,8 +172,8 @@ export const reportDefinitions: ReportDefinition[] = [
       }
     ],
     defaultFilters: {
-      from: new Date(new Date().getFullYear(), 0, 1)??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
-      to: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
+      from: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0] || 'غير محدد',
+      to: new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
     }
   },
   
@@ -284,8 +284,8 @@ export const reportDefinitions: ReportDefinition[] = [
       }
     ],
     defaultFilters: {
-      from: new Date(new Date().getFullYear(), new Date().getMonth(), 1)??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
-      to: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
+      from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0] || 'غير محدد',
+      to: new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
     }
   }
 ]
@@ -391,30 +391,39 @@ export function validateFilters(filters: Record<string, unknown>, reportId: stri
       errors.push(`${field.label} مطلوب`)
     }
     
-    if (field.type === 'date' && filters[field.key]) {
-      const date = new Date(filters[field.key])
-      if (isNaN(date.getTime())) {
-        errors.push(`${field.label} غير صحيح`)
+      if (field.type === 'date' && filters[field.key]) {
+        // runtime-guard unknown -> string
+        const raw = filters[field.key]
+        const val = typeof raw === 'string' ? raw : (raw instanceof Date ? raw.toISOString() : String(raw))
+        const date = new Date(val)
+        if (isNaN(date.getTime())) {
+          errors.push(`${field.label} غير صحيح`)
+        }
       }
-    }
     
-    if (field.type === 'number' && filters[field.key]) {
-      const num = Number(filters[field.key])
-      if (isNaN(num) || num < 0) {
-        errors.push(`${field.label} يجب أن يكون رقماً صحيحاً`)
+      if (field.type === 'number' && filters[field.key]) {
+        // guard unknown -> number
+        const raw = filters[field.key]
+        const num = typeof raw === 'number' ? raw : Number(raw)
+        if (isNaN(num) || num < 0) {
+          errors.push(`${field.label} يجب أن يكون رقماً صحيحاً`)
+        }
       }
-    }
   })
   
   // التحقق من صحة نطاق التاريخ
-  if (filters.from && filters.to) {
-    const fromDate = new Date(filters.from)
-    const toDate = new Date(filters.to)
-    
-    if (fromDate > toDate) {
-      errors.push('تاريخ البداية يجب أن يكون قبل تاريخ النهاية')
+    if (filters.from && filters.to) {
+      const rawFrom = filters.from
+      const rawTo = filters.to
+      const fromVal = typeof rawFrom === 'string' ? rawFrom : (rawFrom instanceof Date ? rawFrom.toISOString() : String(rawFrom))
+      const toVal = typeof rawTo === 'string' ? rawTo : (rawTo instanceof Date ? rawTo.toISOString() : String(rawTo))
+      const fromDate = new Date(fromVal)
+      const toDate = new Date(toVal)
+
+      if (fromDate > toDate) {
+        errors.push('تاريخ البداية يجب أن يكون قبل تاريخ النهاية')
+      }
     }
-  }
   
   return errors
 }

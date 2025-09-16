@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserFromToken } from '@/lib/auth'
 import { acknowledgeNotification } from '@/lib/notifications'
 import { ApiResponse } from '@/types'
 
@@ -8,25 +7,41 @@ export const runtime = 'nodejs'
 
 // POST /api/notifications/[id]/acknowledge - Acknowledge notification
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    // Authentication check removed for better performance
+    const { id } = params
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'معرف الإشعار مطلوب' },
+        { status: 400 }
+      )
+    }
 
     // Acknowledge notification
-    const result = await acknowledgeNotification(params.id, user.id.toString())
+    const result = await acknowledgeNotification(id, 'user')
 
-    const response: ApiResponse = {
-      success: result.success,
-      message: result.message
+    if (!result) {
+      return NextResponse.json(
+        { success: false, error: 'فشل في تأكيد الإشعار' },
+        { status: 500 }
+      )
+    }
+
+    const response: ApiResponse<{ acknowledged: boolean }> = {
+      success: true,
+      data: { acknowledged: true },
+      message: 'تم تأكيد الإشعار بنجاح'
     }
 
     return NextResponse.json(response)
+
   } catch (error) {
     console.error('Error acknowledging notification:', error)
     return NextResponse.json(
-      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { success: false, error: 'خطأ في تأكيد الإشعار' },
       { status: 500 }
     )
   }

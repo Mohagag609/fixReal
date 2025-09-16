@@ -618,7 +618,7 @@ export default function Customers() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `customers_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`)
+    link.setAttribute('download', `customers_${new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -824,7 +824,7 @@ export default function Customers() {
       const link = document.createElement('a')
       const url = URL.createObjectURL(blob)
       link.setAttribute('href', url)
-      link.setAttribute('download', `تقرير_العملاء_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`)
+      link.setAttribute('download', `تقرير_العملاء_${new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`)
       link.style.visibility = 'hidden'
       document.body.appendChild(link)
       link.click()
@@ -1075,7 +1075,7 @@ export default function Customers() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `customers_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.json`)
+    link.setAttribute('download', `customers_${new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.json`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()

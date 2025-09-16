@@ -8,61 +8,10 @@ import { NotificationSystem, useNotifications } from '@/components/NotificationS
 import SidebarToggle from '@/components/SidebarToggle'
 import Sidebar from '@/components/Sidebar'
 import NavigationButtons from '@/components/NavigationButtons'
-
-// Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: unknown) => (
-  <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
-    {children}
-  </div>
-)
-
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: unknown) => {
-  const variants: { [key: string]: string } = {
-    primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
-    secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
-    success: 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg shadow-green-500/25',
-    danger: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-500/25',
-    warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-lg shadow-yellow-500/25',
-    info: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg shadow-purple-500/25'
-  }
-  
-  const sizes: { [key: string]: string } = {
-    sm: 'px-3 py-2 text-sm',
-    md: 'px-4 py-2.5 text-sm font-medium',
-    lg: 'px-6 py-3 text-base font-medium'
-  }
-  
-  return (
-    <button 
-      className={`${variants[variant]} ${sizes[size]} rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  )
-}
-
-const ModernInput = ({ label, className = '', ...props }: unknown) => (
-  <div className="space-y-2">
-    {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
-    <input 
-      className={`w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold placeholder:text-gray-500 placeholder:font-normal ${className}`}
-      {...props}
-    />
-  </div>
-)
-
-const ModernSelect = ({ label, children, className = '', ...props }: unknown) => (
-  <div className="space-y-2">
-    {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
-    <select 
-      className={`w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 font-bold ${className}`}
-      {...props}
-    >
-      {children}
-    </select>
-  </div>
-)
+import ModernCard from '@/components/ui/ModernCard'
+import ModernButton from '@/components/ui/ModernButton'
+import { ModernInput } from '@/components/ui/ModernInput'
+import { ModernSelect } from '@/components/ui/ModernSelect'
 
 export default function Units() {
   const [units, setUnits] = useState<Unit[]>([])
@@ -141,7 +90,7 @@ export default function Units() {
   useEffect(() => {
     // Load data when page opens
     fetchData(true)
-  }, [] // TODO: Review dependencies) // TODO: Review dependencies
+  }, []) // TODO: Review dependencies
 
   useEffect(() => {
     // Check if we need to open edit modal from management page
@@ -648,7 +597,7 @@ export default function Units() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `وحدات_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`)
+    link.setAttribute('download', `وحدات_${new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -860,7 +809,7 @@ export default function Units() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-      link.setAttribute('download', `تقرير_الوحدات_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`)
+      link.setAttribute('download', `تقرير_الوحدات_${new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -1106,7 +1055,7 @@ export default function Units() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `وحدات_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.json`)
+    link.setAttribute('download', `وحدات_${new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.json`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -1629,7 +1578,7 @@ export default function Units() {
                   label="الطابق (اختياري)"
                   type="text"
                   value={newUnit.floor}
-                  onChange={(e: unknown) => setNewUnit({...newUnit, floor: e.target.value})}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewUnit({...newUnit, floor: e.target.value})}
                   placeholder="رقم الطابق"
                 />
                 
@@ -1637,7 +1586,7 @@ export default function Units() {
                   label="المبنى (اختياري)"
                   type="text"
                   value={newUnit.building}
-                  onChange={(e: unknown) => setNewUnit({...newUnit, building: e.target.value})}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewUnit({...newUnit, building: e.target.value})}
                   placeholder="اسم المبنى"
                 />
                 
@@ -1645,7 +1594,7 @@ export default function Units() {
                   label="السعر الإجمالي (اختياري)"
                   type="number"
                   value={newUnit.totalPrice}
-                  onChange={(e: unknown) => setNewUnit({...newUnit, totalPrice: e.target.value})}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewUnit({...newUnit, totalPrice: e.target.value})}
                   placeholder="السعر الإجمالي"
                 />
                 
@@ -1671,12 +1620,12 @@ export default function Units() {
                 <ModernSelect
                   label="مجموعة الشركاء (اختيارية)"
                   value={newUnit.partnerGroupId}
-                  onChange={(e: unknown) => setNewUnit({...newUnit, partnerGroupId: e.target.value})}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNewUnit({...newUnit, partnerGroupId: e.target.value})}
                 >
                   <option value="">اختر مجموعة شركاء...</option>
                   {partnerGroups.map(group => {
-                    const groupPartners = partners.filter(p => p.partnerGroupId === group.id)
-                    const totalPercent = groupPartners.reduce((sum, p) => sum + p.percent, 0)
+                    const groupPartners = partners.filter((p: any) => p.partnerGroupId === group.id)
+                    const totalPercent = groupPartners.reduce((sum: number, p: any) => sum + p.percent, 0)
                     return (
                       <option key={group.id} value={group.id}>
                         {group.name} ({totalPercent}%)
@@ -1688,7 +1637,7 @@ export default function Units() {
                 <ModernSelect
                   label="الحالة"
                   value={newUnit.status}
-                  onChange={(e: unknown) => setNewUnit({...newUnit, status: e.target.value})}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNewUnit({...newUnit, status: e.target.value})}
                 >
                   <option value="متاحة">متاحة</option>
                   <option value="محجوزة">محجوزة</option>
@@ -1700,7 +1649,7 @@ export default function Units() {
                     <label className="text-sm font-medium text-gray-700">ملاحظات</label>
                     <textarea
                       value={newUnit.notes}
-                      onChange={(e: unknown) => setNewUnit({...newUnit, notes: e.target.value})}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewUnit({...newUnit, notes: e.target.value})}
                       placeholder="ملاحظات إضافية"
                       rows={3}
                       className="w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"

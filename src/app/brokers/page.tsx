@@ -103,7 +103,7 @@ export default function Brokers() {
   const [selectedDue, setSelectedDue] = useState<unknown>(null)
   const [paymentData, setPaymentData] = useState({
     safeId: '',
-    paymentDate: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
+    paymentDate: new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
     notes: ''
   })
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -471,7 +471,7 @@ export default function Brokers() {
         setError(null)
         setPaymentData({
           safeId: '',
-          paymentDate: new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
+          paymentDate: new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد',
           notes: ''
         })
         fetchBrokerDues()
@@ -529,7 +529,7 @@ export default function Brokers() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `brokers_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`)
+    link.setAttribute('download', `brokers_${new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()

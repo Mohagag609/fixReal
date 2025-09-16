@@ -5,328 +5,192 @@ import { useRouter } from 'next/navigation'
 import { Voucher } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/formatting'
 import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
-
-// Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: unknown) => (
-  <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
-    {children}
-  </div>
-)
-
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: unknown) => {
-  const variants: { [key: string]: string } = {
-    primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
-    secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
-    success: 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg shadow-green-500/25',
-    danger: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-500/25',
-    warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-lg shadow-yellow-500/25',
-    info: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg shadow-purple-500/25'
-  }
-  
-  const sizes: { [key: string]: string } = {
-    sm: 'px-3 py-2 text-sm',
-    md: 'px-4 py-2.5 text-sm font-medium',
-    lg: 'px-6 py-3 text-base font-medium'
-  }
-  
-  return (
-    <button 
-      className={`${variants[variant]} ${sizes[size]} rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  )
-}
+import ModernCard from '@/components/ui/ModernCard'
+import ModernButton from '@/components/ui/ModernButton'
 
 export default function Vouchers() {
   const [vouchers, setVouchers] = useState<Voucher[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
-  const [deletingVouchers, setDeletingVouchers] = useState<Set<string>>(new Set())
   
   const router = useRouter()
-  const { notifications, addNotification, removeNotification } = useNotifications()
+  const { addNotification } = useNotifications()
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        switch (e.key) {
-          case 'f':
-            e.preventDefault()
-            document.getElementById('search-input')?.focus()
-            break
-          case 'Escape':
-            e.preventDefault()
-            setSearch('')
-            setTypeFilter('')
-            break
-        }
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyPress)
-    return () => document.removeEventListener('keydown', handleKeyPress)
-  }, [])
-
-  useEffect(() => {
-    const token = localStorage.getItem('authToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    
-    fetchVouchers()
-  }, [])
-
+  // Fetch vouchers
   const fetchVouchers = async () => {
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/vouchers', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      
+      setLoading(true)
+      const response = await fetch('/api/vouchers')
       const data = await response.json()
+      
       if (data.success) {
         setVouchers(data.data)
       } else {
-        setError(data.error || 'خطأ في تحميل السندات')
+        setError(data.error || 'فشل في تحميل السندات')
       }
     } catch (err) {
-      console.error('Error fetching vouchers:', err)
-      setError('خطأ في الاتصال')
+      setError('خطأ في الاتصال بالخادم')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleDeleteVoucher = async (voucherId: string) => {
+  // Delete voucher
+  const handleDeleteVoucher = async (id: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا السند؟')) return
 
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch(`/api/vouchers/${voucherId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+      const response = await fetch(`/api/vouchers/${id}`, {
+        method: 'DELETE'
       })
-
+      
       const data = await response.json()
+      
       if (data.success) {
-        setSuccess('تم حذف السند بنجاح!')
-        setError(null)
-        fetchVouchers()
-        addNotification({
-          type: 'success',
-          title: 'تم الحذف بنجاح',
-          message: 'تم حذف السند بنجاح'
-        })
+        setVouchers(vouchers.filter(v => v.id !== id))
+        addNotification('تم حذف السند بنجاح')
       } else {
-        setError(data.error || 'خطأ في حذف السند')
-        setSuccess(null)
-        addNotification({
-          type: 'error',
-          title: 'خطأ في الحذف',
-          message: data.error || 'فشل في حذف السند'
-        })
+        addNotification(data.error || 'فشل في حذف السند')
       }
     } catch (err) {
-      console.error('Delete voucher error:', err)
-      setError('خطأ في حذف السند')
-      setSuccess(null)
-      addNotification({
-        type: 'error',
-        title: 'خطأ في الحذف',
-        message: 'فشل في حذف السند'
-      })
+      addNotification('خطأ في الاتصال بالخادم')
     }
   }
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'receipt':
-        return 'bg-green-100 text-green-800'
-      case 'payment':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'receipt':
-        return 'سند قبض'
-      case 'payment':
-        return 'سند دفع'
-      default:
-        return type
-    }
-  }
-
+  // Filter vouchers
   const filteredVouchers = vouchers.filter(voucher => {
-    const matchesSearch = search === '' || 
-      voucher.description.toLowerCase().includes(search.toLowerCase()) ||
-      voucher.payer?.toLowerCase().includes(search.toLowerCase()) ||
-      voucher.beneficiary?.toLowerCase().includes(search.toLowerCase())
-    
-    const matchesType = typeFilter === '' || voucher.type === typeFilter
-    
+    const matchesSearch = voucher.description?.toLowerCase().includes(search.toLowerCase()) ||
+                         voucher.id?.toLowerCase().includes(search.toLowerCase())
+    const matchesType = !typeFilter || voucher.type === typeFilter
     return matchesSearch && matchesType
   })
 
+  useEffect(() => {
+    fetchVouchers()
+  }, [])
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-700">جاري التحميل...</h2>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 space-x-reverse">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <span className="text-white text-xl">📄</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">إدارة السندات</h1>
-                <p className="text-gray-600">نظام متطور لإدارة سندات القبض والدفع</p>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <NotificationSystem notifications={[]} onRemove={() => {}} />
+        
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">إدارة السندات</h1>
+              <p className="text-gray-600">إدارة جميع السندات المالية في النظام</p>
             </div>
-            <div className="flex items-center space-x-3 space-x-reverse">
+            <div className="flex gap-3">
               <ModernButton variant="secondary" onClick={() => router.push('/treasury')}>
-                💰 إدارة الخزائن
+                العودة للخزينة
               </ModernButton>
               <ModernButton variant="secondary" onClick={() => router.push('/')}>
-                العودة للرئيسية
+                الرئيسية
               </ModernButton>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Search and Filters */}
+        {/* Filters */}
         <ModernCard className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 space-x-reverse">
-              <div className="relative">
-                <input
-                  id="search-input"
-                  type="text"
-                  placeholder="🔍 ابحث في السندات... (Ctrl+F)"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-80 px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
-                />
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">البحث</label>
+              <input
+                type="text"
+                placeholder="ابحث في السندات..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">نوع السند</label>
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">جميع الأنواع</option>
-                <option value="receipt">سند قبض</option>
-                <option value="payment">سند دفع</option>
+                <option value="receipt">إيصال استلام</option>
+                <option value="payment">إيصال دفع</option>
+                <option value="transfer">تحويل</option>
               </select>
-              <ModernButton variant="secondary" size="sm">
-                📊 تصدير CSV
-              </ModernButton>
-              <ModernButton variant="secondary" size="sm">
-                🖨️ طباعة PDF
-              </ModernButton>
             </div>
-            <div className="text-sm text-gray-500">
-              {filteredVouchers.length} سند
+            <div className="flex items-end">
+              <ModernButton variant="secondary" size="sm">
+                تصفية
+              </ModernButton>
+              <ModernButton variant="secondary" size="sm">
+                إعادة تعيين
+              </ModernButton>
             </div>
           </div>
         </ModernCard>
 
         {/* Vouchers List */}
         <ModernCard>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">قائمة السندات</h2>
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <span className="text-sm text-gray-500">آخر تحديث:</span>
-              <span className="text-sm font-medium text-gray-700">{new Date().toLocaleString('en-GB')}</span>
-            </div>
-          </div>
-
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-              <div className="flex items-center">
-                <span className="text-red-500 mr-2">⚠️</span>
-                <span className="text-red-700">{error}</span>
-              </div>
-            </div>
-          )}
-
-          {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
-              <div className="flex items-center">
-                <span className="text-green-500 mr-2">✅</span>
-                <span className="text-green-700">{success}</span>
-              </div>
-            </div>
-          )}
-
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">النوع</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">التاريخ</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">المبلغ</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الخزنة</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الوصف</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">المدفوع له</th>
-                  <th className="text-right py-4 px-6 font-semibold text-gray-700">الإجراءات</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-700">رقم السند</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-700">النوع</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-700">المبلغ</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-700">الوصف</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-700">التاريخ</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-700">الإجراءات</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredVouchers.map((voucher) => (
-                  <tr key={voucher.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors duration-150">
-                    <td className="py-4 px-6">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(voucher.type)}`}>
-                        {getTypeLabel(voucher.type)}
+                  <tr key={voucher.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-3 px-4 text-gray-900 font-medium">
+                      {voucher.id || 'غير محدد'}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        voucher.type === 'receipt' 
+                          ? 'bg-green-100 text-green-800' 
+                          : voucher.type === 'payment'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {voucher.type === 'receipt' ? 'إيصال استلام' : 
+                         voucher.type === 'payment' ? 'إيصال دفع' : 'تحويل'}
                       </span>
                     </td>
-                    <td className="py-4 px-6">
-                      <div className="text-gray-600">{formatDate(voucher.date)}</div>
+                    <td className="py-3 px-4 text-gray-900 font-medium">
+                      {formatCurrency(voucher.amount)}
                     </td>
-                    <td className="py-4 px-6">
-                      <div className={`font-semibold ${voucher.type === 'receipt' ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatCurrency(voucher.amount)}
-                      </div>
+                    <td className="py-3 px-4 text-gray-600">
+                      {voucher.description || 'لا يوجد وصف'}
                     </td>
-                    <td className="py-4 px-6">
-                      <div className="text-gray-600">{voucher.safe?.name || 'غير محدد'}</div>
+                    <td className="py-3 px-4 text-gray-600">
+                      {formatDate(voucher.date)}
                     </td>
-                    <td className="py-4 px-6">
-                      <div className="text-gray-600 max-w-xs truncate">{voucher.description}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="text-gray-600">{voucher.payer || voucher.beneficiary || '-'}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center space-x-2 space-x-reverse">
+                    <td className="py-3 px-4">
+                      <div className="flex gap-2">
                         <ModernButton size="sm" variant="secondary">
-                          👁️ عرض
+                          عرض
                         </ModernButton>
                         <ModernButton size="sm" variant="danger" onClick={() => handleDeleteVoucher(voucher.id)}>
-                          🗑️ حذف
+                          حذف
                         </ModernButton>
                       </div>
                     </td>
@@ -334,14 +198,15 @@ export default function Vouchers() {
                 ))}
               </tbody>
             </table>
+            
+            {filteredVouchers.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                لا توجد سندات مطابقة للبحث
+              </div>
+            )}
           </div>
         </ModernCard>
       </div>
-      
-      <NotificationSystem 
-        notifications={notifications} 
-        onRemove={removeNotification} 
-      />
     </div>
   )
 }

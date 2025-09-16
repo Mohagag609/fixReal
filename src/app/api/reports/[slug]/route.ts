@@ -23,7 +23,7 @@ export async function POST(
       )
     }
     
-    const data: unknown[] = []
+    let data: unknown[] = []
     
     // تشغيل التقرير المناسب
     switch (slug) {
@@ -94,7 +94,7 @@ export async function GET(
       }
     })
     
-    const data: unknown[] = []
+    let data: unknown[] = []
     
     // تشغيل التقرير المناسب
     switch (slug) {

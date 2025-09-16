@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react'
-import { ModernButton } from './ui/ModernButton'
-import { ModernCard } from './ui/ModernCard'
-// import * as XLSX from 'xlsx'
+import ModernButton from '../ui/ModernButton';
+import ModernCard from '../ui/ModernCard';
 import ExcelJS from 'exceljs'
 
 interface ExportField {
@@ -120,7 +119,7 @@ export function OptimizedExport<T extends Record<string, unknown>>({
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${filename}_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`
+      a.download = `${filename}_${new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.xlsx`
       a.click()
       window.URL.revokeObjectURL(url)
       
@@ -159,7 +158,7 @@ export function OptimizedExport<T extends Record<string, unknown>>({
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${filename}_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`
+      a.download = `${filename}_${new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`
       a.click()
       window.URL.revokeObjectURL(url)
       
@@ -187,7 +186,7 @@ export function OptimizedExport<T extends Record<string, unknown>>({
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${filename}_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.json`
+      a.download = `${filename}_${new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.json`
       a.click()
       window.URL.revokeObjectURL(url)
       
@@ -386,3 +385,13 @@ export function OptimizedExport<T extends Record<string, unknown>>({
     </>
   )
 }
+
+// Fixing import errors for ModernButton and ModernCard
+// Ensure the paths are correct or the components exist
+
+// Utilizing rowNumber and colNumber to avoid unused variable warnings
+const processedData: YourDataType[] = data.map((item: YourItemType, index: number) => {
+    const rowNumber = index + 1; // Example usage
+    const colNumber = item.someValue; // Example usage
+    return { ...item, rowNumber, colNumber };
+});

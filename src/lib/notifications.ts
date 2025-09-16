@@ -21,7 +21,7 @@ export async function createNotification(data: NotificationData): Promise<void> 
         message: data.message,
         category: data.category,
         data: data.data ? JSON.stringify(data.data) : null,
-        expiresAt: data.expiresAt
+        expiresAt: data.expiresAt || null || null
       }
     })
   } catch (error) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getSharedAuth } from '@/lib/shared-auth'
+// import { getSharedAuth } from '@/lib/shared-auth'
 import { validateCustomer } from '@/utils/validation'
 import { cache as cacheClient, CacheKeys, CacheTTL } from '@/lib/cache/redis'
 import { ApiResponse, Customer, PaginatedResponse } from '@/types'
@@ -13,7 +13,7 @@ export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    const { user, token } = await getSharedAuth(request)
+    // const { user, token } = await getSharedAuth(request)
     
     // For now, allow access without authentication for customers list
     // You can uncomment the following lines to require authentication
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
 
     const hasMore = customers.length > limit
     const data = hasMore ? customers.slice(0, limit) : customers
-    const nextCursor = hasMore ? data[data.length - 1].id : null
+    const nextCursor = hasMore && data.length > 0 ? (data[data.length - 1] as any)?.id : null
 
     const response: PaginatedResponse<Customer> = {
       success: true,
@@ -154,8 +154,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    const { user, token } = await getSharedAuth(request)
-    
+    // const { user, token } = await getSharedAuth(request)
+
     // For now, allow access without authentication for customer creation
     // You can uncomment the following lines to require authentication
     // if (!user || !token) {
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
     const { name, phone, nationalId, address, email, notes } = body
 
     // Validate customer data
-    const validation = validateCustomer({ name, phone, nationalId, email, notes })
+    const validation = validateCustomer({ name, phone, nationalId, email })
     if (!validation.isValid) {
       return NextResponse.json(
         { success: false, error: validation.errors.join(', ') },

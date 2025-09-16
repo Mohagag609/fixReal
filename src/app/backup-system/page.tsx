@@ -52,7 +52,7 @@ export default function BackupSystem() {
   useEffect(() => {
     // Get database type from environment or API
     fetchDatabaseInfo()
-  }, [] // TODO: Review dependencies) // TODO: Review dependencies
+  }, []) // TODO: Review dependencies
 
   const fetchDatabaseInfo = async () => {
     try {
@@ -80,7 +80,7 @@ export default function BackupSystem() {
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `backup-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.tar.gz`
+        a.download = `backup-${new Date().toISOString().split('T')[0] || 'غير محدد'}.tar.gz`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)

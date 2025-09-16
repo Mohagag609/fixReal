@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getUserFromToken } from '@/lib/auth'
+// import { getUserFromToken } from '@/lib/auth'
 import { createReadStream, mkdirSync, rmSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
 
     // الحصول على إعدادات قاعدة البيانات
@@ -93,7 +93,7 @@ async function exportDatabaseData(prisma: unknown) {
 
   for (const table of tables) {
     try {
-      const records = await prisma[table].findMany({
+      const records = await (prisma as any)[table].findMany({
         orderBy: { id: 'asc' }
       })
       data[table] = records

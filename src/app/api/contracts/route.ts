@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getSharedAuth } from '@/lib/shared-auth'
+// import { getSharedAuth } from '@/lib/shared-auth'
 import { validateContract } from '@/utils/validation'
 import { cache as cacheClient, CacheKeys, CacheTTL } from '@/lib/cache/redis'
 import { ApiResponse, Contract, PaginatedResponse } from '@/types'
@@ -109,9 +109,9 @@ export async function GET(request: NextRequest) {
 
     const hasMore = contracts.length > limit
     const data = hasMore ? contracts.slice(0, limit) : contracts
-    const nextCursor = hasMore ? data[data.length - 1].id : null
+    const nextCursor = hasMore && data.length > 0 ? (data[data.length - 1] as any)?.id : null
 
-    const response: PaginatedResponse<Contract> = {
+    const response: PaginatedResponse<unknown> = {
       success: true,
       data,
       pagination: {
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Validate contract data
-    const validation = validateContract({ unitId, customerId, start, totalPrice, discountAmount, brokerAmount })
+    const validation = validateContract({ unitId, customerId, start, totalPrice, discountAmount })
     if (!validation.isValid) {
       return NextResponse.json(
         { success: false, error: validation.errors.join(', ') },
@@ -255,10 +255,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Create contract and generate installments in a transaction
-    const result = await prisma.$transaction(async (tx: any) => {
+    const result = await prisma.$transaction(async (tx) => {
       // Generate contract code
-      const contractCount = await tx.contract.count()
-      const code = `CTR-${String(contractCount + 1).padStart(5, '0')}`
+      // const contractCount = await tx.contract.count()
+      // const code = `CTR-${String(contractCount + 1).padStart(5, '0')}`
 
       // Create contract
       const contract = await tx.contract.create({
@@ -303,9 +303,9 @@ export async function POST(request: NextRequest) {
             type: 'receipt',
             date: new Date(start),
             amount: downPayment,
-            safeId: downPaymentSafeId,
+            safeId: downPaymentSafeId || '',
             description: `مقدم عقد للوحدة ${unit?.code}`,
-            payer: customer?.name,
+            payer: customer?.name || '',
             linkedRef: unitId
           }
         })

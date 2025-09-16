@@ -218,7 +218,7 @@ export async function softDeleteEntity(
     }
     
     // Perform soft delete
-    await model.update({
+    await (model as any).update({
       where: { id: entityId },
       data: { deletedAt: new Date() }
     })
@@ -302,7 +302,7 @@ export async function restoreEntity(
     }
     
     // Check if entity exists and is soft deleted
-    const entity = await model.findUnique({
+    const entity = await (model as any).findUnique({
       where: { id: entityId }
     })
     
@@ -321,7 +321,7 @@ export async function restoreEntity(
     }
     
     // Restore entity
-    await model.update({
+    await (model as any).update({
       where: { id: entityId },
       data: { deletedAt: null }
     })
@@ -397,13 +397,13 @@ export async function getSoftDeletedEntities(
     }
     
     const [data, total] = await Promise.all([
-      model.findMany({
+      (model as any).findMany({
         where: { deletedAt: { not: null } },
         skip,
         take: limit,
         orderBy: { deletedAt: 'desc' }
       }),
-      model.count({ where: { deletedAt: { not: null } } })
+      (model as any).count({ where: { deletedAt: { not: null } } })
     ])
     
     const totalPages = Math.ceil(total / limit)

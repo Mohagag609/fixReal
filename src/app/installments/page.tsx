@@ -269,7 +269,7 @@ export default function Installments() {
 
   const handleReschedule = (installment: Installment) => {
     setRescheduleInstallment(installment)
-    setNewDueDate(new Date(installment.dueDate)??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد')
+    setNewDueDate(new Date(installment.dueDate).toISOString().split('T')[0] || 'غير محدد' || 'غير محدد')
     setShowRescheduleModal(true)
   }
 
@@ -330,7 +330,7 @@ export default function Installments() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `installments_${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`)
+    link.setAttribute('download', `installments_${new Date().toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getSharedAuth } from '@/lib/shared-auth'
-import { cache as cacheClient, CacheKeys } from '@/lib/cache/redis'
+// import { getSharedAuth } from '@/lib/shared-auth'
+import { cache as cacheClient } from '@/lib/cache/redis'
 import { ApiResponse } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
 
     // تحديث الكاش بعد الاستيراد الناجح
     try {
-      await cacheClient.invalidatePattern(CacheKeys.CUSTOMERS_LIST)
+      await cacheClient.invalidatePattern('customers:list:*')
       console.log('Customers cache invalidated after bulk import')
     } catch (cacheError) {
       console.error('Cache invalidation error:', cacheError)

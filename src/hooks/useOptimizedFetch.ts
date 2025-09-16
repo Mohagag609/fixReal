@@ -62,7 +62,7 @@ export function useOptimizedFetch<T = unknown>(options: UseOptimizedFetchOptions
           error: null,
           lastFetch: cached.timestamp
         }))
-        return cached.data
+        return cached.data as T
       }
     }
 
@@ -102,7 +102,7 @@ export function useOptimizedFetch<T = unknown>(options: UseOptimizedFetchOptions
       return data
 
     } catch (error: unknown) {
-      if (error.name === 'AbortError') {
+      if ((error as any)?.name === 'AbortError') {
         return null // Request was cancelled
       }
 
@@ -118,7 +118,7 @@ export function useOptimizedFetch<T = unknown>(options: UseOptimizedFetchOptions
       setState(prev => ({
         ...prev,
         loading: false,
-        error: error.message || 'خطأ في الاتصال بالخادم'
+        error: (error as any)?.message || 'خطأ في الاتصال بالخادم'
       }))
 
       return null

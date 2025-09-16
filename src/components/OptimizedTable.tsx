@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react'
-import { ModernCard } from './ui/ModernCard'
+import { ReactNode } from 'react';
+import ModernCard from './ModernCard';
 
 interface Column<T> {
   key: keyof T
@@ -143,10 +144,7 @@ export function OptimizedTable<T extends Record<string, unknown>>({
                     key={String(column.key)}
                     className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
                   >
-                    {column.render 
-                      ? column.render(item[column.key], item)
-                      : item[column.key] || '-'
-                    }
+                    {column.render ? column.render(item[column.key] as ReactNode, item) : (typeof item[column.key] === 'string' || typeof item[column.key] === 'number' ? item[column.key] as ReactNode : null)}
                   </td>
                 ))}
               </tr>

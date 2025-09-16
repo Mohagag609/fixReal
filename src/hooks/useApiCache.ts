@@ -16,7 +16,7 @@ interface ApiCacheState<T> {
 const apiCache = new Map<string, { data: unknown; timestamp: number; ttl: number }>()
 
 export function useApiCache<T>(
-  url: string, 
+  url: string,
   options: ApiCacheOptions = {}
 ) {
   const { ttl = 60000, enabled = true } = options // Default 1 minute TTL
@@ -26,7 +26,7 @@ export function useApiCache<T>(
     error: null,
     lastFetch: null
   })
-  
+
   const abortControllerRef = useRef<AbortController | null>(null)
   const isMountedRef = useRef(true)
 
@@ -39,7 +39,7 @@ export function useApiCache<T>(
       if (cached && Date.now() - cached.timestamp < cached.ttl) {
         setState(prev => ({
           ...prev,
-          data: cached.data,
+          data: cached.data as T,
           loading: false,
           error: null,
           lastFetch: cached.timestamp
@@ -53,36 +53,49 @@ export function useApiCache<T>(
       abortControllerRef.current.abort()
     }
 
-    // Create new abort controller
+    // Create new abort controller and timeout
     abortControllerRef.current = new AbortController()
+    const timeoutId = setTimeout(() => {
+      abortControllerRef.current?.abort()
+    }, 1000 * 15) // 15s timeout
 
     setState(prev => ({ ...prev, loading: true, error: null }))
 
     try {
+      // Attach Authorization header automatically if token present
+      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (token) headers['Authorization'] = `Bearer ${token}`
+
       const response = await fetch(url, {
         signal: abortControllerRef.current.signal,
-        headers: {
-          'Content-Type': 'application/json',
-        }
+        headers
       })
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      const data = await response.json()
+      // Try to parse JSON safely
+      let parsed: unknown = null
+      try {
+        parsed = await response.json()
+      } catch (parseError) {
+        console.warn('Failed to parse JSON from', url, parseError)
+        parsed = null
+      }
 
       if (!isMountedRef.current) return
 
       // Cache the data
       apiCache.set(url, {
-        data,
+        data: parsed,
         timestamp: Date.now(),
         ttl
       })
 
       setState({
-        data,
+        data: parsed as T,
         loading: false,
         error: null,
         lastFetch: Date.now()
@@ -90,9 +103,9 @@ export function useApiCache<T>(
 
     } catch (error) {
       if (!isMountedRef.current) return
-      
+
       if (error instanceof Error && error.name === 'AbortError') {
-        return // Request was cancelled
+        return // Request was cancelled or timed out
       }
 
       setState(prev => ({
@@ -100,6 +113,9 @@ export function useApiCache<T>(
         loading: false,
         error: error instanceof Error ? error.message : 'Unknown error'
       }))
+
+    } finally {
+      clearTimeout(timeoutId)
     }
   }
 

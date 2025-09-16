@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getSharedAuth } from '@/lib/shared-auth'
+// import { getSharedAuth } from '@/lib/shared-auth'
 import { ApiResponse, PartnerDebt, PaginatedResponse } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
 
     const hasMore = partnerDebts.length > limit
     const data = hasMore ? partnerDebts.slice(0, limit) : partnerDebts
-    const nextCursor = hasMore ? data[data.length - 1].id : null
+    const nextCursor = hasMore && data.length > 0 ? (data[data.length - 1] as any)?.id : null
 
     const response: PaginatedResponse<PartnerDebt> = {
       success: true,

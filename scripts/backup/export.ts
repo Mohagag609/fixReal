@@ -116,7 +116,7 @@ export async function runExport(options: ExportOptions = {}): Promise<string> {
     for (const modelName of MODELS) {
       console.log(`📦 Exporting ${modelName}...`)
       
-      const model = prisma[modelName.toLowerCase()]
+      const model = (prisma as any)[modelName.toLowerCase()]
       if (!model) {
         console.warn(`⚠️  Model ${modelName} not found in Prisma client`)
         continue

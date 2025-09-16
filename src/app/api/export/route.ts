@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserFromToken } from '@/lib/auth'
+// import { getUserFromToken } from '@/lib/auth'
 import { createBackup } from '@/lib/backup'
-import { ApiResponse } from '@/types'
+// import { ApiResponse } from '@/types'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 // GET /api/export - Export all data to JSON
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Authentication check removed for better performance
 
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(JSON.stringify(backupData, null, 2), {
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
-        'Content-Disposition': `attachment; filename="backup-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.json"`
+        'Content-Disposition': `attachment; filename="backup-${new Date().toISOString().split('T')[0] || 'غير محدد'}.json"`
       }
     })
   } catch (error) {

@@ -28,7 +28,7 @@ export default function UsersManagementPage() {
   useEffect(() => {
     checkAdminAuth()
     fetchUsers()
-  }, [] // TODO: Review dependencies) // TODO: Review dependencies
+  }, []) // TODO: Review dependencies
 
   const checkAdminAuth = () => {
     const adminAuth = localStorage.getItem('adminAuth')

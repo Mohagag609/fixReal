@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getSharedAuth } from '@/lib/shared-auth'
+// import { getSharedAuth } from '@/lib/shared-auth'
 import { cache as cacheClient, CacheKeys, CacheTTL } from '@/lib/cache/redis'
 
 export async function GET(request: NextRequest) {
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
 
     const hasMore = partnerGroups.length > limit
     const data = hasMore ? partnerGroups.slice(0, limit) : partnerGroups
-    const nextCursor = hasMore ? data[data.length - 1].id : null
+    const nextCursor = hasMore && data.length > 0 ? (data[data.length - 1] as any)?.id : null
 
     // Transform the data to match the expected format
     const transformedGroups = data.map(group => ({
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Cache the response for future requests
-    await cacheClient.set(cacheKey, response, CacheTTL.ENTITY)
+    await cacheClient.set(cacheKey, response, { ttl: CacheTTL.ENTITY })
     console.log('Partner-groups data cached successfully')
 
     await prisma.$disconnect()

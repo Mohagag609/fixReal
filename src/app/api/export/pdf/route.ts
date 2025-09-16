@@ -9,7 +9,7 @@ import { exportToPDF } from '../../../../lib/reports/exporters/toPDF'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { title, data, reportType, fileName, html } = body
+    const { title, data, reportType, fileName } = body
     
     if (!data || !Array.isArray(data)) {
       return NextResponse.json(
@@ -23,10 +23,10 @@ export async function POST(request: NextRequest) {
       title: title || 'تقرير',
       data,
       reportType: reportType || 'general',
-      fileName: fileName || `report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.pdf`
+      fileName: fileName || `report-${new Date().toISOString().split('T')[0] || 'غير محدد'}.pdf`
     })
     
-    const response = new NextResponse(buffer as unknown)
+    const response = new NextResponse(buffer as BodyInit)
     response.headers.set('Content-Type', 'application/pdf')
     response.headers.set('Content-Disposition', `attachment; filename="${fileName || 'report'}.pdf"`)
     response.headers.set('Content-Length', buffer.length.toString())
@@ -62,10 +62,10 @@ export async function GET(request: NextRequest) {
       title,
       data: sampleData,
       reportType,
-      fileName: `${reportType}-report-${new Date()??.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'}.pdf`
+      fileName: `${reportType}-report-${new Date().toISOString().split('T')[0] || 'غير محدد'}.pdf`
     })
     
-    const response = new NextResponse(buffer as unknown)
+    const response = new NextResponse(buffer as BodyInit)
     response.headers.set('Content-Type', 'application/pdf')
     response.headers.set('Content-Disposition', `attachment; filename="${reportType}-report.pdf"`)
     response.headers.set('Content-Length', buffer.length.toString())

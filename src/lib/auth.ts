@@ -44,7 +44,7 @@ export function getUserFromRequest(request: NextRequest): { id: string; username
 }
 
 // Get user from token
-export async function getUserFromToken(token: string): Promise<{ id: string; username: string; role: string; email?: string } | null> {
+export async function getUserFromToken(token: string): Promise<{ id: string; username: string; role: string; email?: string | null } | null> {
   const decoded = verifyToken(token)
   if (!decoded) {
     return null

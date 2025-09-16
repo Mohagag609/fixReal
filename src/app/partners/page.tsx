@@ -1,6 +1,7 @@
-'use client'
+ 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
+import { usePaginatedApi } from '@/hooks/usePaginatedApi'
 import { useRouter } from 'next/navigation'
 import { Partner } from '@/types'
 import { formatDate } from '@/utils/formatting'
@@ -10,14 +11,17 @@ import SidebarToggle from '@/components/SidebarToggle'
 import Sidebar from '@/components/Sidebar'
 import NavigationButtons from '@/components/NavigationButtons'
 
-// Modern UI Components
-const ModernCard = ({ children, className = '', ...props }: unknown) => (
+// Modern UI Components (typed to avoid TS errors)
+type CommonProps = { className?: string; children?: React.ReactNode }
+
+const ModernCard: React.FC<CommonProps> = ({ children, className = '', ...props }) => (
   <div className={`bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-xl shadow-gray-900/5 p-6 ${className}`} {...props}>
     {children}
   </div>
 )
 
-const ModernButton = ({ children, variant = 'primary', size = 'md', className = '', ...props }: unknown) => {
+type ModernButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string; size?: string }
+const ModernButton: React.FC<ModernButtonProps> = ({ children, variant = 'primary', size = 'md', className = '', ...props }) => {
   const variants: { [key: string]: string } = {
     primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25',
     secondary: 'bg-white/80 hover:bg-white border border-gray-200 text-gray-700 shadow-lg shadow-gray-900/5',
@@ -26,16 +30,16 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
     warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-lg shadow-yellow-500/25',
     info: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg shadow-purple-500/25'
   }
-  
+
   const sizes: { [key: string]: string } = {
     sm: 'px-3 py-2 text-sm',
     md: 'px-4 py-2.5 text-sm font-medium',
     lg: 'px-6 py-3 text-base font-medium'
   }
-  
+
   return (
     <button 
-      className={`${variants[variant]} ${sizes[size]} rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${className}`}
+      className={`${variants[variant || 'primary']} ${sizes[size || 'md']} rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${className}`}
       {...props}
     >
       {children}
@@ -43,7 +47,8 @@ const ModernButton = ({ children, variant = 'primary', size = 'md', className = 
   )
 }
 
-const ModernInput = ({ label, className = '', ...props }: unknown) => (
+type ModernInputProps = React.InputHTMLAttributes<HTMLInputElement> & { label?: string }
+const ModernInput: React.FC<ModernInputProps> = ({ label, className = '', ...props }) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <input 
@@ -53,7 +58,8 @@ const ModernInput = ({ label, className = '', ...props }: unknown) => (
   </div>
 )
 
-const ModernTextarea = ({ label, className = '', ...props }: unknown) => (
+type ModernTextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: string }
+const ModernTextarea: React.FC<ModernTextareaProps> = ({ label, className = '', ...props }) => (
   <div className="space-y-2">
     {label && <label className="text-sm font-bold text-gray-900">{label}</label>}
     <textarea 
@@ -64,9 +70,12 @@ const ModernTextarea = ({ label, className = '', ...props }: unknown) => (
 )
 
 export default function Partners() {
-  const [partners, setPartners] = useState<Partner[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // Use paginated API hook for caching and pagination
+  const { data: pagedPartners, loading: hookLoading, error: hookError, refresh } = usePaginatedApi<Partner>('/api/partners', { ttl: 60000, initialLimit: 1000 })
+
+  const [partners, setPartners] = useState<Partner[]>(pagedPartners || [])
+  const [loading, setLoading] = useState<boolean>(Boolean(hookLoading))
+  const [error, setError] = useState<string | null>(hookError || null)
   const [success, setSuccess] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
@@ -121,52 +130,21 @@ export default function Partners() {
       router.push('/login')
       return
     }
-    
-    fetchPartners()
+    // Sync hook data to local state
   }, [])
 
-  const fetchPartners = async () => {
-    try {
-      const token = localStorage.getItem('authToken')
-      const response = await fetch('/api/partners', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('authToken')
-          router.push('/login')
-          return
-        }
-        throw new Error('فشل في تحميل الشركاء')
-      }
-
-      const data = await response.json()
-      if (data.success) {
-        setPartners(data.data || [])
-        setError(null)
-      } else {
-        setError(data.error || 'خطأ في تحميل الشركاء')
-        addNotification({
-          type: 'error',
-          title: 'خطأ في التحميل',
-          message: data.error || 'فشل في تحميل الشركاء'
-        })
-      }
-    } catch (err) {
-      console.error('Partners error:', err)
-      setError('خطأ في الاتصال')
-      addNotification({
-        type: 'error',
-        title: 'خطأ في الاتصال',
-        message: 'فشل في الاتصال بالخادم'
-      })
-    } finally {
-      setLoading(false)
+  // Sync hook data to local state and handle errors
+  useEffect(() => {
+    if (hookError) {
+      setError(hookError as string)
+      addNotification({ type: 'error', title: 'خطأ في التحميل', message: String(hookError) })
     }
-  }
+    if (pagedPartners) {
+      setPartners(pagedPartners)
+      setError(null)
+    }
+    setLoading(Boolean(hookLoading))
+  }, [pagedPartners, hookError, hookLoading])
 
   const handleAddPartner = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -193,7 +171,7 @@ export default function Partners() {
     }
 
     // فحص تكرار رقم الهاتف (إذا تم إدخاله)
-    if (newPartner.phone && checkDuplicatePhone(newPartner.phone, partners)) {
+    if (newPartner.phone && checkDuplicatePhone(newPartner.phone, partners.map(p => ({ phone: p.phone || '', id: p.id })))) {
       setError('رقم الهاتف موجود بالفعل')
       addNotification({
         type: 'error',
@@ -223,12 +201,8 @@ export default function Partners() {
         setShowAddForm(false)
         setSuccess('تم إضافة الشريك بنجاح!')
         setError(null)
-        setNewPartner({
-          name: '',
-          phone: '',
-          notes: ''
-        })
-        fetchPartners()
+  setNewPartner({ name: '', phone: '', notes: '' })
+  await refresh()
         addNotification({
           type: 'success',
           title: 'تم الإضافة بنجاح',
@@ -284,11 +258,11 @@ export default function Partners() {
 
       const data = await response.json()
       if (data.success) {
-        setShowEditForm(false)
-        setEditingPartner(null)
-        setSuccess('تم تحديث الشريك بنجاح!')
-        setError(null)
-        fetchPartners()
+  setShowEditForm(false)
+  setEditingPartner(null)
+  setSuccess('تم تحديث الشريك بنجاح!')
+  setError(null)
+  await refresh()
         addNotification({
           type: 'success',
           title: 'تم التحديث بنجاح',
@@ -328,9 +302,9 @@ export default function Partners() {
 
       const data = await response.json()
       if (data.success) {
-        setSuccess('تم حذف الشريك بنجاح!')
-        setError(null)
-        fetchPartners()
+  setSuccess('تم حذف الشريك بنجاح!')
+  setError(null)
+  await refresh()
         addNotification({
           type: 'success',
           title: 'تم الحذف بنجاح',

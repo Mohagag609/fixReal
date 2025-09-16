@@ -71,10 +71,10 @@ export async function getAuditLogs(
     if (filters.fromDate || filters.toDate) {
       whereClause.createdAt = {}
       if (filters.fromDate) {
-        whereClause.createdAt.gte = new Date(filters.fromDate)
+        (whereClause as any).createdAt = { gte: new Date(filters.fromDate) }
       }
       if (filters.toDate) {
-        whereClause.createdAt.lte = new Date(filters.toDate)
+        (whereClause as any).createdAt = { ...(whereClause as any).createdAt, lte: new Date(filters.toDate) }
       }
     }
     
@@ -215,10 +215,10 @@ export async function exportAuditLogsToCSV(
     if (filters.fromDate || filters.toDate) {
       whereClause.createdAt = {}
       if (filters.fromDate) {
-        whereClause.createdAt.gte = new Date(filters.fromDate)
+        (whereClause as any).createdAt = { gte: new Date(filters.fromDate) }
       }
       if (filters.toDate) {
-        whereClause.createdAt.lte = new Date(filters.toDate)
+        (whereClause as any).createdAt = { ...(whereClause as any).createdAt, lte: new Date(filters.toDate) }
       }
     }
     

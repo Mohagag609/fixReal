@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getConfig } from "@/lib/db/config";
 import { getPrismaClient } from "@/lib/prisma-clients";
-import { getSharedAuth } from "@/lib/shared-auth";
+// import { getSharedAuth } from "@/lib/shared-auth";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Authentication check removed for better performance
 
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     }
     return NextResponse.json({
       success: false,
-      error: error.message || "خطأ في جلب الإحصائيات"
+      error: error instanceof Error ? error.message : "خطأ في جلب الإحصائيات"
     }, { status: 500 });
   }
 }

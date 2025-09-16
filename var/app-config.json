@@ -4,9 +4,9 @@
     "file": "./data/dev.db"
   },
   "pgLocal": {
-    "url": "postgresql://postgres:28709926@localhost:5432/mohagag?schema=public"
+    "url": "postgresql://postgres:28709926@localhost:5432/mohamedhagag?schema=public"
   },
   "pgCloud": {
-    "url": ""
+    "url": "postgresql://postgres:28709926@localhost:5432/postgres?schema=public"
   }
 }

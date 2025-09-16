@@ -1,8 +1,7 @@
 import { NextRequest } from "next/server";
 import { saveConfig, AppDbConfig } from "@/lib/db/config";
-import { getSharedAuth } from "@/lib/shared-auth";
 import { mkdirSync, existsSync } from "fs";
-import { dirname, join } from "path";
+import { dirname } from "path";
 
 export async function POST(req: NextRequest) {
   try {
@@ -145,7 +144,7 @@ export async function POST(req: NextRequest) {
         `;
       } else {
         // لـ PostgreSQL، استخدم db push لإنشاء الجداول
-        import { execSync  } from 'child_process';
+        const { execSync } = await import('child_process');
         const schemaFile = "prisma/postgres.prisma";
         
         try {
@@ -162,9 +161,10 @@ export async function POST(req: NextRequest) {
       await prisma.$disconnect();
     } catch (connectionError: unknown) {
       console.error("Connection test failed:", connectionError);
+      const errorMessage = connectionError instanceof Error ? connectionError.message : "خطأ غير معروف";
       return new Response(JSON.stringify({ 
         ok: false, 
-        error: `فشل في الاتصال بقاعدة البيانات: ${connectionError.message || "خطأ غير معروف"}` 
+        error: `فشل في الاتصال بقاعدة البيانات: ${errorMessage}` 
       }), { 
         status: 400,
         headers: { "Content-Type": "application/json" }
@@ -196,9 +196,10 @@ export async function POST(req: NextRequest) {
 
     } catch (e: unknown) {
     console.error("Setup API error:", e);
+    const errorMessage = e instanceof Error ? e.message : "حدث خطأ غير متوقع";
     return new Response(JSON.stringify({ 
       ok: false, 
-      error: e.message || "حدث خطأ غير متوقع" 
+      error: errorMessage 
     }), { 
       status: 500,
       headers: { "Content-Type": "application/json" }
@@ -233,9 +234,10 @@ export async function GET() {
 
     } catch (e: unknown) {
     console.error("Setup GET error:", e);
+    const errorMessage = e instanceof Error ? e.message : "خطأ في قراءة الإعدادات";
     return new Response(JSON.stringify({ 
       configured: false,
-      error: e.message || "خطأ في قراءة الإعدادات"
+      error: errorMessage
     }), { 
       status: 500,
       headers: { "Content-Type": "application/json" }

@@ -47,7 +47,7 @@ export function exportDashboardData(kpis: { totalSales: number; totalReceipts: n
     ['الوحدات المتاحة', kpis.unitCounts.available],
     ['الوحدات المباعة', kpis.unitCounts.sold],
     ['الوحدات المحجوزة', kpis.unitCounts.reserved],
-    ['عدد المستثمرين', kpis.investorCount]
+    ['عدد المستثمرين', 0] // investorCount not available
   ]
   const wsKpis = XLSX.utils.aoa_to_sheet(kpiData)
   XLSX.utils.book_append_sheet(wb, wsKpis, "المؤشرات الرئيسية")
@@ -76,7 +76,7 @@ export function importFromExcel(file: File): Promise<unknown[]> {
         const data = new Uint8Array(e.target?.result as ArrayBuffer)
         const workbook = XLSX.read(data, { type: 'array' })
         const sheetName = workbook.SheetNames[0]
-        const worksheet = workbook.Sheets[sheetName]
+        const worksheet = workbook.Sheets[sheetName || "Sheet1"]
         const jsonData = XLSX.utils.sheet_to_json(worksheet)
         resolve(jsonData)
       } catch (error) {

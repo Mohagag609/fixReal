@@ -212,11 +212,11 @@ export async function getPaymentsReport(filters: ReportFilters): Promise<Payment
     customerName: voucher.unit?.contracts[0]?.customer.name || voucher.payer || '',
     customerPhone: voucher.unit?.contracts[0]?.customer.phone || '',
     amount: voucher.amount,
-    date: voucher.date || 'غير محدد'?.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد' || 'غير محدد',
+    date: voucher.date?.toISOString().split('T')[0] || 'غير محدد',
     method: voucher.description || 'غير محدد',
     description: voucher.description,
     safeName: voucher.safe.name,
-    createdAt: voucher.createdAt || 'غير محدد'.toISOString().split('T')[0] || 'غير محدد' || 'غير محدد'
+    createdAt: voucher.createdAt?.toISOString().split('T')[0] || 'غير محدد'
   }))
 }
 

@@ -24,7 +24,7 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
   // تحميل الوحدات عند بدء التطبيق
   useEffect(() => {
     loadUnits()
-  }, [] // TODO: Review dependencies) // TODO: Review dependencies
+  }, []) // TODO: Review dependencies
 
   // تطبيق الفلاتر الافتراضية عند تغيير نوع التقرير
   useEffect(() => {
@@ -43,9 +43,9 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
       
       if (response.ok) {
         const data = await response.json()
-        const unitsOptions = data.data?.map((unit: unknown) => ({
-          value: unit.id,
-          label: `${unit.code} - ${unit.name || 'بدون اسم'}`
+        const unitsOptions = data.data?.map((unit: any) => ({
+          value: unit?.id ?? '',
+          label: `${unit?.code ?? ''} - ${unit?.name || 'بدون اسم'}`
         })) || []
         
         setUnits(unitsOptions)
@@ -205,7 +205,7 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
                 {filter.type === 'text' && (
                   <input
                     type="text"
-                    value={filters[filter.key] || ''}
+                    value={(filters[filter.key] as any) ?? ''}
                     onChange={(e) => handleFilterChange(filter.key, e.target.value)}
                     placeholder={filter.placeholder}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -215,7 +215,7 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
                 {filter.type === 'date' && (
                   <input
                     type="date"
-                    value={filters[filter.key] || ''}
+                    value={(filters[filter.key] as any) ?? ''}
                     onChange={(e) => handleFilterChange(filter.key, e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -224,7 +224,7 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
                 {filter.type === 'number' && (
                   <input
                     type="number"
-                    value={filters[filter.key] || ''}
+                    value={(filters[filter.key] as any) ?? ''}
                     onChange={(e) => handleFilterChange(filter.key, e.target.value)}
                     placeholder={filter.placeholder}
                     min="0"
@@ -234,12 +234,12 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
                 
                 {filter.type === 'select' && (
                   <select
-                    value={filters[filter.key] || ''}
+                    value={(filters[filter.key] as any) ?? ''}
                     onChange={(e) => handleFilterChange(filter.key, e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">{filter.placeholder || 'اختر...'}</option>
-                    {filter.options?.map((option) => (
+                    {filter.options?.map((option: any) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
@@ -249,17 +249,17 @@ export default function ReportBuilder({ onReportGenerated, onLoadingChange }: Re
                 
                 {filter.type === 'multiselect' && (
                   <div className="space-y-2">
-                    {filter.options?.map((option) => (
+                    {filter.options?.map((option: any) => (
                       <label key={option.value} className="flex items-center">
                         <input
                           type="checkbox"
-                          checked={filters[filter.key]?.includes(option.value) || false}
+                          checked={Array.isArray(filters[filter.key]) && (filters[filter.key] as any[]).includes(option.value)}
                           onChange={(e) => {
-                            const currentValues = filters[filter.key] || []
+                            const currentValues = Array.isArray(filters[filter.key]) ? [...(filters[filter.key] as any[])] : []
                             if (e.target.checked) {
                               handleFilterChange(filter.key, [...currentValues, option.value])
                             } else {
-                              handleFilterChange(filter.key, currentValues.filter((v: string) => v !== option.value))
+                              handleFilterChange(filter.key, currentValues.filter((v: any) => v !== option.value))
                             }
                           }}
                           className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"

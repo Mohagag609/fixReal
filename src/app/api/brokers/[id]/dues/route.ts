@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getCachedUser } from '@/lib/cached-auth'
+// import { getCachedUser } from '@/lib/cached-auth'
 import { ApiResponse } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -9,7 +9,7 @@ export const runtime = 'nodejs'
 
 // GET /api/brokers/[id]/dues - Get broker dues for specific broker
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {

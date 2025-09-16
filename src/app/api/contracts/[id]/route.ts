@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getCachedUser } from '@/lib/cached-auth'
+// import { getCachedUser } from '@/lib/cached-auth'
 import { validateContract } from '@/utils/validation'
 import { canDeleteEntity, softDeleteEntity } from '@/lib/soft-delete'
 import { ApiResponse, Contract } from '@/types'
@@ -11,7 +11,7 @@ export const runtime = 'nodejs'
 
 // GET /api/contracts/[id] - Get contract by ID
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -99,7 +99,7 @@ export async function PUT(
     const { unitId, customerId, start, totalPrice, discountAmount, brokerName, commissionSafeId, brokerAmount } = body
 
     // Validate contract data
-    const validation = validateContract({ unitId, customerId, start, totalPrice, discountAmount, brokerName, commissionSafeId, brokerAmount })
+    const validation = validateContract({ unitId, customerId, start, totalPrice, discountAmount })
     if (!validation.isValid) {
       await prisma.$disconnect()
 
@@ -190,7 +190,7 @@ export async function PUT(
 
 // DELETE /api/contracts/[id] - Delete contract
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {

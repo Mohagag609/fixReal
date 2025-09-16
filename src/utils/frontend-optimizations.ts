@@ -244,7 +244,7 @@ function createPaginatedTable<T>(
 export function loadComponent<T extends React.ComponentType<unknown>>(
   importFunc: () => Promise<{ default: T }>
 ): Promise<T> {
-  return importFunc().then(importedModule => module.default)
+  return importFunc().then(importedModule => (importedModule as any).default)
 }
 
 // Preload critical resources
@@ -291,9 +291,9 @@ export function getMemoryUsage() {
   if ('memory' in performance) {
     const memory = (performance as { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory
     return {
-      used: memory.usedJSHeapSize,
-      total: memory.totalJSHeapSize,
-      limit: memory.jsHeapSizeLimit
+      used: memory?.usedJSHeapSize || 0,
+      total: memory?.totalJSHeapSize || 0,
+      limit: memory?.jsHeapSizeLimit || 0
     }
   }
   return null

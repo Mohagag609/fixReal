@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getSharedAuth } from '@/lib/shared-auth'
+// import { getSharedAuth } from '@/lib/shared-auth'
 import { cache as cacheClient, CacheKeys, CacheTTL } from '@/lib/cache/redis'
 import { ApiResponse, DashboardKPIs } from '@/types'
 
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
     ` as unknown[]
 
     // Calculate KPIs using aggregated data from single query
-    const data = dashboardData[0] as unknown
+    const data = dashboardData[0] as any
     kpis = {
       totalContracts: Number(data?.contract_count || 0),
       totalVouchers: Number(data?.voucher_count || 0),
@@ -113,12 +113,16 @@ export async function GET(request: NextRequest) {
       paidInstallments: Number(data?.paid_installments_count || 0),
       pendingInstallments: Number(data?.pending_installments_count || 0),
       activeUnits: Number(data?.unit_count || 0), // Assuming all units are active for now
-      inactiveUnits: 0
+      inactiveUnits: 0,
+      totalSales: Number(data?.total_contract_value || 0),
+      totalReceipts: Number(data?.total_voucher_amount || 0),
+      totalExpenses: 0, // Placeholder - would need separate query for expenses
+      netProfit: Number(data?.total_contract_value || 0) - 0 // Placeholder calculation
     }
 
     // Cache the result for future requests (with error handling)
     try {
-      await cacheClient.set(CacheKeys.dashboard, kpis, CacheTTL.DASHBOARD)
+      await cacheClient.set(CacheKeys.dashboard, kpis, { ttl: CacheTTL.DASHBOARD })
       console.log('Dashboard data cached successfully')
     } catch (cacheError) {
       console.log('Cache set error:', cacheError)

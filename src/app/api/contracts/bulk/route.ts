@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getSharedAuth } from '@/lib/shared-auth'
-import { cache as cacheClient, CacheKeys } from '@/lib/cache/redis'
+// import { getSharedAuth } from '@/lib/shared-auth'
+import { cache as cacheClient } from '@/lib/cache/redis'
 import { ApiResponse } from '@/types'
 
 export const dynamic = 'force-dynamic'

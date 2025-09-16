@@ -151,7 +151,7 @@ export function useEntityApi<T>(
 
   return {
     // Data
-    data: listResponse?.data || [],
+    data: (listResponse as any)?.data || [],
     loading: listLoading || isRefreshing,
     error: listError,
     
@@ -169,9 +169,9 @@ export function useEntityApi<T>(
     isRefreshing,
     
     // Metadata
-    pagination: listResponse?.pagination,
-    success: listResponse?.success,
-    message: listResponse?.message
+    pagination: (listResponse as any)?.pagination,
+    success: (listResponse as any)?.success,
+    message: (listResponse as any)?.message
   }
 }
 

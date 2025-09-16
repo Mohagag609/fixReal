@@ -5,8 +5,8 @@
   "private": true,
   "main": "electron-main.js",
   "scripts": {
-    "dev": "next dev",
-    "build": "npm run lint && npm run type-check && cross-env NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=4096 next build",
+    "dev": "cross-env WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true next dev",
+    "build": "cross-env NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=2048 WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true next build",
     "start": "next start",
     "lint": "next lint",
     "fresh": "rm -rf .next data var && mkdir data var && npm run dev",

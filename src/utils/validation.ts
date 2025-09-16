@@ -151,12 +151,7 @@ export function validateUnit(unit: { name?: string; code?: string }): { isValid:
   }
   
   // السعر اختياري
-  if (unit.totalPrice !== undefined && unit.totalPrice !== null && unit.totalPrice !== '') {
-    const amountValidation = validateAmount(parseFloat(unit.totalPrice))
-    if (!amountValidation.isValid) {
-      errors.push(amountValidation.error!)
-    }
-  }
+  // totalPrice validation removed - not part of unit interface
   
   return {
     isValid: errors.length === 0,
@@ -176,12 +171,12 @@ export function validateContract(contract: { unitId?: string; customerId?: strin
     errors.push(ERROR_MESSAGES.validation.required)
   }
   
-  const dateValidation = validateDate(contract.start)
+  const dateValidation = contract.start ? validateDate(contract.start) : { isValid: true, error: "" }
   if (!dateValidation.isValid) {
     errors.push(dateValidation.error!)
   }
   
-  const amountValidation = validateAmount(contract.totalPrice)
+  const amountValidation = contract.totalPrice ? validateAmount(contract.totalPrice) : { isValid: true, error: "" }
   if (!amountValidation.isValid) {
     errors.push(amountValidation.error!)
   }

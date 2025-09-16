@@ -111,7 +111,7 @@ const SystemPage = () => {
 
   useEffect(() => {
     fetchSystemStats()
-  }, [] // TODO: Review dependencies) // TODO: Review dependencies
+  }, []) // TODO: Review dependencies
 
   // Keyboard shortcuts
   useEffect(() => {

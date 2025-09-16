@@ -142,7 +142,7 @@ export async function POST(
   } catch (error) {
     console.error('Error paying broker due:', error)
     const errorMessage = error instanceof Error ? error.message : String(error)
-    await prisma.$disconnect()
+    // await prisma.$disconnect() // prisma not accessible in catch block
 
     return NextResponse.json(
       { success: false, error: `خطأ في قاعدة البيانات: ${errorMessage}` },

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getCachedUser } from '@/lib/cached-auth'
+// import { getCachedUser } from '@/lib/cached-auth'
 import { validateCustomer } from '@/utils/validation'
 import { canDeleteEntity, softDeleteEntity } from '@/lib/soft-delete'
 import { ApiResponse, Customer } from '@/types'
@@ -11,7 +11,7 @@ export const runtime = 'nodejs'
 
 // GET /api/customers/[id] - Get customer by ID
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -101,7 +101,7 @@ export async function PUT(
     const { name, phone, nationalId, address, status, notes } = body
 
     // Validate customer data
-    const validation = validateCustomer({ name, phone, nationalId, address, status, notes })
+    const validation = validateCustomer({ name, phone, nationalId })
     if (!validation.isValid) {
       await prisma.$disconnect()
       return NextResponse.json(
@@ -181,7 +181,7 @@ export async function PUT(
 
 // DELETE /api/customers/[id] - Delete customer
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {

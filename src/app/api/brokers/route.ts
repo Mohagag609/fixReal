@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getSharedAuth } from '@/lib/shared-auth'
+// import { getSharedAuth } from '@/lib/shared-auth'
 import { ApiResponse, Broker, PaginatedResponse } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     const hasMore = brokers.length > limit
     const data = hasMore ? brokers.slice(0, limit) : brokers
-    const nextCursor = hasMore ? data[data.length - 1].id : null
+    const nextCursor = hasMore && data.length > 0 ? (data[data.length - 1] as any)?.id : null
 
     const response: PaginatedResponse<Broker> = {
       success: true,
@@ -104,11 +104,30 @@ export async function POST(request: NextRequest) {
   try {
     // Authentication check removed for better performance
 
+    // Get database config and client
+    const config = getConfig()
+    if (!config) {
+      return NextResponse.json(
+        { success: false, error: 'قاعدة البيانات غير مُعدة' },
+        { status: 400 }
+      )
+    }
+
+    const prisma = getPrismaClient(config)
+    
+    // إعادة الاتصال في حالة انقطاع الاتصال
+    try {
+      await prisma.$connect()
+    } catch (error) {
+      console.log('Reconnecting to database...')
+    }
+
     const body = await request.json()
     const { name, phone, notes } = body
 
     // Validation
     if (!name) {
+      await prisma.$disconnect()
       return NextResponse.json(
         { success: false, error: 'اسم السمسار مطلوب' },
         { status: 400 }
@@ -150,6 +169,7 @@ export async function POST(request: NextRequest) {
       message: 'تم إضافة السمسار بنجاح'
     }
 
+    await prisma.$disconnect()
     return NextResponse.json(response)
   } catch (error) {
     console.error('Error creating broker:', error)

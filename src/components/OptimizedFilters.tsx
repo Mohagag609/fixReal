@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react'
 import { ModernInput } from './ui/ModernInput'
 import { ModernSelect } from './ui/ModernSelect'
-import { ModernButton } from './ui/ModernButton'
+import ModernButton from './ui/ModernButton'
 
 interface FilterOption {
   value: string
@@ -112,14 +112,14 @@ export function OptimizedFilters({
               <ModernInput
                 type="text"
                 placeholder={filter.placeholder || `البحث في ${filter.label}`}
-                value={filterValues[filter.key] || ''}
+                value={String(filterValues[filter.key] || '')}
                 onChange={(e) => handleFilterChange(filter.key, e.target.value)}
               />
             )}
 
             {filter.type === 'select' && (
               <ModernSelect
-                value={filterValues[filter.key] || ''}
+                value={String(filterValues[filter.key] || '')}
                 onChange={(e) => handleFilterChange(filter.key, e.target.value)}
               >
                 <option value="">جميع {filter.label}</option>
@@ -134,7 +134,7 @@ export function OptimizedFilters({
             {filter.type === 'date' && (
               <ModernInput
                 type="date"
-                value={filterValues[filter.key] || ''}
+                value={String(filterValues[filter.key] || '')}
                 onChange={(e) => handleFilterChange(filter.key, e.target.value)}
               />
             )}
@@ -146,7 +146,7 @@ export function OptimizedFilters({
                   placeholder="من"
                   min={filter.min}
                   max={filter.max}
-                  value={filterValues[`${filter.key}_min`] || ''}
+                  value={String(filterValues[`${filter.key}_min`] || '')}
                   onChange={(e) => handleFilterChange(`${filter.key}_min`, e.target.value)}
                 />
                 <ModernInput
@@ -154,7 +154,7 @@ export function OptimizedFilters({
                   placeholder="إلى"
                   min={filter.min}
                   max={filter.max}
-                  value={filterValues[`${filter.key}_max`] || ''}
+                  value={String(filterValues[`${filter.key}_max`] || '')}
                   onChange={(e) => handleFilterChange(`${filter.key}_max`, e.target.value)}
                 />
               </div>

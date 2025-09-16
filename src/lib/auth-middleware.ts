@@ -31,7 +31,7 @@ export async function authenticateRequest(request: NextRequest): Promise<{
       if (cookieHeader) {
         const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
           const [key, value] = cookie.trim().split('=')
-          acc[key] = value
+          if (key && value) { acc[key] = value }
           return acc
         }, {} as Record<string, string>)
         token = cookies.authToken
@@ -70,7 +70,7 @@ export function requireAuth(handler: (request: AuthenticatedRequest) => Promise<
 
     // Add user to request
     const authenticatedRequest = request as AuthenticatedRequest
-    authenticatedRequest.user = user
+    authenticatedRequest.user = user as any
 
     return handler(authenticatedRequest)
   }

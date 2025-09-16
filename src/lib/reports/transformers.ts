@@ -93,10 +93,10 @@ export function formatValue(value: unknown, type: string, format?: string): stri
       return numeral(value).format(format || '0,0')
     
     case 'date':
-      return dayjs(value).format('YYYY-MM-DD')
+      return dayjs(value as string | Date).format('YYYY-MM-DD')
     
     case 'status':
-      return getStatusLabel(value)
+      return getStatusLabel(value as string)
     
     default:
       return String(value)
@@ -119,7 +119,7 @@ export function formatValueForExport(value: unknown, type: string, format?: stri
       return numeral(value).format(format || '0,0')
     
     case 'date':
-      return dayjs(value).format('YYYY-MM-DD')
+      return dayjs(value as string | Date).format('YYYY-MM-DD')
     
     default:
       return String(value)
@@ -172,7 +172,7 @@ export function transformDataForTable(data: unknown[], reportType: string) {
     const transformedRow: Record<string, unknown> = {}
     
     columns.forEach(column => {
-      const value = row[column.key]
+      const value = (row as any)[column.key]
       transformedRow[column.key] = {
         raw: value,
         formatted: formatValue(value, column.type, column.format),
@@ -195,7 +195,7 @@ export function calculateTotals(data: unknown[], reportType: string) {
   columns.forEach(column => {
     if (column.type === 'currency' || column.type === 'number') {
       totals[column.key] = data.reduce((sum, row) => {
-        const value = row[column.key]?.raw || row[column.key]
+        const value = (row as any)[column.key]?.raw || (row as any)[column.key]
         return sum + (Number(value) || 0)
       }, 0)
     }
@@ -214,7 +214,7 @@ export function prepareDataForExport(data: unknown[], reportType: string) {
     const exportRow: Record<string, string> = {}
     
     columns.forEach(column => {
-      const value = row[column.key]?.raw || row[column.key]
+      const value = (row as any)[column.key]?.raw || (row as any)[column.key]
       exportRow[column.title] = formatValueForExport(value, column.type, column.format)
     })
     
@@ -266,7 +266,7 @@ export function generatePrintHTML(data: unknown[], reportType: string, title: st
             ${data.map(row => `
               <tr>
                 ${columns.map(col => {
-                  const value = row[col.key]?.formatted || row[col.key] || '-'
+                  const value = (row as any)[col.key]?.formatted || (row as any)[col.key] || '-'
                   return `<td class="text-${col.align || 'left'}">${value}</td>`
                 }).join('')}
               </tr>

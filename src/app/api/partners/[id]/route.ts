@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getCachedUser } from '@/lib/cached-auth'
+// import { getCachedUser } from '@/lib/cached-auth'
 import { ApiResponse, Partner } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -9,7 +9,7 @@ export const runtime = 'nodejs'
 
 // GET /api/partners/[id] - Get partner by ID
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -160,7 +160,7 @@ export async function PUT(
 
 // DELETE /api/partners/[id] - Delete partner
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {

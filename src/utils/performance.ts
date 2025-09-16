@@ -46,7 +46,7 @@ export function memoize<T extends (...args: unknown[]) => unknown>(
     }
 
     const result = func(...args)
-    cache.set(key, result)
+    cache.set(key, result as any)
     return result
   }) as T
 }
@@ -110,7 +110,7 @@ export class PerformanceMonitor {
     performance.measure(label, `${label}-start`, `${label}-end`)
     
     const measure = performance.getEntriesByName(label)[0]
-    const duration = measure.duration
+    const duration = measure?.duration || 0
 
     // Store metric
     if (!this.metrics.has(label)) {

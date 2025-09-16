@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserFromToken } from '@/lib/auth'
+// import { getUserFromToken } from '@/lib/auth'
 import { restoreBackup, validateBackupData } from '@/lib/backup'
 import { ApiResponse } from '@/types'
 

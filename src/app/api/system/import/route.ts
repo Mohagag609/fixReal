@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getUserFromToken } from '@/lib/auth'
+// import { getUserFromToken } from '@/lib/auth'
 import { z } from 'zod'
-import * as fs from 'fs'
-import * as path from 'path'
-import { tmpdir } from 'os'
+// import * as fs from 'fs'
+// import * as path from 'path'
+// import { tmpdir } from 'os'
 
 // Validation schema
 const ImportRequestSchema = z.object({
@@ -131,14 +131,14 @@ async function runImport(prisma: unknown, backupData: unknown, options: { dryRun
   console.log('📊 Analyzing current database state...')
   for (const modelName of MODELS) {
     try {
-      const model = prisma[modelName]
+      const model = (prisma as any)[modelName]
       if (!model) {
         changes[modelName] = { current: 0, backup: 0, difference: 0 }
         continue
       }
 
       const currentCount = await model.count()
-      const backupCount = backupData[modelName]?.length || 0
+      const backupCount = (backupData as any)[modelName]?.length || 0
       const difference = backupCount - currentCount
 
       changes[modelName] = {
@@ -160,7 +160,7 @@ async function runImport(prisma: unknown, backupData: unknown, options: { dryRun
       
       for (const modelName of MODELS.reverse()) { // Reverse order for deletion
         try {
-        const model = prisma[modelName]
+        const model = (prisma as any)[modelName]
           if (!model) continue
 
           if (!dryRun) {
@@ -180,7 +180,7 @@ async function runImport(prisma: unknown, backupData: unknown, options: { dryRun
     // Import data
     for (const modelName of MODELS) {
       try {
-      const records = backupData[modelName] || []
+      const records = (backupData as any)[modelName] || []
       
       if (!Array.isArray(records) || records.length === 0) {
           console.log(`📦 ${modelName}: No records to import`)
@@ -197,7 +197,7 @@ async function runImport(prisma: unknown, backupData: unknown, options: { dryRun
       }
 
       // Get model
-      const model = prisma[modelName]
+      const model = (prisma as any)[modelName]
         if (!model) {
           console.log(`⚠️  Model ${modelName} not found in Prisma client`)
           stats[modelName] = 0

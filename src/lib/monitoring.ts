@@ -3,12 +3,32 @@
 import { prisma } from './db'
 import { createCriticalNotification, createImportantNotification } from './notifications'
 
+// ملاحظة: كاش بسيط في الذاكرة لتقليل استدعاءات قاعدة البيانات المتكررة.
+// هذا مجرد حل قصير الأجل داخل نفس العملية — إن أردت مشاركة الكاش بين إنستانسات
+// استخدم Redis أو حل خارجي.
+type CacheEntry<T> = { value: T; expiresAt: number }
+const _monitorCache = new Map<string, CacheEntry<any>>()
+
+function getFromCache<T>(key: string): T | undefined {
+  const entry = _monitorCache.get(key)
+  if (!entry) return undefined
+  if (Date.now() > entry.expiresAt) {
+    _monitorCache.delete(key)
+    return undefined
+  }
+  return entry.value as T
+}
+
+function setCache<T>(key: string, value: T, ttlMs = 1000 * 30) {
+  _monitorCache.set(key, { value, expiresAt: Date.now() + ttlMs })
+}
+
 export interface HealthCheckResult {
   status: 'healthy' | 'degraded' | 'unhealthy'
   checks: {
-    database: { status: 'pass' | 'fail'; responseTime: number; error?: string }
-    memory: { status: 'pass' | 'fail'; usage: number; error?: string }
-    disk: { status: 'pass' | 'fail'; usage: number; error?: string }
+    database: { status: 'pass' | 'fail'; responseTime: number; error?: string | undefined }
+    memory: { status: 'pass' | 'fail'; usage: number; error?: string | undefined }
+    disk: { status: 'pass' | 'fail'; usage: number; error?: string | undefined }
   }
   timestamp: string
   uptime: number
@@ -22,17 +42,16 @@ export interface Metrics {
   databaseConnections: number
   memoryUsage: number
   diskUsage: number
-  lastBackupDate?: string
+  lastBackupDate?: string | undefined
   totalRecords: number
 }
 
 // Perform health check
 export async function performHealthCheck(): Promise<HealthCheckResult> {
-  const startTime = Date.now()
   const checks = {
-    database: { status: 'pass' as 'pass' | 'fail', responseTime: 0, error: undefined as string },
-    memory: { status: 'pass' as 'pass' | 'fail', usage: 0, error: undefined as string },
-    disk: { status: 'pass' as 'pass' | 'fail', usage: 0, error: undefined as string }
+    database: { status: 'pass' as 'pass' | 'fail', responseTime: 0, error: undefined as string | undefined },
+    memory: { status: 'pass' as 'pass' | 'fail', usage: 0, error: undefined as string | undefined },
+    disk: { status: 'pass' as 'pass' | 'fail', usage: 0, error: undefined as string | undefined }
   }
   
   // Database check
@@ -92,6 +111,11 @@ export async function performHealthCheck(): Promise<HealthCheckResult> {
 
 // Get system metrics
 export async function getSystemMetrics(): Promise<Metrics> {
+  // FIXED: استخدم كاش قصير الأمد لخفض استدعاءات DB المتكررة من واجهات المراقبة
+  const cacheKey = 'system:metrics'
+  const cached = getFromCache<Metrics>(cacheKey)
+  if (cached) return cached
+
   try {
     const [
       totalRecords,
@@ -102,11 +126,11 @@ export async function getSystemMetrics(): Promise<Metrics> {
       getActiveUsersCount(),
       getLastBackupDate()
     ])
-    
+
     const memUsage = process.memoryUsage()
     const memUsagePercent = (memUsage.heapUsed / memUsage.heapTotal) * 100
-    
-    return {
+
+    const result: Metrics = {
       totalRequests: 0, // Would be tracked in production
       averageResponseTime: 0, // Would be tracked in production
       errorRate: 0, // Would be tracked in production
@@ -117,6 +141,10 @@ export async function getSystemMetrics(): Promise<Metrics> {
       lastBackupDate: lastBackup,
       totalRecords
     }
+
+    // Cache for 20 seconds by default to reduce load
+    setCache(cacheKey, result, 1000 * 20)
+    return result
   } catch (error) {
     console.error('Error getting system metrics:', error)
     throw error
@@ -160,14 +188,20 @@ async function getActiveUsersCount(): Promise<number> {
 }
 
 // Get last backup date
-async function getLastBackupDate(): Promise<string> {
+async function getLastBackupDate(): Promise<string | undefined> {
+  const cacheKey = 'system:last_backup'
+  const cached = getFromCache<string | undefined>(cacheKey)
+  if (cached) return cached
+
   try {
     // This would be stored in settings or a separate backup log table
     const setting = await prisma.settings.findUnique({
       where: { key: 'last_backup_date' }
     })
-    
-    return setting?.value
+    const value = setting?.value || undefined
+    // Cache backups for longer (e.g., 15 minutes)
+    setCache(cacheKey, value, 1000 * 60 * 15)
+    return value
   } catch (error) {
     console.error('Error getting last backup date:', error)
     return undefined

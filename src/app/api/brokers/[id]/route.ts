@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig } from '@/lib/db/config'
 import { getPrismaClient } from '@/lib/prisma-clients'
-import { getCachedUser } from '@/lib/cached-auth'
+// import { getCachedUser } from '@/lib/cached-auth'
 import { canDeleteEntity, softDeleteEntity } from '@/lib/soft-delete'
 import { ApiResponse, Broker } from '@/types'
 
@@ -10,7 +10,7 @@ export const runtime = 'nodejs'
 
 // GET /api/brokers/[id] - Get broker by ID
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -169,7 +169,7 @@ export async function PUT(
 
 // DELETE /api/brokers/[id] - Delete broker
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
