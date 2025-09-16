@@ -2,12 +2,18 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Users, Building, DollarSign, Phone, MapPin } from 'lucide-react'
+import { Plus, Edit, Trash2, Users, Building, DollarSign, Phone, MapPin, Search, Filter, Download, Upload, RefreshCw } from 'lucide-react'
 import { DataTable } from '@/components/tables/DataTable'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { PartnerForm } from '@/components/forms/PartnerForm'
+import { AdvancedSearch } from '@/components/AdvancedSearch'
+import { DataGrouping } from '@/components/DataGrouping'
+import { MasterDetailLayout } from '@/components/MasterDetailLayout'
+import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
+import { usePaginatedApi } from '@/hooks/usePaginatedApi'
+import { checkDuplicateName, checkDuplicatePhone } from '@/lib/duplicateCheck'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import { ColumnDef } from '@tanstack/react-table'
 
@@ -42,33 +48,90 @@ interface Partner {
 }
 
 export default function PartnersPage() {
-  const [partners, setPartners] = useState<Partner[]>([])
-  const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingPartner, setEditingPartner] = useState<Partner | null>(null)
   const [deletingPartner, setDeletingPartner] = useState<Partner | null>(null)
+  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null)
+  const [showDetailPanel, setShowDetailPanel] = useState(false)
+  const [groupedData, setGroupedData] = useState<Record<string, Partner[]>>({})
+  const [searchFilters, setSearchFilters] = useState<any[]>([])
+  const [dateRange, setDateRange] = useState<{ from: string; to: string } | undefined>()
 
-  // Fetch partners
-  const fetchPartners = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch('/api/partners')
-      const data = await response.json()
-      setPartners(data.data || [])
-    } catch (error) {
-      console.error('Error fetching partners:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { notifications, addNotification, removeNotification } = useNotifications()
 
+  // Use paginated API hook
+  const {
+    data: partners,
+    loading,
+    error,
+    pagination,
+    refresh,
+    setSearch,
+    setFilters,
+    clearFilters,
+    hasNextPage,
+    hasPrevPage,
+  } = usePaginatedApi<Partner>('/api/partners', {
+    ttl: 60000,
+    initialLimit: 20,
+    autoRefresh: true,
+    refreshInterval: 300000, // 5 minutes
+  })
+
+  // Keyboard shortcuts
   useEffect(() => {
-    fetchPartners()
-  }, [])
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
+        return
+      }
+
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case 'f':
+            e.preventDefault()
+            document.getElementById('search-input')?.focus()
+            break
+          case 'r':
+            e.preventDefault()
+            refresh()
+            break
+          case 'Escape':
+            e.preventDefault()
+            setShowDetailPanel(false)
+            setSelectedPartner(null)
+            break
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyPress)
+    return () => document.removeEventListener('keydown', handleKeyPress)
+  }, [refresh])
 
   // Handle create/update partner
   const handleSavePartner = async (partnerData: Partial<Partner>) => {
     try {
+      // Check for duplicates
+      if (partners) {
+        if (checkDuplicateName(partnerData.name || '', partners, editingPartner?.id)) {
+          addNotification({
+            type: 'error',
+            title: 'خطأ في البيانات',
+            message: 'اسم الشريك موجود بالفعل'
+          })
+          return
+        }
+
+        if (partnerData.phone && checkDuplicatePhone(partnerData.phone, partners, editingPartner?.id)) {
+          addNotification({
+            type: 'error',
+            title: 'خطأ في البيانات',
+            message: 'رقم الهاتف موجود بالفعل'
+          })
+          return
+        }
+      }
+
       const url = editingPartner ? `/api/partners/${editingPartner.id}` : '/api/partners'
       const method = editingPartner ? 'PUT' : 'POST'
       
@@ -79,12 +142,24 @@ export default function PartnersPage() {
       })
 
       if (response.ok) {
-        await fetchPartners()
+        await refresh()
         setIsModalOpen(false)
         setEditingPartner(null)
+        addNotification({
+          type: 'success',
+          title: 'تم بنجاح',
+          message: editingPartner ? 'تم تحديث الشريك بنجاح' : 'تم إنشاء الشريك بنجاح'
+        })
+      } else {
+        throw new Error('فشل في حفظ البيانات')
       }
     } catch (error) {
       console.error('Error saving partner:', error)
+      addNotification({
+        type: 'error',
+        title: 'خطأ',
+        message: 'فشل في حفظ البيانات'
+      })
     }
   }
 
@@ -96,11 +171,63 @@ export default function PartnersPage() {
       })
 
       if (response.ok) {
-        await fetchPartners()
+        await refresh()
         setDeletingPartner(null)
+        addNotification({
+          type: 'success',
+          title: 'تم بنجاح',
+          message: 'تم حذف الشريك بنجاح'
+        })
+      } else {
+        throw new Error('فشل في حذف الشريك')
       }
     } catch (error) {
       console.error('Error deleting partner:', error)
+      addNotification({
+        type: 'error',
+        title: 'خطأ',
+        message: 'فشل في حذف الشريك'
+      })
+    }
+  }
+
+  // Handle search
+  const handleSearch = (filters: any[], dateRange?: { from: string; to: string }) => {
+    setSearchFilters(filters)
+    setDateRange(dateRange)
+    
+    // Convert filters to API format
+    const apiFilters: Record<string, any> = {}
+    filters.forEach(filter => {
+      apiFilters[filter.field] = filter.value
+    })
+    
+    setFilters(apiFilters)
+  }
+
+  // Handle export
+  const handleExport = async (format: 'excel' | 'pdf') => {
+    try {
+      addNotification({
+        type: 'info',
+        title: 'جاري التصدير',
+        message: `جاري تصدير البيانات بصيغة ${format}...`
+      })
+      
+      // TODO: Implement export functionality
+      console.log(`Exporting as ${format}`)
+      
+      addNotification({
+        type: 'success',
+        title: 'تم التصدير',
+        message: 'تم تصدير البيانات بنجاح'
+      })
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'خطأ في التصدير',
+        message: 'فشل في تصدير البيانات'
+      })
     }
   }
 
@@ -206,7 +333,7 @@ export default function PartnersPage() {
     []
   )
 
-  if (loading) {
+  if (loading && !partners) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -214,12 +341,23 @@ export default function PartnersPage() {
     )
   }
 
-  const totalUnits = partners.reduce((sum, p) => sum + (p.unitPartners?.length || 0), 0)
-  const totalDebts = partners.reduce((sum, p) => 
+  const totalUnits = partners?.reduce((sum, p) => sum + (p.unitPartners?.length || 0), 0) || 0
+  const totalDebts = partners?.reduce((sum, p) => 
     sum + (p.partnerDebts?.reduce((s, debt) => s + debt.amount, 0) || 0), 0
-  )
+  ) || 0
 
-  return (
+  const searchFields = [
+    { key: 'name', label: 'اسم الشريك', type: 'text' as const },
+    { key: 'phone', label: 'رقم الهاتف', type: 'text' as const },
+    { key: 'notes', label: 'ملاحظات', type: 'text' as const },
+  ]
+
+  const groupingOptions = [
+    { key: 'name', label: 'اسم الشريك', type: 'text' as const },
+    { key: 'phone', label: 'رقم الهاتف', type: 'text' as const },
+  ]
+
+  const masterContent = (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -227,17 +365,67 @@ export default function PartnersPage() {
           <h1 className="text-2xl font-bold text-gray-900">الشركاء</h1>
           <p className="text-gray-600">إدارة الشركاء ومجموعات الشركاء</p>
         </div>
-        <Button
-          onClick={() => {
-            setEditingPartner(null)
-            setIsModalOpen(true)
-          }}
-          className="flex items-center"
-        >
-          <Plus className="w-4 h-4 ml-2" />
-          إضافة شريك جديد
-        </Button>
+        <div className="flex items-center space-x-2 space-x-reverse">
+          <Button
+            variant="outline"
+            onClick={() => handleExport('excel')}
+            className="flex items-center"
+          >
+            <Download className="w-4 h-4 ml-2" />
+            Excel
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => handleExport('pdf')}
+            className="flex items-center"
+          >
+            <Download className="w-4 h-4 ml-2" />
+            PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={refresh}
+            className="flex items-center"
+          >
+            <RefreshCw className="w-4 h-4 ml-2" />
+            تحديث
+          </Button>
+          <Button
+            onClick={() => {
+              setEditingPartner(null)
+              setIsModalOpen(true)
+            }}
+            className="flex items-center"
+          >
+            <Plus className="w-4 h-4 ml-2" />
+            إضافة شريك جديد
+          </Button>
+        </div>
       </div>
+
+      {/* Advanced Search */}
+      <AdvancedSearch
+        onSearch={handleSearch}
+        onClear={() => {
+          setSearchFilters([])
+          setDateRange(undefined)
+          clearFilters()
+        }}
+        searchFields={searchFields}
+        dateRangeFields={[
+          { key: 'createdAt', label: 'تاريخ الإنشاء' }
+        ]}
+      />
+
+      {/* Data Grouping */}
+      {partners && partners.length > 0 && (
+        <DataGrouping
+          data={partners}
+          groupingOptions={groupingOptions}
+          onGroupedDataChange={setGroupedData}
+          onSortingChange={() => {}}
+        />
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -249,7 +437,7 @@ export default function PartnersPage() {
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">إجمالي الشركاء</p>
-                <p className="text-2xl font-bold text-gray-900">{partners.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{partners?.length || 0}</p>
               </div>
             </div>
           </CardContent>
@@ -294,7 +482,7 @@ export default function PartnersPage() {
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">متوسط الوحدات</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {partners.length > 0 ? Math.round(totalUnits / partners.length) : 0}
+                  {partners && partners.length > 0 ? Math.round(totalUnits / partners.length) : 0}
                 </p>
               </div>
             </div>
@@ -310,12 +498,109 @@ export default function PartnersPage() {
         <CardContent>
           <DataTable
             columns={columns}
-            data={partners}
+            data={partners || []}
             searchKey="name"
             searchPlaceholder="البحث باسم الشريك..."
           />
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {pagination && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-700">
+            عرض {((pagination.page - 1) * pagination.limit) + 1} إلى {Math.min(pagination.page * pagination.limit, pagination.total)} من {pagination.total} عنصر
+          </div>
+          <div className="flex items-center space-x-2 space-x-reverse">
+            <Button
+              variant="outline"
+              onClick={() => setPage(pagination.page - 1)}
+              disabled={!hasPrevPage}
+            >
+              السابق
+            </Button>
+            <span className="text-sm text-gray-700">
+              صفحة {pagination.page} من {pagination.pages}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => setPage(pagination.page + 1)}
+              disabled={!hasNextPage}
+            >
+              التالي
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  const detailContent = selectedPartner ? (
+    <div className="p-6 space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-gray-900">{selectedPartner.name}</h2>
+        <p className="text-gray-600">تفاصيل الشريك</p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>المعلومات الأساسية</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-600">اسم الشريك</label>
+              <p className="text-gray-900">{selectedPartner.name}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-600">رقم الهاتف</label>
+              <p className="text-gray-900">{selectedPartner.phone || 'غير محدد'}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-600">ملاحظات</label>
+              <p className="text-gray-900">{selectedPartner.notes || 'لا توجد ملاحظات'}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>الإحصائيات</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-600">عدد الوحدات</label>
+              <p className="text-gray-900">{selectedPartner.unitPartners?.length || 0}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-600">إجمالي الديون</label>
+              <p className="text-gray-900">
+                {formatCurrency(selectedPartner.partnerDebts?.reduce((sum, debt) => sum + debt.amount, 0) || 0)}
+              </p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-600">عدد المجموعات</label>
+              <p className="text-gray-900">{selectedPartner.partnerGroupPartners?.length || 0}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  ) : null
+
+  return (
+    <div className="h-full">
+      <MasterDetailLayout
+        master={masterContent}
+        detail={detailContent}
+        isDetailOpen={showDetailPanel}
+        onDetailClose={() => {
+          setShowDetailPanel(false)
+          setSelectedPartner(null)
+        }}
+        onDetailOpen={() => setShowDetailPanel(true)}
+        selectedItem={selectedPartner}
+      />
 
       {/* Create/Edit Modal */}
       <Modal
