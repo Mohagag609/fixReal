@@ -11,7 +11,7 @@ import { PartnerForm } from '@/components/forms/PartnerForm'
 import { AdvancedSearch } from '@/components/AdvancedSearch'
 import { DataGrouping } from '@/components/DataGrouping'
 import { MasterDetailLayout } from '@/components/MasterDetailLayout'
-import NotificationSystem, { useNotifications } from '@/components/NotificationSystem'
+import { NotificationProvider, useNotifications } from '@/components/NotificationSystem'
 import { usePaginatedApi } from '@/hooks/usePaginatedApi'
 import { checkDuplicateName, checkDuplicatePhone } from '@/lib/duplicateCheck'
 import { formatDate, formatCurrency } from '@/lib/utils'
@@ -48,7 +48,7 @@ interface Partner {
   [key: string]: unknown
 }
 
-export default function PartnersPage() {
+function PartnersPageContent() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingPartner, setEditingPartner] = useState<Partner | null>(null)
   const [deletingPartner, setDeletingPartner] = useState<Partner | null>(null)
@@ -651,6 +651,15 @@ export default function PartnersPage() {
           </div>
         </div>
       </Modal>
+
     </div>
+  )
+}
+
+export default function PartnersPage() {
+  return (
+    <NotificationProvider>
+      <PartnersPageContent />
+    </NotificationProvider>
   )
 }

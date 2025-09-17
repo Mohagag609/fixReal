@@ -179,7 +179,7 @@ export const prepareTableDataForExport = <T>(
         return col.cell(item)
       }
       const key = col.accessorKey || col.key
-      return (item as Record<string, unknown>)[key] || ''
+      return String((item as Record<string, unknown>)[key] || '')
     })
   )
 

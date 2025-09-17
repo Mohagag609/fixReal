@@ -1,10 +1,10 @@
 'use client'
 
 import { ButtonHTMLAttributes, forwardRef } from 'react'
-import { motion } from 'framer-motion'
+import { motion, HTMLMotionProps } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'onDrag'> {
   variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'outline'
   size?: 'sm' | 'md' | 'lg'
   loading?: boolean
@@ -61,7 +61,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ) : icon ? (
           <span className="mr-2">{icon}</span>
         ) : null}
-        {children}
+        {children as React.ReactNode}
       </motion.button>
     )
   }

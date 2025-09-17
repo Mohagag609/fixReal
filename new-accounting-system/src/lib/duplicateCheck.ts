@@ -59,7 +59,7 @@ export const checkDuplicateField = (
   
   return items.some(item => 
     item.id !== excludeId && 
-    item[field]?.toLowerCase().trim() === value.toLowerCase().trim()
+    String(item[field] || '').toLowerCase().trim() === value.toLowerCase().trim()
   )
 }
 
@@ -118,7 +118,7 @@ export const getDuplicateSuggestions = (
   return items
     .filter(item => 
       item.id !== excludeId && 
-      item[field]?.toLowerCase().trim().includes(normalizedValue)
+      String(item[field] || '').toLowerCase().trim().includes(normalizedValue)
     )
     .slice(0, 5) // Limit to 5 suggestions
 }

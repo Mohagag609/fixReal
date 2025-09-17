@@ -128,7 +128,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
             return (
               <Link
                 key={item.href}
-                href={item.href as any}
+                href={item.href as any} // eslint-disable-line @typescript-eslint/no-explicit-any
                 onClick={() => {
                   // Close sidebar on mobile after navigation
                   if (window.innerWidth < 1024) {

@@ -1,10 +1,10 @@
 'use client'
 
 import { InputHTMLAttributes, forwardRef } from 'react'
-import { motion } from 'framer-motion'
+import { motion, HTMLMotionProps } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<HTMLMotionProps<'input'>, 'onDrag'> {
   label?: string
   error?: string
   icon?: React.ReactNode

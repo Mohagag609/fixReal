@@ -142,8 +142,9 @@ export const usePaginatedApi = <T>(
       const cachedData = getCachedData(url)
 
       if (cachedData) {
-        setData(append ? [...(data || []), ...cachedData.data] : cachedData.data)
-        setPagination(cachedData.pagination)
+        const cachedResponse = cachedData as PaginationResponse<T>
+        setData(append ? [...(data || []), ...cachedResponse.data] : cachedResponse.data)
+        setPagination(cachedResponse.pagination)
         setLoading(false)
         return
       }
