@@ -15,7 +15,7 @@ const contractSchema = z.object({
   start: z.string().min(1, 'تاريخ العقد مطلوب'),
   totalPrice: z.number().min(0, 'السعر الإجمالي يجب أن يكون أكبر من أو يساوي صفر'),
   discountAmount: z.number().min(0),
-  brokerName: z.string().optional(),
+  brokerName: z.string().optional().or(z.undefined()),
   brokerPercent: z.number().min(0).max(100),
   brokerAmount: z.number().min(0),
   downPayment: z.number().min(0),
@@ -56,7 +56,7 @@ interface Contract {
 
 interface ContractFormProps {
   contract?: Contract | null
-  onSave: (data: ContractFormData) => void
+  onSave: (data: ContractFormData) => Promise<void>
   onCancel: () => void
 }
 

@@ -65,7 +65,20 @@ export default function ContractsPage() {
   }, [])
 
   // Handle create/update contract
-  const handleSaveContract = async (contractData: Partial<Contract>) => {
+  const handleSaveContract = async (contractData: { 
+    totalPrice: number; 
+    start: string; 
+    discountAmount: number; 
+    brokerPercent: number; 
+    brokerAmount: number; 
+    installmentType: "شهري" | "سنوي" | "ربعي"; 
+    installmentCount: number; 
+    downPayment: number; 
+    paymentType: "installment" | "cash"; 
+    unitId: string; 
+    customerId: string; 
+    brokerName?: string | undefined; 
+  }) => {
     try {
       const url = editingContract ? `/api/contracts/${editingContract.id}` : '/api/contracts'
       const method = editingContract ? 'PUT' : 'POST'
