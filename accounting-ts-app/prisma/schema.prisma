@@ -1,0 +1,188 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// Account Management
+model Account {
+  id           Int           @id @default(autoincrement())
+  name         String
+  type         String        // "asset" | "liability" | "equity" | "revenue" | "expense"
+  balance      Float         @default(0)
+  description  String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+  properties   Property[]
+  expenses     Expense[]
+
+  @@map("accounts")
+}
+
+// Property Management
+model Property {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  address     String
+  type        String   // "apartment" | "house" | "commercial" | "land"
+  status      String   @default("available") // "available" | "rented" | "sold" | "maintenance"
+  price       Float
+  rentPrice   Float?
+  area        Float?
+  rooms       Int?
+  bathrooms   Int?
+  accountId   Int
+  account     Account  @relation(fields: [accountId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  contracts   Contract[]
+  expenses    Expense[]
+  transactions Transaction[]
+  invoices    Invoice[]
+
+  @@map("properties")
+}
+
+// Contract Management
+model Contract {
+  id          Int      @id @default(autoincrement())
+  type        String   // "rent" | "sale"
+  startDate   DateTime
+  endDate     DateTime?
+  rentAmount  Float?
+  salePrice   Float?
+  status      String   @default("active") // "active" | "expired" | "terminated"
+  propertyId  Int
+  property    Property @relation(fields: [propertyId], references: [id])
+  tenantId    Int?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  payments    Payment[]
+
+  @@map("contracts")
+}
+
+// Tenant Management
+model Tenant {
+  id          Int        @id @default(autoincrement())
+  name        String
+  email       String?    @unique
+  phone       String?
+  address     String?
+  idNumber    String?    @unique
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  contracts   Contract[]
+  payments    Payment[]
+
+  @@map("tenants")
+}
+
+// Transaction Management
+model Transaction {
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  type        String   // "credit" | "debit"
+  description String
+  category    String?  // "rent" | "maintenance" | "utilities" | "sale" | "expense"
+  accountId   Int
+  account     Account  @relation(fields: [accountId], references: [id])
+  propertyId  Int?
+  property    Property? @relation(fields: [propertyId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("transactions")
+}
+
+// Invoice Management
+model Invoice {
+  id          Int      @id @default(autoincrement())
+  invoiceNumber String @unique
+  customer    String
+  amount      Float
+  tax         Float    @default(0)
+  total       Float
+  status      String   @default("unpaid") // "paid" | "unpaid" | "overdue" | "cancelled"
+  dueDate     DateTime
+  description String?
+  propertyId  Int?
+  property    Property? @relation(fields: [propertyId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  payments    Payment[]
+
+  @@map("invoices")
+}
+
+// Payment Management
+model Payment {
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  method      String   // "cash" | "bank_transfer" | "check" | "credit_card"
+  reference   String?
+  status      String   @default("completed") // "completed" | "pending" | "failed"
+  invoiceId   Int?
+  invoice     Invoice? @relation(fields: [invoiceId], references: [id])
+  contractId  Int?
+  contract    Contract? @relation(fields: [contractId], references: [id])
+  tenantId    Int?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("payments")
+}
+
+// Expense Management
+model Expense {
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  category    String   // "maintenance" | "utilities" | "insurance" | "taxes" | "other"
+  description String
+  propertyId  Int?
+  property    Property? @relation(fields: [propertyId], references: [id])
+  accountId   Int
+  account     Account  @relation(fields: [accountId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("expenses")
+}
+
+// Report Management
+model Report {
+  id          Int      @id @default(autoincrement())
+  type        String   // "financial" | "property" | "tenant" | "revenue"
+  title       String
+  data        Json
+  period      String   // "daily" | "monthly" | "yearly"
+  startDate   DateTime
+  endDate     DateTime
+  createdAt   DateTime @default(now())
+
+  @@map("reports")
+}
