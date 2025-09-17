@@ -113,11 +113,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Filter out undefined values to satisfy Prisma's exactOptionalPropertyTypes
+    const createData = {
+      fromSafeId: validatedData.fromSafeId,
+      toSafeId: validatedData.toSafeId,
+      amount: validatedData.amount,
+      ...(validatedData.description !== undefined && { description: validatedData.description }),
+    }
+
     // Create transfer and update balances in a transaction
     const result = await prisma.$transaction(async (tx) => {
       // Create transfer
       const transfer = await tx.transfer.create({
-        data: validatedData,
+        data: createData,
         include: {
           fromSafe: {
             select: { name: true },
