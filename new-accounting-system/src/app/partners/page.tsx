@@ -54,9 +54,9 @@ function PartnersPageContent() {
   const [deletingPartner, setDeletingPartner] = useState<Partner | null>(null)
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null)
   const [showDetailPanel, setShowDetailPanel] = useState(false)
-  // const [groupedData, setGroupedData] = useState<Record<string, Partner[]>>({})
-  // const [searchFilters, setSearchFilters] = useState<Record<string, unknown>[]>([])
-  // const [dateRange, setDateRange] = useState<{ from: string; to: string } | undefined>()
+  const [groupedData, setGroupedData] = useState<Record<string, Partner[]>>({})
+  const [searchFilters, setSearchFilters] = useState<Record<string, unknown>[]>([])
+  const [dateRange, setDateRange] = useState<{ from: string; to: string } | undefined>()
 
   const { addNotification } = useNotifications()
 
@@ -69,7 +69,7 @@ function PartnersPageContent() {
     refresh,
     // setSearch,
     setFilters,
-    // setPage,
+    setPage,
     clearFilters,
     hasNextPage,
     hasPrevPage,
