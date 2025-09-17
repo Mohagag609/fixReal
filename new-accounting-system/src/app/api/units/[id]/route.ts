@@ -17,11 +17,12 @@ const unitSchema = z.object({
 // GET /api/units/[id] - Get unit by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const unit = await prisma.unit.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id: id, deletedAt: null },
       include: {
         contracts: {
           where: { deletedAt: null },
@@ -70,15 +71,16 @@ export async function GET(
 // PUT /api/units/[id] - Update unit
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const validatedData = unitSchema.parse(body)
 
     // Check if unit exists
     const existingUnit = await prisma.unit.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id: id, deletedAt: null },
     })
 
     if (!existingUnit) {
@@ -93,7 +95,7 @@ export async function PUT(
       where: { 
         code: validatedData.code, 
         deletedAt: null,
-        id: { not: params.id }
+        id: { not: id }
       },
     })
     if (existingCode) {
@@ -104,7 +106,7 @@ export async function PUT(
     }
 
     const unit = await prisma.unit.update({
-      where: { id: params.id },
+      where: { id: id },
       data: validatedData,
     })
 
@@ -112,7 +114,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'بيانات غير صحيحة', details: error.errors },
+        { error: 'بيانات غير صحيحة', details: error.issues },
         { status: 400 }
       )
     }
@@ -127,11 +129,12 @@ export async function PUT(
 // DELETE /api/units/[id] - Soft delete unit
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const unit = await prisma.unit.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id: id, deletedAt: null },
     })
 
     if (!unit) {
@@ -143,7 +146,7 @@ export async function DELETE(
 
     // Check if unit has active contracts
     const activeContracts = await prisma.contract.count({
-      where: { unitId: params.id, deletedAt: null },
+      where: { unitId: id, deletedAt: null },
     })
 
     if (activeContracts > 0) {
@@ -154,7 +157,7 @@ export async function DELETE(
     }
 
     await prisma.unit.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { deletedAt: new Date() },
     })
 

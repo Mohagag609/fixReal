@@ -11,7 +11,7 @@ import { PartnerForm } from '@/components/forms/PartnerForm'
 import { AdvancedSearch } from '@/components/AdvancedSearch'
 import { DataGrouping } from '@/components/DataGrouping'
 import { MasterDetailLayout } from '@/components/MasterDetailLayout'
-import { NotificationSystem, useNotifications } from '@/components/NotificationSystem'
+import NotificationSystem, { useNotifications } from '@/components/NotificationSystem'
 import { usePaginatedApi } from '@/hooks/usePaginatedApi'
 import { checkDuplicateName, checkDuplicatePhone } from '@/lib/duplicateCheck'
 import { formatDate, formatCurrency } from '@/lib/utils'
@@ -45,6 +45,7 @@ interface Partner {
       name: string
     }
   }>
+  [key: string]: unknown
 }
 
 export default function PartnersPage() {
@@ -68,6 +69,7 @@ export default function PartnersPage() {
     refresh,
     setSearch,
     setFilters,
+    setPage,
     clearFilters,
     hasNextPage,
     hasPrevPage,
@@ -192,7 +194,7 @@ export default function PartnersPage() {
   }
 
   // Handle search
-  const handleSearch = (filters: Record<string, unknown>[], dateRange?: { from: string; to: string }) => {
+  const handleSearch = (filters: Array<{ field: string; operator: string; value: string | number; value2?: string | number }>, dateRange?: { from: string; to: string }) => {
     setSearchFilters(filters)
     setDateRange(dateRange)
     
@@ -273,7 +275,7 @@ export default function PartnersPage() {
         header: 'الديون',
         cell: ({ row }) => {
           const debts = row.getValue('partnerDebts') as Array<Record<string, unknown>>
-          const totalDebts = debts?.reduce((sum, debt) => sum + debt.amount, 0) || 0
+          const totalDebts = debts?.reduce((sum, debt) => sum + (debt.amount as number), 0) || 0
           return (
             <div className="flex items-center">
               <DollarSign className="w-4 h-4 ml-2 text-red-600" />
@@ -599,7 +601,7 @@ export default function PartnersPage() {
           setSelectedPartner(null)
         }}
         onDetailOpen={() => setShowDetailPanel(true)}
-        selectedItem={selectedPartner}
+        selectedItem={selectedPartner as Record<string, unknown> | undefined}
       />
 
       {/* Create/Edit Modal */}

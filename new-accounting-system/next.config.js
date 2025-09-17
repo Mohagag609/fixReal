@@ -1,11 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Remove standalone output for Netlify compatibility
-  experimental: {
-    typedRoutes: true,
-    serverActions: true,
-    serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
-  },
+  typedRoutes: true,
+  serverExternalPackages: ['@prisma/client', 'prisma'],
+  outputFileTracingRoot: '/workspace/new-accounting-system',
   // Environment variables for build time
   env: {
     DATABASE_URL: process.env.DATABASE_URL,

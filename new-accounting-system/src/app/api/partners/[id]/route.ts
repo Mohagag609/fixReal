@@ -11,11 +11,12 @@ const partnerSchema = z.object({
 // GET /api/partners/[id] - Get partner by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const partner = await prisma.partner.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id: id, deletedAt: null },
       include: {
         unitPartners: {
           where: { deletedAt: null },
@@ -60,15 +61,16 @@ export async function GET(
 // PUT /api/partners/[id] - Update partner
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const validatedData = partnerSchema.parse(body)
 
     // Check if partner exists
     const existingPartner = await prisma.partner.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id: id, deletedAt: null },
     })
 
     if (!existingPartner) {
@@ -79,7 +81,7 @@ export async function PUT(
     }
 
     const partner = await prisma.partner.update({
-      where: { id: params.id },
+      where: { id: id },
       data: validatedData,
     })
 
@@ -87,7 +89,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'بيانات غير صحيحة', details: error.errors },
+        { error: 'بيانات غير صحيحة', details: error.issues },
         { status: 400 }
       )
     }
@@ -102,11 +104,12 @@ export async function PUT(
 // DELETE /api/partners/[id] - Soft delete partner
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const partner = await prisma.partner.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id: id, deletedAt: null },
     })
 
     if (!partner) {
@@ -118,7 +121,7 @@ export async function DELETE(
 
     // Check if partner has active unit partnerships
     const activeUnitPartners = await prisma.unitPartner.count({
-      where: { partnerId: params.id, deletedAt: null },
+      where: { partnerId: id, deletedAt: null },
     })
 
     if (activeUnitPartners > 0) {
@@ -129,7 +132,7 @@ export async function DELETE(
     }
 
     await prisma.partner.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { deletedAt: new Date() },
     })
 

@@ -13,11 +13,12 @@ const installmentSchema = z.object({
 // GET /api/installments/[id] - Get installment by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const installment = await prisma.installment.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id: id, deletedAt: null },
       include: {
         unit: {
           select: { code: true, name: true, totalPrice: true },
@@ -45,15 +46,16 @@ export async function GET(
 // PUT /api/installments/[id] - Update installment
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const validatedData = installmentSchema.parse(body)
 
     // Check if installment exists
     const existingInstallment = await prisma.installment.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id: id, deletedAt: null },
     })
 
     if (!existingInstallment) {
@@ -76,7 +78,7 @@ export async function PUT(
     }
 
     const installment = await prisma.installment.update({
-      where: { id: params.id },
+      where: { id: id },
       data: validatedData,
       include: {
         unit: {
@@ -89,7 +91,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'بيانات غير صحيحة', details: error.errors },
+        { error: 'بيانات غير صحيحة', details: error.issues },
         { status: 400 }
       )
     }
@@ -104,11 +106,12 @@ export async function PUT(
 // DELETE /api/installments/[id] - Soft delete installment
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const installment = await prisma.installment.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id: id, deletedAt: null },
     })
 
     if (!installment) {
@@ -119,7 +122,7 @@ export async function DELETE(
     }
 
     await prisma.installment.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { deletedAt: new Date() },
     })
 

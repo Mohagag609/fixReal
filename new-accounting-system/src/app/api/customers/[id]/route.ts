@@ -14,11 +14,12 @@ const customerSchema = z.object({
 // GET /api/customers/[id] - Get customer by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const customer = await prisma.customer.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id: id, deletedAt: null },
       include: {
         contracts: {
           where: { deletedAt: null },
@@ -51,15 +52,16 @@ export async function GET(
 // PUT /api/customers/[id] - Update customer
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const validatedData = customerSchema.parse(body)
 
     // Check if customer exists
     const existingCustomer = await prisma.customer.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id: id, deletedAt: null },
     })
 
     if (!existingCustomer) {
@@ -75,7 +77,7 @@ export async function PUT(
         where: { 
           phone: validatedData.phone, 
           deletedAt: null,
-          id: { not: params.id }
+          id: { not: id }
         },
       })
       if (existingPhone) {
@@ -91,7 +93,7 @@ export async function PUT(
         where: { 
           nationalId: validatedData.nationalId, 
           deletedAt: null,
-          id: { not: params.id }
+          id: { not: id }
         },
       })
       if (existingNationalId) {
@@ -103,7 +105,7 @@ export async function PUT(
     }
 
     const customer = await prisma.customer.update({
-      where: { id: params.id },
+      where: { id: id },
       data: validatedData,
     })
 
@@ -111,7 +113,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'بيانات غير صحيحة', details: error.errors },
+        { error: 'بيانات غير صحيحة', details: error.issues },
         { status: 400 }
       )
     }
@@ -126,11 +128,12 @@ export async function PUT(
 // DELETE /api/customers/[id] - Soft delete customer
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const customer = await prisma.customer.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id: id, deletedAt: null },
     })
 
     if (!customer) {
@@ -142,7 +145,7 @@ export async function DELETE(
 
     // Check if customer has active contracts
     const activeContracts = await prisma.contract.count({
-      where: { customerId: params.id, deletedAt: null },
+      where: { customerId: id, deletedAt: null },
     })
 
     if (activeContracts > 0) {
@@ -153,7 +156,7 @@ export async function DELETE(
     }
 
     await prisma.customer.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { deletedAt: new Date() },
     })
 

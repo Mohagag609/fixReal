@@ -11,11 +11,12 @@ const brokerSchema = z.object({
 // GET /api/brokers/[id] - Get broker by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const broker = await prisma.broker.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id, deletedAt: null },
       include: {
         brokerDues: {
           where: { deletedAt: null },
@@ -44,15 +45,16 @@ export async function GET(
 // PUT /api/brokers/[id] - Update broker
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const validatedData = brokerSchema.parse(body)
 
     // Check if broker exists
     const existingBroker = await prisma.broker.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id, deletedAt: null },
     })
 
     if (!existingBroker) {
@@ -67,7 +69,7 @@ export async function PUT(
       where: { 
         name: validatedData.name, 
         deletedAt: null,
-        id: { not: params.id }
+        id: { not: id }
       },
     })
     if (duplicateBroker) {
@@ -78,7 +80,7 @@ export async function PUT(
     }
 
     const broker = await prisma.broker.update({
-      where: { id: params.id },
+      where: { id },
       data: validatedData,
     })
 
@@ -86,7 +88,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'بيانات غير صحيحة', details: error.errors },
+        { error: 'بيانات غير صحيحة', details: error.issues },
         { status: 400 }
       )
     }
@@ -101,11 +103,12 @@ export async function PUT(
 // DELETE /api/brokers/[id] - Soft delete broker
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const broker = await prisma.broker.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id, deletedAt: null },
     })
 
     if (!broker) {
@@ -117,7 +120,7 @@ export async function DELETE(
 
     // Check if broker has active dues
     const activeDues = await prisma.brokerDue.count({
-      where: { brokerId: params.id, deletedAt: null },
+      where: { brokerId: id, deletedAt: null },
     })
 
     if (activeDues > 0) {
@@ -128,7 +131,7 @@ export async function DELETE(
     }
 
     await prisma.broker.update({
-      where: { id: params.id },
+      where: { id },
       data: { deletedAt: new Date() },
     })
 

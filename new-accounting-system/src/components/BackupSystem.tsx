@@ -292,19 +292,19 @@ export const BackupSystem: React.FC<BackupSystemProps> = ({ className = '' }) =>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-gray-600">الإصدار:</span>
-                      <span className="font-medium text-gray-900 mr-2">{backupInfo.version}</span>
+                      <span className="font-medium text-gray-900 mr-2">{String(backupInfo.version)}</span>
                     </div>
                     <div>
                       <span className="text-gray-600">التاريخ:</span>
-                      <span className="font-medium text-gray-900 mr-2">{backupInfo.timestamp}</span>
+                      <span className="font-medium text-gray-900 mr-2">{String(backupInfo.timestamp)}</span>
                     </div>
                     <div>
                       <span className="text-gray-600">عدد السجلات:</span>
-                      <span className="font-medium text-gray-900 mr-2">{backupInfo.totalRecords}</span>
+                      <span className="font-medium text-gray-900 mr-2">{String(backupInfo.totalRecords)}</span>
                     </div>
                     <div>
                       <span className="text-gray-600">عدد الجداول:</span>
-                      <span className="font-medium text-gray-900 mr-2">{backupInfo.tablesCount}</span>
+                      <span className="font-medium text-gray-900 mr-2">{String(backupInfo.tablesCount)}</span>
                     </div>
                   </div>
                 </motion.div>

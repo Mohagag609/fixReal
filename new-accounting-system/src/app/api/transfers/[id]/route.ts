@@ -12,11 +12,12 @@ const transferSchema = z.object({
 // GET /api/transfers/[id] - Get transfer by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const transfer = await prisma.transfer.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id: id, deletedAt: null },
       include: {
         fromSafe: {
           select: { name: true },
@@ -47,15 +48,16 @@ export async function GET(
 // PUT /api/transfers/[id] - Update transfer
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const validatedData = transferSchema.parse(body)
 
     // Check if transfer exists
     const existingTransfer = await prisma.transfer.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id: id, deletedAt: null },
     })
 
     if (!existingTransfer) {
@@ -131,7 +133,7 @@ export async function PUT(
 
       // Update transfer
       const transfer = await tx.transfer.update({
-        where: { id: params.id },
+        where: { id: id },
         data: validatedData,
         include: {
           fromSafe: {
@@ -150,7 +152,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'بيانات غير صحيحة', details: error.errors },
+        { error: 'بيانات غير صحيحة', details: error.issues },
         { status: 400 }
       )
     }
@@ -165,11 +167,12 @@ export async function PUT(
 // DELETE /api/transfers/[id] - Soft delete transfer
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const transfer = await prisma.transfer.findFirst({
-      where: { id: params.id, deletedAt: null },
+      where: { id: id, deletedAt: null },
     })
 
     if (!transfer) {
@@ -194,7 +197,7 @@ export async function DELETE(
 
       // Soft delete transfer
       await tx.transfer.update({
-        where: { id: params.id },
+        where: { id: id },
         data: { deletedAt: new Date() },
       })
     })
