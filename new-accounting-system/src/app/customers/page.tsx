@@ -14,11 +14,11 @@ import { ColumnDef } from '@tanstack/react-table'
 interface Customer {
   id: string
   name: string
-  phone?: string
-  nationalId?: string
-  address?: string
+  phone?: string | undefined
+  nationalId?: string | undefined
+  address?: string | undefined
   status: string
-  notes?: string
+  notes?: string | undefined
   createdAt: string
   contracts: Array<{
     id: string
