@@ -7,7 +7,7 @@ const nextConfig = {
   //   unoptimized: true,
   // },
   typedRoutes: true,
-  serverExternalPackages: ['@prisma/client', 'prisma'],
+  serverExternalPackages: ['@prisma/client', 'prisma', 'framer-motion'],
   transpilePackages: ['lucide-react'],
   // Environment variables for build time
   env: {
