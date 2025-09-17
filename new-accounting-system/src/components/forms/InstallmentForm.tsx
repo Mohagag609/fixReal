@@ -14,7 +14,7 @@ const installmentSchema = z.object({
   amount: z.number().min(0.01, 'المبلغ يجب أن يكون أكبر من صفر'),
   dueDate: z.string().min(1, 'تاريخ الاستحقاق مطلوب'),
   status: z.enum(['مدفوع', 'معلق', 'متأخر']),
-  notes: z.string().optional(),
+  notes: z.string().optional().or(z.undefined()),
 })
 
 type InstallmentFormData = z.infer<typeof installmentSchema>
@@ -25,7 +25,7 @@ interface Installment {
   amount: number
   dueDate: string
   status: string
-  notes?: string
+  notes?: string | undefined
   createdAt: string
   unit: {
     code: string
@@ -36,7 +36,7 @@ interface Installment {
 
 interface InstallmentFormProps {
   installment?: Installment | null
-  onSave: (data: InstallmentFormData) => void
+  onSave: (data: InstallmentFormData) => Promise<void>
   onCancel: () => void
 }
 

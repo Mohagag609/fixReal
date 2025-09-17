@@ -52,7 +52,13 @@ export default function InstallmentsPage() {
   }, [])
 
   // Handle create/update installment
-  const handleSaveInstallment = async (installmentData: Partial<Installment>) => {
+  const handleSaveInstallment = async (installmentData: { 
+    status: "مدفوع" | "معلق" | "متأخر"; 
+    unitId: string; 
+    amount: number; 
+    dueDate: string; 
+    notes?: string | undefined; 
+  }) => {
     try {
       const url = editingInstallment ? `/api/installments/${editingInstallment.id}` : '/api/installments'
       const method = editingInstallment ? 'PUT' : 'POST'
