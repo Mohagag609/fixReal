@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block page_title %}إضافة تحويل جديد{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900">إضافة تحويل جديد</h2>
+            <p class="text-gray-600 mt-2">أدخل بيانات التحويل بين الخزائن</p>
+        </div>
+        
+        <!-- Form -->
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- From Safe -->
+            <div>
+                <label for="{{ form.from_safe.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    من خزنة <span class="text-red-500">*</span>
+                </label>
+                {{ form.from_safe }}
+                {% if form.from_safe.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {% for error in form.from_safe.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- To Safe -->
+            <div>
+                <label for="{{ form.to_safe.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    إلى خزنة <span class="text-red-500">*</span>
+                </label>
+                {{ form.to_safe }}
+                {% if form.to_safe.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {% for error in form.to_safe.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Amount -->
+            <div>
+                <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    المبلغ <span class="text-red-500">*</span>
+                </label>
+                {{ form.amount }}
+                {% if form.amount.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {% for error in form.amount.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Description -->
+            <div>
+                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    الوصف
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {% for error in form.description.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="flex items-center justify-end space-x-4 space-x-reverse pt-6 border-t border-gray-200">
+                <a href="/transfers/" class="px-6 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors duration-200">
+                    إلغاء
+                </a>
+                <button type="submit" class="px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors duration-200 hover-scale">
+                    إضافة
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+/* Custom form styling */
+input[type="text"], input[type="number"], textarea, select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+    background-color: #ffffff;
+}
+
+input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 40px;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+
+{% block page_title %}{% if object %}تعديل العقد{% else %}إضافة عقد جديد{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900">
+                {% if object %}تعديل العقد{% else %}إضافة عقد جديد{% endif %}
+            </h2>
+            <p class="text-gray-600 mt-2">
+                {% if object %}قم بتعديل بيانات العقد{% else %}أدخل بيانات العقد الجديد{% endif %}
+            </p>
+        </div>
+        
+        <!-- Form -->
+        <form method="post" class="space-y-8">
+            {% csrf_token %}
+            
+            <!-- Basic Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.unit.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        الوحدة <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.unit }}
+                    {% if form.unit.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.unit.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.customer.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        العميل <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.customer }}
+                    {% if form.customer.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.customer.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Contract Details -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.start.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        تاريخ البدء <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.start }}
+                    {% if form.start.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.start.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.total_price.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        السعر الإجمالي <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.total_price }}
+                    {% if form.total_price.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.total_price.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Payment Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.payment_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        نوع الدفع <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.payment_type }}
+                    {% if form.payment_type.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.payment_type.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.discount_amount.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        مبلغ الخصم
+                    </label>
+                    {{ form.discount_amount }}
+                    {% if form.discount_amount.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.discount_amount.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Installment Information -->
+            <div id="installment-section" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label for="{{ form.installment_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        نوع الأقساط
+                    </label>
+                    {{ form.installment_type }}
+                    {% if form.installment_type.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.installment_type.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.installment_count.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        عدد الأقساط
+                    </label>
+                    {{ form.installment_count }}
+                    {% if form.installment_count.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.installment_count.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.down_payment.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        المقدم
+                    </label>
+                    {{ form.down_payment }}
+                    {% if form.down_payment.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.down_payment.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Broker Information -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label for="{{ form.broker_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        اسم السمسار
+                    </label>
+                    {{ form.broker_name }}
+                    {% if form.broker_name.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.broker_name.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.broker_percent.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        نسبة العمولة
+                    </label>
+                    {{ form.broker_percent }}
+                    {% if form.broker_percent.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.broker_percent.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.broker_amount.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        مبلغ العمولة
+                    </label>
+                    {{ form.broker_amount }}
+                    {% if form.broker_amount.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.broker_amount.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Additional Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.maintenance_deposit.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        وديعة الصيانة
+                    </label>
+                    {{ form.maintenance_deposit }}
+                    {% if form.maintenance_deposit.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.maintenance_deposit.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.commission_safe_id.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        خزنة العمولة
+                    </label>
+                    {{ form.commission_safe_id }}
+                    {% if form.commission_safe_id.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.commission_safe_id.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="flex items-center justify-end space-x-4 space-x-reverse pt-6 border-t border-gray-200">
+                <a href="/contracts/" class="px-6 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors duration-200">
+                    إلغاء
+                </a>
+                <button type="submit" class="px-6 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors duration-200 hover-scale">
+                    {% if object %}تحديث{% else %}إضافة{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+/* Custom form styling */
+input[type="text"], input[type="number"], input[type="datetime-local"], textarea, select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+    background-color: #ffffff;
+}
+
+input[type="text"]:focus, input[type="number"]:focus, input[type="datetime-local"]:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: #0d9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 40px;
+}
+</style>
+
+<script>
+// Show/hide installment section based on payment type
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentTypeSelect = document.getElementById('id_payment_type');
+    const installmentSection = document.getElementById('installment-section');
+    
+    function toggleInstallmentSection() {
+        if (paymentTypeSelect.value === 'installment') {
+            installmentSection.style.display = 'grid';
+        } else {
+            installmentSection.style.display = 'none';
+        }
+    }
+    
+    paymentTypeSelect.addEventListener('change', toggleInstallmentSection);
+    toggleInstallmentSection(); // Initial call
+});
+</script>
+{% endblock %}
