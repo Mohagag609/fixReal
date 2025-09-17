@@ -13,7 +13,7 @@ const installmentSchema = z.object({
   unitId: z.string().min(1, 'الوحدة مطلوبة'),
   amount: z.number().min(0.01, 'المبلغ يجب أن يكون أكبر من صفر'),
   dueDate: z.string().min(1, 'تاريخ الاستحقاق مطلوب'),
-  status: z.enum(['مدفوع', 'معلق', 'متأخر']).default('معلق'),
+  status: z.enum(['مدفوع', 'معلق', 'متأخر']),
   notes: z.string().optional(),
 })
 

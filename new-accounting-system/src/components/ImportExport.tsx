@@ -44,14 +44,14 @@ export const ImportExport = <T,>({
 
   const handleExport = (format: 'excel' | 'pdf' | 'csv') => {
     try {
-      const exportData = prepareTableDataForExport(data, columns, title, subtitle)
+      const preparedData = prepareTableDataForExport(data as Record<string, unknown>[], columns, title, subtitle)
       const options: ExportOptions = {
         format,
         filename: `${title || 'export'}_${new Date().toISOString().split('T')[0]}`,
         includeHeaders: true,
       }
       
-      exportData(exportData, options)
+      exportData(preparedData, options)
     } catch (error) {
       console.error('Export error:', error)
     }
@@ -95,7 +95,7 @@ export const ImportExport = <T,>({
         return converted
       })
       
-      onImport(convertedData)
+      onImport(convertedData as T[])
       setIsModalOpen(false)
       setImportData([])
       setImportErrors([])

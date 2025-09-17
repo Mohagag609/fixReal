@@ -14,13 +14,13 @@ const contractSchema = z.object({
   customerId: z.string().min(1, 'العميل مطلوب'),
   start: z.string().min(1, 'تاريخ العقد مطلوب'),
   totalPrice: z.number().min(0, 'السعر الإجمالي يجب أن يكون أكبر من أو يساوي صفر'),
-  discountAmount: z.number().min(0).default(0),
+  discountAmount: z.number().min(0),
   brokerName: z.string().optional(),
-  brokerPercent: z.number().min(0).max(100).default(0),
-  brokerAmount: z.number().min(0).default(0),
-  downPayment: z.number().min(0).default(0),
+  brokerPercent: z.number().min(0).max(100),
+  brokerAmount: z.number().min(0),
+  downPayment: z.number().min(0),
   installmentType: z.enum(['شهري', 'ربعي', 'سنوي']),
-  installmentCount: z.number().min(0).default(0),
+  installmentCount: z.number().min(0),
   paymentType: z.enum(['installment', 'cash']),
 })
 

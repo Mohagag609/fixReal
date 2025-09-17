@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 
 const voucherSchema = z.object({
-  type: z.enum(['receipt', 'payment'], { required_error: 'نوع الشيك مطلوب' }),
+  type: z.enum(['receipt', 'payment'], { message: 'نوع الشيك مطلوب' }),
   date: z.string().min(1, 'التاريخ مطلوب'),
   amount: z.number().min(0.01, 'المبلغ يجب أن يكون أكبر من صفر'),
   safeId: z.string().min(1, 'الخزينة مطلوبة'),
