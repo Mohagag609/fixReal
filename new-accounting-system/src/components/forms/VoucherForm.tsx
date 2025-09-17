@@ -61,8 +61,8 @@ export function VoucherForm({ voucher, onSave, onCancel }: VoucherFormProps) {
   } = useForm<VoucherFormData>({
     resolver: zodResolver(voucherSchema),
     defaultValues: {
-      type: 'receipt',
-      date: new Date().toISOString().split('T')[0],
+      type: 'receipt' as const,
+      date: new Date().toISOString().split('T')[0] || '',
       amount: 0,
       safeId: '',
       description: '',
@@ -100,7 +100,7 @@ export function VoucherForm({ voucher, onSave, onCancel }: VoucherFormProps) {
     if (voucher) {
       reset({
         type: voucher.type as 'receipt' | 'payment',
-        date: voucher.date.split('T')[0],
+        date: voucher.date.split('T')[0] || '',
         amount: voucher.amount,
         safeId: voucher.safeId,
         description: voucher.description,
@@ -121,7 +121,7 @@ export function VoucherForm({ voucher, onSave, onCancel }: VoucherFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6"> {/* eslint-disable-line @typescript-eslint/no-explicit-any */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Basic Information */}
         <Card>

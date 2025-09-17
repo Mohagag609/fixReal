@@ -205,7 +205,7 @@ export const importFromCSV = (file: File): Promise<Array<Record<string, string>>
           return
         }
 
-        const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim())
+        const headers = lines[0]?.split(',').map(h => h.replace(/"/g, '').trim()) || []
         const rows = lines.slice(1).map(line => {
           const values = line.split(',').map(v => v.replace(/"/g, '').trim())
           const row: Record<string, string> = {}

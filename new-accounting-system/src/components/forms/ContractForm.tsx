@@ -120,7 +120,7 @@ export function ContractForm({ contract, onSave, onCancel }: ContractFormProps) 
       reset({
         unitId: contract.unitId,
         customerId: contract.customerId,
-        start: contract.start.split('T')[0], // Convert to YYYY-MM-DD format
+        start: contract.start.split('T')[0] || '', // Convert to YYYY-MM-DD format
         totalPrice: contract.totalPrice,
         discountAmount: contract.discountAmount,
         brokerName: contract.brokerName || '',

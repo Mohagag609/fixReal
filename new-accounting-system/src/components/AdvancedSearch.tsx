@@ -48,7 +48,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   const addFilter = () => {
     if (searchFields.length > 0 && searchFields[0]) {
       setFilters(prev => [...prev, {
-        field: searchFields[0].key,
+        field: searchFields[0]!.key,
         operator: 'contains',
         value: '',
       }])
@@ -69,7 +69,8 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     setDateRanges(prev => ({
       ...prev,
       [key]: {
-        ...prev[key],
+        from: prev[key]?.from || '',
+        to: prev[key]?.to || '',
         [field]: value,
       }
     }))
@@ -81,7 +82,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       range.from || range.to
     )
     
-    onSearch(activeFilters, activeDateRanges.length > 0 ? activeDateRanges[0][1] : undefined)
+    onSearch(activeFilters, activeDateRanges.length > 0 ? activeDateRanges[0]![1] : undefined)
   }
 
   const handleClear = () => {

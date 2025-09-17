@@ -79,7 +79,7 @@ export function InstallmentForm({ installment, onSave, onCancel }: InstallmentFo
       reset({
         unitId: installment.unitId,
         amount: installment.amount,
-        dueDate: installment.dueDate.split('T')[0],
+        dueDate: installment.dueDate.split('T')[0] || '',
         status: installment.status as 'مدفوع' | 'معلق' | 'متأخر',
         notes: installment.notes || '',
       })
