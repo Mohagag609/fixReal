@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gradient-to-br from-blue-50 via-white to-purple-50;
+    direction: rtl;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .btn-primary {
+    @apply bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md shadow-blue-500/20 hover:scale-105 active:scale-95;
+  }
+  
+  .btn-secondary {
+    @apply bg-white/90 hover:bg-white border border-gray-200 text-gray-700 shadow-md shadow-gray-900/5 hover:scale-105 active:scale-95;
+  }
+  
+  .btn-success {
+    @apply bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md shadow-green-500/20 hover:scale-105 active:scale-95;
+  }
+  
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-md shadow-red-500/20 hover:scale-105 active:scale-95;
+  }
+  
+  .btn-warning {
+    @apply bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white shadow-md shadow-yellow-500/20 hover:scale-105 active:scale-95;
+  }
+  
+  .card {
+    @apply bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg shadow-gray-900/5 p-6;
+  }
+  
+  .card-hover {
+    @apply hover:scale-105 hover:shadow-xl transition-all duration-150;
+  }
+  
+  .input {
+    @apply w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+  }
+  
+  .table {
+    @apply w-full bg-white rounded-lg shadow-sm overflow-hidden;
+  }
+  
+  .table th {
+    @apply px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50;
+  }
+  
+  .table td {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+  }
+  
+  .table tbody tr {
+    @apply hover:bg-gray-50 transition-colors duration-150;
+  }
+  
+  .sidebar {
+    @apply fixed top-0 right-0 h-full bg-white/95 backdrop-blur-sm border-l border-gray-200/50 shadow-2xl shadow-gray-900/10 z-50 transition-all duration-300 ease-in-out;
+  }
+  
+  .sidebar-open {
+    @apply translate-x-0;
+  }
+  
+  .sidebar-closed {
+    @apply translate-x-full;
+  }
+  
+  .kpi-card {
+    @apply bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg shadow-gray-900/5 p-4 hover:scale-105 transition-all duration-150 hover:shadow-xl cursor-pointer;
+  }
+  
+  .quick-action-card {
+    @apply bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg shadow-gray-900/5 p-4 hover:scale-105 transition-all duration-150 hover:shadow-xl cursor-pointer text-center;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+}
