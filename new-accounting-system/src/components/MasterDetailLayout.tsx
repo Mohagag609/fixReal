@@ -11,7 +11,7 @@ export interface MasterDetailLayoutProps {
   isDetailOpen: boolean
   onDetailClose: () => void
   onDetailOpen: () => void
-  selectedItem?: Record<string, unknown>
+  selectedItem?: Record<string, unknown> | undefined
   className?: string
   masterWidth?: string
   detailWidth?: string
