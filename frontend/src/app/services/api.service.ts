@@ -5,6 +5,12 @@ import { environment } from '../../environments/environment';
 import { Customer, CustomerResponse, CustomerFormData, CustomerFilters } from '../models/customer.model';
 import { Unit, UnitResponse, UnitFormData, UnitFilters } from '../models/unit.model';
 import { DashboardResponse } from '../models/dashboard.model';
+import { Broker, BrokerStats } from '../models/broker.model';
+import { BrokerDue } from '../models/broker-due.model';
+import { PartnerDebt, PartnerDebtStats } from '../models/partner-debt.model';
+import { AuditLog, AuditLogStats } from '../models/audit-log.model';
+import { Settings } from '../models/settings.model';
+import { Notification } from '../models/notification.model';
 
 @Injectable({
   providedIn: 'root'
@@ -295,5 +301,231 @@ export class ApiService {
   // Health check
   healthCheck(): Observable<{ success: boolean; message: string; timestamp: string }> {
     return this.http.get<{ success: boolean; message: string; timestamp: string }>(`${this.baseUrl}/health`);
+  }
+
+  // Brokers
+  getBrokers(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      for (const key in filters) {
+        if (filters.hasOwnProperty(key) && filters[key] !== null && filters[key] !== undefined) {
+          params = params.append(key, filters[key]);
+        }
+      }
+    }
+    return this.http.get<any>(`${this.baseUrl}/brokers`, { params });
+  }
+
+  getBroker(id: string): Observable<{ success: boolean; data: Broker }> {
+    return this.http.get<{ success: boolean; data: Broker }>(`${this.baseUrl}/brokers/${id}`);
+  }
+
+  createBroker(broker: Broker): Observable<{ success: boolean; data: Broker }> {
+    return this.http.post<{ success: boolean; data: Broker }>(`${this.baseUrl}/brokers`, broker);
+  }
+
+  updateBroker(id: string, broker: Broker): Observable<{ success: boolean; data: Broker }> {
+    return this.http.put<{ success: boolean; data: Broker }>(`${this.baseUrl}/brokers/${id}`, broker);
+  }
+
+  deleteBroker(id: string): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/brokers/${id}`);
+  }
+
+  getBrokerStats(): Observable<{ success: boolean; data: BrokerStats }> {
+    return this.http.get<{ success: boolean; data: BrokerStats }>(`${this.baseUrl}/brokers/stats`);
+  }
+
+  // Broker Dues
+  getBrokerDues(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      for (const key in filters) {
+        if (filters.hasOwnProperty(key) && filters[key] !== null && filters[key] !== undefined) {
+          params = params.append(key, filters[key]);
+        }
+      }
+    }
+    return this.http.get<any>(`${this.baseUrl}/broker-dues`, { params });
+  }
+
+  getBrokerDue(id: string): Observable<{ success: boolean; data: BrokerDue }> {
+    return this.http.get<{ success: boolean; data: BrokerDue }>(`${this.baseUrl}/broker-dues/${id}`);
+  }
+
+  createBrokerDue(brokerDue: BrokerDue): Observable<{ success: boolean; data: BrokerDue }> {
+    return this.http.post<{ success: boolean; data: BrokerDue }>(`${this.baseUrl}/broker-dues`, brokerDue);
+  }
+
+  updateBrokerDue(id: string, brokerDue: BrokerDue): Observable<{ success: boolean; data: BrokerDue }> {
+    return this.http.put<{ success: boolean; data: BrokerDue }>(`${this.baseUrl}/broker-dues/${id}`, brokerDue);
+  }
+
+  deleteBrokerDue(id: string): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/broker-dues/${id}`);
+  }
+
+  markBrokerDueAsPaid(id: string, paymentData: { payment_date: string; notes?: string }): Observable<{ success: boolean; data: BrokerDue }> {
+    return this.http.post<{ success: boolean; data: BrokerDue }>(`${this.baseUrl}/broker-dues/${id}/mark-paid`, paymentData);
+  }
+
+  getOverdueBrokerDues(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      for (const key in filters) {
+        if (filters.hasOwnProperty(key) && filters[key] !== null && filters[key] !== undefined) {
+          params = params.append(key, filters[key]);
+        }
+      }
+    }
+    return this.http.get<any>(`${this.baseUrl}/broker-dues/overdue`, { params });
+  }
+
+  // Partner Debts
+  getPartnerDebts(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      for (const key in filters) {
+        if (filters.hasOwnProperty(key) && filters[key] !== null && filters[key] !== undefined) {
+          params = params.append(key, filters[key]);
+        }
+      }
+    }
+    return this.http.get<any>(`${this.baseUrl}/partner-debts`, { params });
+  }
+
+  getPartnerDebt(id: string): Observable<{ success: boolean; data: PartnerDebt }> {
+    return this.http.get<{ success: boolean; data: PartnerDebt }>(`${this.baseUrl}/partner-debts/${id}`);
+  }
+
+  createPartnerDebt(partnerDebt: PartnerDebt): Observable<{ success: boolean; data: PartnerDebt }> {
+    return this.http.post<{ success: boolean; data: PartnerDebt }>(`${this.baseUrl}/partner-debts`, partnerDebt);
+  }
+
+  updatePartnerDebt(id: string, partnerDebt: PartnerDebt): Observable<{ success: boolean; data: PartnerDebt }> {
+    return this.http.put<{ success: boolean; data: PartnerDebt }>(`${this.baseUrl}/partner-debts/${id}`, partnerDebt);
+  }
+
+  deletePartnerDebt(id: string): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/partner-debts/${id}`);
+  }
+
+  markPartnerDebtAsPaid(id: string, paymentData: { payment_date: string; notes?: string }): Observable<{ success: boolean; data: PartnerDebt }> {
+    return this.http.post<{ success: boolean; data: PartnerDebt }>(`${this.baseUrl}/partner-debts/${id}/mark-paid`, paymentData);
+  }
+
+  getOverduePartnerDebts(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      for (const key in filters) {
+        if (filters.hasOwnProperty(key) && filters[key] !== null && filters[key] !== undefined) {
+          params = params.append(key, filters[key]);
+        }
+      }
+    }
+    return this.http.get<any>(`${this.baseUrl}/partner-debts/overdue`, { params });
+  }
+
+  getPartnerDebtStats(): Observable<{ success: boolean; data: PartnerDebtStats }> {
+    return this.http.get<{ success: boolean; data: PartnerDebtStats }>(`${this.baseUrl}/partner-debts/stats`);
+  }
+
+  // Audit Logs
+  getAuditLogs(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      for (const key in filters) {
+        if (filters.hasOwnProperty(key) && filters[key] !== null && filters[key] !== undefined) {
+          params = params.append(key, filters[key]);
+        }
+      }
+    }
+    return this.http.get<any>(`${this.baseUrl}/audit-logs`, { params });
+  }
+
+  getAuditLog(id: string): Observable<{ success: boolean; data: AuditLog }> {
+    return this.http.get<{ success: boolean; data: AuditLog }>(`${this.baseUrl}/audit-logs/${id}`);
+  }
+
+  getAuditLogStats(): Observable<{ success: boolean; data: AuditLogStats }> {
+    return this.http.get<{ success: boolean; data: AuditLogStats }>(`${this.baseUrl}/audit-logs/stats`);
+  }
+
+  // Settings
+  getSettings(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      for (const key in filters) {
+        if (filters.hasOwnProperty(key) && filters[key] !== null && filters[key] !== undefined) {
+          params = params.append(key, filters[key]);
+        }
+      }
+    }
+    return this.http.get<any>(`${this.baseUrl}/settings`, { params });
+  }
+
+  getSetting(id: string): Observable<{ success: boolean; data: Settings }> {
+    return this.http.get<{ success: boolean; data: Settings }>(`${this.baseUrl}/settings/${id}`);
+  }
+
+  createSetting(setting: Settings): Observable<{ success: boolean; data: Settings }> {
+    return this.http.post<{ success: boolean; data: Settings }>(`${this.baseUrl}/settings`, setting);
+  }
+
+  updateSetting(id: string, setting: Settings): Observable<{ success: boolean; data: Settings }> {
+    return this.http.put<{ success: boolean; data: Settings }>(`${this.baseUrl}/settings/${id}`, setting);
+  }
+
+  deleteSetting(id: string): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/settings/${id}`);
+  }
+
+  getSettingByKey(key: string): Observable<{ success: boolean; data: Settings }> {
+    return this.http.get<{ success: boolean; data: Settings }>(`${this.baseUrl}/settings/key/${key}`);
+  }
+
+  updateSettingByKey(key: string, setting: Partial<Settings>): Observable<{ success: boolean; data: Settings }> {
+    return this.http.put<{ success: boolean; data: Settings }>(`${this.baseUrl}/settings/key/${key}`, setting);
+  }
+
+  // Notifications
+  getNotifications(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      for (const key in filters) {
+        if (filters.hasOwnProperty(key) && filters[key] !== null && filters[key] !== undefined) {
+          params = params.append(key, filters[key]);
+        }
+      }
+    }
+    return this.http.get<any>(`${this.baseUrl}/notifications`, { params });
+  }
+
+  getNotification(id: string): Observable<{ success: boolean; data: Notification }> {
+    return this.http.get<{ success: boolean; data: Notification }>(`${this.baseUrl}/notifications/${id}`);
+  }
+
+  createNotification(notification: Notification): Observable<{ success: boolean; data: Notification }> {
+    return this.http.post<{ success: boolean; data: Notification }>(`${this.baseUrl}/notifications`, notification);
+  }
+
+  updateNotification(id: string, notification: Notification): Observable<{ success: boolean; data: Notification }> {
+    return this.http.put<{ success: boolean; data: Notification }>(`${this.baseUrl}/notifications/${id}`, notification);
+  }
+
+  deleteNotification(id: string): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/notifications/${id}`);
+  }
+
+  markNotificationAsRead(id: string): Observable<{ success: boolean; data: Notification }> {
+    return this.http.post<{ success: boolean; data: Notification }>(`${this.baseUrl}/notifications/${id}/mark-read`, {});
+  }
+
+  markAllNotificationsAsRead(userId: string): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(`${this.baseUrl}/notifications/mark-all-read`, { user_id: userId });
+  }
+
+  getUnreadNotificationCount(userId: string): Observable<{ success: boolean; data: { unread_count: number } }> {
+    return this.http.get<{ success: boolean; data: { unread_count: number } }>(`${this.baseUrl}/notifications/unread-count?user_id=${userId}`);
   }
 }

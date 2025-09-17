@@ -5,6 +5,18 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\UnitController;
+use App\Http\Controllers\Api\ContractController;
+use App\Http\Controllers\Api\InstallmentController;
+use App\Http\Controllers\Api\VoucherController;
+use App\Http\Controllers\Api\PartnerController;
+use App\Http\Controllers\Api\PartnerGroupController;
+use App\Http\Controllers\Api\SafeController;
+use App\Http\Controllers\Api\BrokerController;
+use App\Http\Controllers\Api\BrokerDueController;
+use App\Http\Controllers\Api\PartnerDebtController;
+use App\Http\Controllers\Api\AuditLogController;
+use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,6 +68,36 @@ Route::apiResource('safes', SafeController::class);
 Route::get('safes/stats', [SafeController::class, 'getStats']);
 Route::get('safes/{safe}/transactions', [SafeController::class, 'getTransactions']);
 Route::post('safes/transfer', [SafeController::class, 'transfer']);
+
+// Partner Debts
+Route::apiResource('partner-debts', PartnerDebtController::class);
+Route::post('partner-debts/{debt}/mark-paid', [PartnerDebtController::class, 'markAsPaid']);
+Route::get('partner-debts/overdue', [PartnerDebtController::class, 'getOverdue']);
+Route::get('partner-debts/stats', [PartnerDebtController::class, 'getStats']);
+
+// Brokers
+Route::apiResource('brokers', BrokerController::class);
+Route::get('brokers/stats', [BrokerController::class, 'getStats']);
+
+// Broker Dues
+Route::apiResource('broker-dues', BrokerDueController::class);
+Route::post('broker-dues/{due}/mark-paid', [BrokerDueController::class, 'markAsPaid']);
+Route::get('broker-dues/overdue', [BrokerDueController::class, 'getOverdue']);
+
+// Audit Logs
+Route::apiResource('audit-logs', AuditLogController::class);
+Route::get('audit-logs/stats', [AuditLogController::class, 'getStats']);
+
+// Settings
+Route::apiResource('settings', SettingsController::class);
+Route::get('settings/key/{key}', [SettingsController::class, 'getByKey']);
+Route::put('settings/key/{key}', [SettingsController::class, 'updateByKey']);
+
+// Notifications
+Route::apiResource('notifications', NotificationController::class);
+Route::post('notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead']);
+Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+Route::get('notifications/unread-count', [NotificationController::class, 'getUnreadCount']);
 
 // Health check
 Route::get('/health', function () {

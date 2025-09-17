@@ -1,12 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { ApiService } from '../../services/api.service';
+import { DataTableComponent, Column, Action } from '../../components/data-table/data-table.component';
+import { ExportMenuComponent, ExportOption } from '../../components/export-menu/export-menu.component';
+import { PrintButtonComponent } from '../../components/print-button/print-button.component';
+import { ReportBuilderComponent, ReportConfig, ReportField } from '../../components/report-builder/report-builder.component';
+import { ReportPreviewComponent, ReportData } from '../../components/report-preview/report-preview.component';
 
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule, DataTableComponent, ExportMenuComponent, PrintButtonComponent, ReportBuilderComponent, ReportPreviewComponent],
   template: `
     <div class="space-y-6">
       <!-- Header -->
@@ -18,12 +24,23 @@ import { ApiService } from '../../services/api.service';
         <div class="flex gap-2">
           <button 
             class="btn btn-primary"
-            (click)="generateReport()">
-            تصدير تقرير
+            (click)="openReportBuilder()">
+            <i class="fas fa-plus mr-2"></i>
+            إنشاء تقرير جديد
           </button>
+          <app-export-menu 
+            (export)="onExport($event)"
+            (customExport)="onCustomExport()"
+            (settings)="onExportSettings()">
+          </app-export-menu>
+          <app-print-button 
+            [printData]="reportData"
+            [title]="'تقرير العقارات'">
+          </app-print-button>
           <button 
             class="btn btn-secondary"
             (click)="refreshData()">
+            <i class="fas fa-refresh mr-2"></i>
             تحديث البيانات
           </button>
         </div>
@@ -250,6 +267,41 @@ import { ApiService } from '../../services/api.service';
           <p class="text-gray-600">جاري تحميل التقارير...</p>
         </div>
       </div>
+
+      <!-- Report Builder Modal -->
+      <div *ngIf="showReportBuilder" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-4/5 max-w-6xl shadow-lg rounded-md bg-white">
+          <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-medium text-gray-900">منشئ التقارير</h3>
+              <button (click)="closeReportBuilder()" 
+                      class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+              </button>
+            </div>
+            <app-report-builder 
+              [availableFields]="availableFields"
+              [initialConfig]="reportConfig"
+              (reportGenerated)="onReportGenerated($event)"
+              (reportSaved)="onReportSaved($event)">
+            </app-report-builder>
+          </div>
+        </div>
+      </div>
+
+      <!-- Report Preview Modal -->
+      <div *ngIf="showReportPreview" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-4/5 max-w-6xl shadow-lg rounded-md bg-white">
+          <div class="mt-3">
+            <app-report-preview 
+              [reportData]="previewData"
+              (export)="onPreviewExport($event)"
+              (print)="onPreviewPrint($event)"
+              (close)="closeReportPreview()">
+            </app-report-preview>
+          </div>
+        </div>
+      </div>
     </div>
   `,
   styles: []
@@ -289,6 +341,54 @@ export class ReportsComponent implements OnInit {
   };
 
   topCustomers: any[] = [];
+
+  // Advanced Report Features
+  showReportBuilder = false;
+  showReportPreview = false;
+  reportConfig: ReportConfig | null = null;
+  previewData: ReportData | null = null;
+  reportData: any = null;
+  
+  // Available fields for report builder
+  availableFields: ReportField[] = [
+    { key: 'id', label: 'المعرف', type: 'text' },
+    { key: 'name', label: 'الاسم', type: 'text' },
+    { key: 'amount', label: 'المبلغ', type: 'currency' },
+    { key: 'date', label: 'التاريخ', type: 'date' },
+    { key: 'status', label: 'الحالة', type: 'status' },
+    { key: 'created_at', label: 'تاريخ الإنشاء', type: 'date' }
+  ];
+  
+  // Table columns for data display
+  columns: Column[] = [
+    { key: 'id', label: 'المعرف', type: 'text', sortable: true },
+    { key: 'name', label: 'الاسم', type: 'text', sortable: true },
+    { key: 'amount', label: 'المبلغ', type: 'currency', sortable: true },
+    { key: 'date', label: 'التاريخ', type: 'date', sortable: true },
+    { key: 'status', label: 'الحالة', type: 'status', sortable: true }
+  ];
+  
+  // Table actions
+  actions: Action[] = [
+    {
+      label: 'عرض',
+      icon: 'fas fa-eye',
+      color: 'info',
+      onClick: (item) => this.viewItem(item)
+    },
+    {
+      label: 'تعديل',
+      icon: 'fas fa-edit',
+      color: 'primary',
+      onClick: (item) => this.editItem(item)
+    },
+    {
+      label: 'حذف',
+      icon: 'fas fa-trash',
+      color: 'danger',
+      onClick: (item) => this.deleteItem(item)
+    }
+  ];
 
   constructor(private apiService: ApiService) {}
 
@@ -393,5 +493,96 @@ export class ReportsComponent implements OnInit {
 
   formatDate(date: string): string {
     return new Date(date).toLocaleDateString('ar-SA');
+  }
+
+  // Advanced Report Methods
+  openReportBuilder() {
+    this.showReportBuilder = true;
+  }
+
+  closeReportBuilder() {
+    this.showReportBuilder = false;
+  }
+
+  onReportGenerated(config: ReportConfig) {
+    this.reportConfig = config;
+    this.generateReportFromConfig(config);
+    this.closeReportBuilder();
+  }
+
+  onReportSaved(config: ReportConfig) {
+    // Save report configuration
+    console.log('Report saved:', config);
+    this.closeReportBuilder();
+  }
+
+  generateReportFromConfig(config: ReportConfig) {
+    // Generate report data based on configuration
+    this.previewData = {
+      title: config.title,
+      subtitle: config.subtitle,
+      dateRange: config.dateRange,
+      fields: config.fields,
+      data: this.getReportData(config),
+      columns: config.fields.map(field => ({
+        key: field.key,
+        label: field.label,
+        type: field.type
+      }))
+    };
+    this.showReportPreview = true;
+  }
+
+  getReportData(config: ReportConfig): any[] {
+    // Mock data - replace with actual API call
+    return [
+      { id: '1', name: 'عقد 1', amount: 100000, date: '2024-01-01', status: 'active' },
+      { id: '2', name: 'عقد 2', amount: 150000, date: '2024-01-02', status: 'pending' },
+      { id: '3', name: 'عقد 3', amount: 200000, date: '2024-01-03', status: 'completed' }
+    ];
+  }
+
+  closeReportPreview() {
+    this.showReportPreview = false;
+    this.previewData = null;
+  }
+
+  onPreviewExport(data: ReportData) {
+    // Implement export functionality
+    console.log('Exporting report:', data);
+  }
+
+  onPreviewPrint(data: ReportData) {
+    // Implement print functionality
+    console.log('Printing report:', data);
+  }
+
+  onExport(option: ExportOption) {
+    // Implement export based on format
+    console.log('Exporting as:', option.format);
+  }
+
+  onCustomExport() {
+    // Implement custom export
+    console.log('Custom export');
+  }
+
+  onExportSettings() {
+    // Implement export settings
+    console.log('Export settings');
+  }
+
+  viewItem(item: any) {
+    console.log('Viewing item:', item);
+  }
+
+  editItem(item: any) {
+    console.log('Editing item:', item);
+  }
+
+  deleteItem(item: any) {
+    if (confirm('هل أنت متأكد من حذف هذا العنصر؟')) {
+      console.log('Deleting item:', item);
+    }
   }
 }
