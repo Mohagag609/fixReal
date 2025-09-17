@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+// import { motion } from 'framer-motion' // Temporarily disabled for Netlify
 import { SettingsIcon, SaveIcon, DatabaseIcon, BellIcon, ShieldIcon, PaletteIcon, GlobeIcon, Download, Upload } from '../../components/icons'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
@@ -162,10 +162,8 @@ export default function SettingsPage() {
         <div className="lg:col-span-3">
           {/* General Settings */}
           {activeTab === 'general' && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="space-y-6"
+            <div
+              className="animate-fade-in-right space-y-6"
             >
               <Card>
                 <CardHeader>
@@ -261,15 +259,13 @@ export default function SettingsPage() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           )}
 
           {/* Database Settings */}
           {activeTab === 'database' && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="space-y-6"
+            <div
+              className="animate-fade-in-right space-y-6"
             >
               <Card>
                 <CardHeader>
@@ -328,15 +324,13 @@ export default function SettingsPage() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           )}
 
           {/* Notifications Settings */}
           {activeTab === 'notifications' && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="space-y-6"
+            <div
+              className="animate-fade-in-right space-y-6"
             >
               <Card>
                 <CardHeader>
@@ -406,15 +400,13 @@ export default function SettingsPage() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           )}
 
           {/* Security Settings */}
           {activeTab === 'security' && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="space-y-6"
+            <div
+              className="animate-fade-in-right space-y-6"
             >
               <Card>
                 <CardHeader>
@@ -477,15 +469,13 @@ export default function SettingsPage() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           )}
 
           {/* Appearance Settings */}
           {activeTab === 'appearance' && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="space-y-6"
+            <div
+              className="animate-fade-in-right space-y-6"
             >
               <Card>
                 <CardHeader>
@@ -551,7 +541,7 @@ export default function SettingsPage() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           )}
         </div>
       </div>
