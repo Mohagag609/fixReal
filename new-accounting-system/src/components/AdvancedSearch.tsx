@@ -46,7 +46,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   const [searchText, setSearchText] = useState('')
 
   const addFilter = () => {
-    if (searchFields.length > 0) {
+    if (searchFields.length > 0 && searchFields[0]) {
       setFilters(prev => [...prev, {
         field: searchFields[0].key,
         operator: 'contains',
