@@ -655,3 +655,381 @@ def get_safes_api(request):
     safes = Safe.objects.filter(deleted_at__isnull=True).order_by('name')
     data = [{'id': s.id, 'name': s.name, 'balance': float(s.balance)} for s in safes]
     return JsonResponse(data, safe=False)
+
+
+# Partner Views
+class PartnerListView(ListView):
+    """قائمة الشركاء"""
+    model = Partner
+    template_name = 'accounting_app/partners/list.html'
+    context_object_name = 'partners'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = Partner.objects.filter(deleted_at__isnull=True)
+        
+        # البحث
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) |
+                Q(phone__icontains=search)
+            )
+        
+        # الترتيب
+        order_by = self.request.GET.get('order_by', 'created_at')
+        queryset = queryset.order_by(order_by)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        context['order_by'] = self.request.GET.get('order_by', 'created_at')
+        return context
+
+
+class PartnerCreateView(CreateView):
+    """إضافة شريك جديد"""
+    model = Partner
+    template_name = 'accounting_app/partners/form.html'
+    fields = ['name', 'phone', 'notes']
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, 'تم إضافة الشريك بنجاح')
+        return response
+    
+    def get_success_url(self):
+        return '/partners/'
+
+
+class PartnerUpdateView(UpdateView):
+    """تعديل شريك"""
+    model = Partner
+    template_name = 'accounting_app/partners/form.html'
+    fields = ['name', 'phone', 'notes']
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, 'تم تحديث الشريك بنجاح')
+        return response
+    
+    def get_success_url(self):
+        return '/partners/'
+
+
+class PartnerDeleteView(DeleteView):
+    """حذف شريك"""
+    model = Partner
+    template_name = 'accounting_app/partners/confirm_delete.html'
+    
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.deleted_at = timezone.now()
+        self.object.save()
+        messages.success(request, 'تم حذف الشريك بنجاح')
+        return redirect('/partners/')
+
+
+# Broker Views
+class BrokerListView(ListView):
+    """قائمة السماسرة"""
+    model = Broker
+    template_name = 'accounting_app/brokers/list.html'
+    context_object_name = 'brokers'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = Broker.objects.filter(deleted_at__isnull=True)
+        
+        # البحث
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) |
+                Q(phone__icontains=search)
+            )
+        
+        # الترتيب
+        order_by = self.request.GET.get('order_by', 'created_at')
+        queryset = queryset.order_by(order_by)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        context['order_by'] = self.request.GET.get('order_by', 'created_at')
+        return context
+
+
+class BrokerCreateView(CreateView):
+    """إضافة سمسار جديد"""
+    model = Broker
+    template_name = 'accounting_app/brokers/form.html'
+    fields = ['name', 'phone', 'notes']
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, 'تم إضافة السمسار بنجاح')
+        return response
+    
+    def get_success_url(self):
+        return '/brokers/'
+
+
+class BrokerUpdateView(UpdateView):
+    """تعديل سمسار"""
+    model = Broker
+    template_name = 'accounting_app/brokers/form.html'
+    fields = ['name', 'phone', 'notes']
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, 'تم تحديث السمسار بنجاح')
+        return response
+    
+    def get_success_url(self):
+        return '/brokers/'
+
+
+class BrokerDeleteView(DeleteView):
+    """حذف سمسار"""
+    model = Broker
+    template_name = 'accounting_app/brokers/confirm_delete.html'
+    
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.deleted_at = timezone.now()
+        self.object.save()
+        messages.success(request, 'تم حذف السمسار بنجاح')
+        return redirect('/brokers/')
+
+
+# Partner Group Views
+class PartnerGroupListView(ListView):
+    """قائمة مجموعات الشركاء"""
+    model = PartnerGroup
+    template_name = 'accounting_app/partner_groups/list.html'
+    context_object_name = 'partner_groups'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = PartnerGroup.objects.filter(deleted_at__isnull=True)
+        
+        # البحث
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(name__icontains=search)
+        
+        # الترتيب
+        order_by = self.request.GET.get('order_by', 'created_at')
+        queryset = queryset.order_by(order_by)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        context['order_by'] = self.request.GET.get('order_by', 'created_at')
+        return context
+
+
+class PartnerGroupCreateView(CreateView):
+    """إضافة مجموعة شركاء جديدة"""
+    model = PartnerGroup
+    template_name = 'accounting_app/partner_groups/form.html'
+    fields = ['name', 'notes']
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, 'تم إضافة مجموعة الشركاء بنجاح')
+        return response
+    
+    def get_success_url(self):
+        return '/partner-groups/'
+
+
+class PartnerGroupUpdateView(UpdateView):
+    """تعديل مجموعة شركاء"""
+    model = PartnerGroup
+    template_name = 'accounting_app/partner_groups/form.html'
+    fields = ['name', 'notes']
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, 'تم تحديث مجموعة الشركاء بنجاح')
+        return response
+    
+    def get_success_url(self):
+        return '/partner-groups/'
+
+
+class PartnerGroupDeleteView(DeleteView):
+    """حذف مجموعة شركاء"""
+    model = PartnerGroup
+    template_name = 'accounting_app/partner_groups/confirm_delete.html'
+    
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.deleted_at = timezone.now()
+        self.object.save()
+        messages.success(request, 'تم حذف مجموعة الشركاء بنجاح')
+        return redirect('/partner-groups/')
+
+
+# Transfer Views
+class TransferListView(ListView):
+    """قائمة التحويلات"""
+    model = Transfer
+    template_name = 'accounting_app/transfers/list.html'
+    context_object_name = 'transfers'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = Transfer.objects.filter(deleted_at__isnull=True).select_related('from_safe', 'to_safe')
+        
+        # البحث
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(description__icontains=search) |
+                Q(from_safe__name__icontains=search) |
+                Q(to_safe__name__icontains=search)
+            )
+        
+        # الترتيب
+        order_by = self.request.GET.get('order_by', 'created_at')
+        queryset = queryset.order_by(order_by)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        context['order_by'] = self.request.GET.get('order_by', 'created_at')
+        return context
+
+
+class TransferCreateView(CreateView):
+    """إضافة تحويل جديد"""
+    model = Transfer
+    template_name = 'accounting_app/transfers/form.html'
+    fields = ['from_safe', 'to_safe', 'amount', 'description']
+    
+    def form_valid(self, form):
+        with transaction.atomic():
+            response = super().form_valid(form)
+            
+            # تحديث أرصدة الخزائن
+            from_safe = form.instance.from_safe
+            to_safe = form.instance.to_safe
+            amount = form.instance.amount
+            
+            from_safe.balance -= amount
+            to_safe.balance += amount
+            
+            from_safe.save()
+            to_safe.save()
+            
+            messages.success(self.request, 'تم إضافة التحويل بنجاح')
+            return response
+    
+    def get_success_url(self):
+        return '/transfers/'
+
+
+class TransferDeleteView(DeleteView):
+    """حذف تحويل"""
+    model = Transfer
+    template_name = 'accounting_app/transfers/confirm_delete.html'
+    
+    def delete(self, request, *args, **kwargs):
+        with transaction.atomic():
+            self.object = self.get_object()
+            
+            # إعادة حساب أرصدة الخزائن
+            from_safe = self.object.from_safe
+            to_safe = self.object.to_safe
+            amount = self.object.amount
+            
+            from_safe.balance += amount
+            to_safe.balance -= amount
+            
+            from_safe.save()
+            to_safe.save()
+            
+            self.object.deleted_at = timezone.now()
+            self.object.save()
+            messages.success(request, 'تم حذف التحويل بنجاح')
+            return redirect('/transfers/')
+
+
+# Debt Views
+class PartnerDebtListView(ListView):
+    """قائمة ديون الشركاء"""
+    model = PartnerDebt
+    template_name = 'accounting_app/debts/partner_debts.html'
+    context_object_name = 'debts'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = PartnerDebt.objects.filter(deleted_at__isnull=True).select_related('partner')
+        
+        # البحث
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(partner__name__icontains=search)
+        
+        # التصفية حسب الحالة
+        status = self.request.GET.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
+        
+        # الترتيب
+        order_by = self.request.GET.get('order_by', 'due_date')
+        queryset = queryset.order_by(order_by)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        context['status'] = self.request.GET.get('status', '')
+        context['order_by'] = self.request.GET.get('order_by', 'due_date')
+        return context
+
+
+class BrokerDueListView(ListView):
+    """قائمة ديون السماسرة"""
+    model = BrokerDue
+    template_name = 'accounting_app/debts/broker_dues.html'
+    context_object_name = 'dues'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = BrokerDue.objects.filter(deleted_at__isnull=True).select_related('broker')
+        
+        # البحث
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(broker__name__icontains=search)
+        
+        # التصفية حسب الحالة
+        status = self.request.GET.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
+        
+        # الترتيب
+        order_by = self.request.GET.get('order_by', 'due_date')
+        queryset = queryset.order_by(order_by)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        context['status'] = self.request.GET.get('status', '')
+        context['order_by'] = self.request.GET.get('order_by', 'due_date')
+        return context

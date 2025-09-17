@@ -41,6 +41,33 @@ urlpatterns = [
     path('vouchers/<int:pk>/edit/', views.VoucherUpdateView.as_view(), name='voucher_update'),
     path('vouchers/<int:pk>/delete/', views.VoucherDeleteView.as_view(), name='voucher_delete'),
     
+    # Partners
+    path('partners/', views.PartnerListView.as_view(), name='partner_list'),
+    path('partners/create/', views.PartnerCreateView.as_view(), name='partner_create'),
+    path('partners/<int:pk>/edit/', views.PartnerUpdateView.as_view(), name='partner_update'),
+    path('partners/<int:pk>/delete/', views.PartnerDeleteView.as_view(), name='partner_delete'),
+    
+    # Brokers
+    path('brokers/', views.BrokerListView.as_view(), name='broker_list'),
+    path('brokers/create/', views.BrokerCreateView.as_view(), name='broker_create'),
+    path('brokers/<int:pk>/edit/', views.BrokerUpdateView.as_view(), name='broker_update'),
+    path('brokers/<int:pk>/delete/', views.BrokerDeleteView.as_view(), name='broker_delete'),
+    
+    # Partner Groups
+    path('partner-groups/', views.PartnerGroupListView.as_view(), name='partner_group_list'),
+    path('partner-groups/create/', views.PartnerGroupCreateView.as_view(), name='partner_group_create'),
+    path('partner-groups/<int:pk>/edit/', views.PartnerGroupUpdateView.as_view(), name='partner_group_update'),
+    path('partner-groups/<int:pk>/delete/', views.PartnerGroupDeleteView.as_view(), name='partner_group_delete'),
+    
+    # Transfers
+    path('transfers/', views.TransferListView.as_view(), name='transfer_list'),
+    path('transfers/create/', views.TransferCreateView.as_view(), name='transfer_create'),
+    path('transfers/<int:pk>/delete/', views.TransferDeleteView.as_view(), name='transfer_delete'),
+    
+    # Debts
+    path('partner-debts/', views.PartnerDebtListView.as_view(), name='partner_debt_list'),
+    path('broker-dues/', views.BrokerDueListView.as_view(), name='broker_due_list'),
+    
     # API endpoints
     path('api/customers/', views.get_customers_api, name='api_customers'),
     path('api/units/', views.get_units_api, name='api_units'),
