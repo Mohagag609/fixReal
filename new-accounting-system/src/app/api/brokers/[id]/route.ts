@@ -17,7 +17,7 @@ const brokerSchema = z.object({
 
 // GET /api/brokers/[id] - Get broker by ID
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -109,7 +109,7 @@ export async function PUT(
 
 // DELETE /api/brokers/[id] - Soft delete broker
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
