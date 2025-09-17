@@ -1,28 +1,18 @@
-# Estate Management System Makefile
+# Makefile for Accounting System
 
-.PHONY: help install dev build start test clean docker-up docker-down docker-build
+.PHONY: help install dev build start test clean docker-up docker-down
 
 # Default target
 help:
-	@echo "Estate Management System - Available Commands:"
-	@echo ""
-	@echo "Development:"
+	@echo "Available commands:"
 	@echo "  install     - Install all dependencies"
 	@echo "  dev         - Start development servers"
-	@echo "  build       - Build all projects"
+	@echo "  build       - Build for production"
 	@echo "  start       - Start production servers"
 	@echo "  test        - Run all tests"
-	@echo "  clean       - Clean all build artifacts"
-	@echo ""
-	@echo "Docker:"
-	@echo "  docker-up   - Start all services with Docker"
-	@echo "  docker-down - Stop all Docker services"
-	@echo "  docker-build- Build all Docker images"
-	@echo ""
-	@echo "Database:"
-	@echo "  db-setup    - Setup database and run migrations"
-	@echo "  db-seed     - Seed database with sample data"
-	@echo "  db-reset    - Reset database"
+	@echo "  clean       - Clean build artifacts"
+	@echo "  docker-up   - Start with Docker Compose"
+	@echo "  docker-down - Stop Docker Compose"
 
 # Install dependencies
 install:
@@ -34,17 +24,18 @@ install:
 # Development
 dev:
 	@echo "Starting development servers..."
-	@echo "Backend: http://localhost:3001"
+	@echo "Backend: http://localhost:3000"
 	@echo "Frontend: http://localhost:4200"
-	@echo "Database: localhost:5432"
+	@echo "Database: http://localhost:5432"
 	@echo ""
-	@echo "Press Ctrl+C to stop all services"
-	@trap 'kill 0' INT; \
+	@echo "Press Ctrl+C to stop all servers"
+	@echo ""
+	@trap 'kill %1; kill %2' INT; \
 	cd backend && npm run dev & \
 	cd frontend && npm start & \
 	wait
 
-# Build all projects
+# Build for production
 build:
 	@echo "Building backend..."
 	cd backend && npm run build
@@ -54,8 +45,13 @@ build:
 # Start production
 start:
 	@echo "Starting production servers..."
-	cd backend && npm start &
-	cd frontend && npm start
+	@echo "Backend: http://localhost:3000"
+	@echo "Frontend: http://localhost:4200"
+	@echo ""
+	@trap 'kill %1; kill %2' INT; \
+	cd backend && npm start & \
+	cd frontend && npm run serve & \
+	wait
 
 # Run tests
 test:
@@ -67,38 +63,66 @@ test:
 # Clean build artifacts
 clean:
 	@echo "Cleaning build artifacts..."
-	cd backend && rm -rf dist node_modules
-	cd frontend && rm -rf dist node_modules
-	docker system prune -f
+	rm -rf backend/dist
+	rm -rf frontend/dist
+	rm -rf backend/node_modules
+	rm -rf frontend/node_modules
 
 # Docker commands
 docker-up:
-	@echo "Starting all services with Docker..."
+	@echo "Starting with Docker Compose..."
 	docker-compose up --build
 
 docker-down:
-	@echo "Stopping all Docker services..."
+	@echo "Stopping Docker Compose..."
 	docker-compose down
 
-docker-build:
-	@echo "Building all Docker images..."
-	docker-compose build
-
 # Database commands
-db-setup:
-	@echo "Setting up database..."
-	cd backend && npx prisma generate
-	cd backend && npx prisma db push
-
-db-seed:
-	@echo "Seeding database..."
-	cd backend && npm run db:seed
+db-migrate:
+	@echo "Running database migrations..."
+	cd backend && npx prisma migrate dev
 
 db-reset:
 	@echo "Resetting database..."
-	cd backend && npx prisma migrate reset --force
+	cd backend && npx prisma migrate reset
 
-# Quick start
-quick-start: install db-setup db-seed
-	@echo "Quick start completed!"
-	@echo "Run 'make dev' to start development servers"
+db-seed:
+	@echo "Seeding database..."
+	cd backend && npx prisma db seed
+
+# Development helpers
+dev-backend:
+	@echo "Starting backend only..."
+	cd backend && npm run dev
+
+dev-frontend:
+	@echo "Starting frontend only..."
+	cd frontend && npm start
+
+# Production helpers
+prod-backend:
+	@echo "Starting backend production..."
+	cd backend && npm start
+
+prod-frontend:
+	@echo "Starting frontend production..."
+	cd frontend && npm run serve
+
+# Utility commands
+logs:
+	@echo "Showing Docker logs..."
+	docker-compose logs -f
+
+status:
+	@echo "Checking service status..."
+	@echo "Backend: $$(curl -s http://localhost:3000/health | jq -r '.message' 2>/dev/null || echo 'Not running')"
+	@echo "Frontend: $$(curl -s http://localhost:4200 > /dev/null && echo 'Running' || echo 'Not running')"
+	@echo "Database: $$(pg_isready -h localhost -p 5432 > /dev/null 2>&1 && echo 'Running' || echo 'Not running')"
+
+# Quick setup for new developers
+setup: install db-migrate
+	@echo "Setup complete! Run 'make dev' to start development servers."
+
+# Full reset
+reset: clean install db-reset
+	@echo "Full reset complete! Run 'make dev' to start development servers."
