@@ -64,7 +64,7 @@ export function DataTable<TData, TValue>({
               <Input
                 placeholder={searchPlaceholder}
                 value={globalFilter}
-                onChange={(e) => setGlobalFilter(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGlobalFilter(e.target.value)}
                 className="w-64 pr-10"
               />
             </div>

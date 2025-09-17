@@ -32,7 +32,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
               <Input
                 placeholder="البحث..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                 className="w-64 pr-10"
               />
             </div>

@@ -106,7 +106,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                href={item.href as any} // eslint-disable-line @typescript-eslint/no-explicit-any
                 className={cn(
                   'flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors duration-200 rounded-lg group',
                   isActive && 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'

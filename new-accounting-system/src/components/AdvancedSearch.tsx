@@ -202,7 +202,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                     <Input
                       type={searchFields.find(f => f.key === filter.field)?.type || 'text'}
                       value={filter.value}
-                      onChange={(e) => updateFilter(index, { value: e.target.value })}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFilter(index, { value: e.target.value })}
                       placeholder="القيمة"
                       className="flex-1"
                     />
@@ -241,13 +241,13 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                       <Input
                         type="date"
                         value={dateRanges[field.key]?.from || ''}
-                        onChange={(e) => updateDateRange(field.key, 'from', e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateDateRange(field.key, 'from', e.target.value)}
                         placeholder="من تاريخ"
                       />
                       <Input
                         type="date"
                         value={dateRanges[field.key]?.to || ''}
-                        onChange={(e) => updateDateRange(field.key, 'to', e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateDateRange(field.key, 'to', e.target.value)}
                         placeholder="إلى تاريخ"
                       />
                     </div>

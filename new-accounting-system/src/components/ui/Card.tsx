@@ -3,7 +3,7 @@
 import { HTMLAttributes, forwardRef } from 'react'
 import { cn } from '@/lib/utils'
 
-interface CardProps extends Omit<HTMLMotionProps<'div'>, 'onDrag'> {
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
   hover?: boolean
   clickable?: boolean
 }
@@ -19,8 +19,6 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
           clickable && 'cursor-pointer hover:shadow-md transition-all duration-200',
           className
         )}
-        whileHover={hover ? { y: -2 } : undefined}
-        whileTap={clickable ? { scale: 0.98 } : undefined}
         {...props}
       >
         {children}
