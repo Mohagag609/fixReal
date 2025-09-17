@@ -2,19 +2,19 @@
 
 import { useState, useEffect, useMemo } from 'react'
 // import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Users, Building, DollarSign, Phone, MapPin, Download, RefreshCw } from 'lucide-react'
-import { DataTable } from '@/components/tables/DataTable'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Modal } from '@/components/ui/Modal'
-import { PartnerForm } from '@/components/forms/PartnerForm'
-import { AdvancedSearch } from '@/components/AdvancedSearch'
-import { DataGrouping } from '@/components/DataGrouping'
-import { MasterDetailLayout } from '@/components/MasterDetailLayout'
-import { NotificationProvider, useNotifications } from '@/components/NotificationSystem'
-import { usePaginatedApi } from '@/hooks/usePaginatedApi'
-import { checkDuplicateName, checkDuplicatePhone } from '@/lib/duplicateCheck'
-import { formatDate, formatCurrency } from '@/lib/utils'
+import { PlusIcon, EditIcon, TrashIcon, UsersIcon, BuildingIcon, DollarIcon, PhoneIcon, MapPinIcon, DownloadIcon, RefreshCwIcon } from '../../components/icons'
+import { DataTable } from '../../components/tables/DataTable'
+import { Button } from '../../components/ui/Button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
+import { Modal } from '../../components/ui/Modal'
+import { PartnerForm } from '../../components/forms/PartnerForm'
+import { AdvancedSearch } from '../../components/AdvancedSearch'
+import { DataGrouping } from '../../components/DataGrouping'
+import { MasterDetailLayout } from '../../components/MasterDetailLayout'
+import { NotificationProvider, useNotifications } from '../../components/NotificationSystem'
+import { usePaginatedApi } from '../../hooks/usePaginatedApi'
+import { checkDuplicateName, checkDuplicatePhone } from '../../lib/duplicateCheck'
+import { formatDate, formatCurrency } from '../../lib/utils'
 import { ColumnDef } from '@tanstack/react-table'
 
 interface Partner {
@@ -241,7 +241,7 @@ function PartnersPageContent() {
         header: 'اسم الشريك',
         cell: ({ row }) => (
           <div className="flex items-center">
-            <Users className="w-4 h-4 ml-2 text-blue-600" />
+            <UsersIcon className="w-4 h-4 ml-2 text-blue-600" />
             <span className="font-medium text-gray-900">
               {row.getValue('name')}
             </span>
@@ -253,7 +253,7 @@ function PartnersPageContent() {
         header: 'الهاتف',
         cell: ({ row }) => (
           <div className="flex items-center text-gray-600">
-            <Phone className="w-4 h-4 ml-2" />
+            <PhoneIcon className="w-4 h-4 ml-2" />
             {row.getValue('phone') || 'غير محدد'}
           </div>
         ),
@@ -278,7 +278,7 @@ function PartnersPageContent() {
           const totalDebts = debts?.reduce((sum, debt) => sum + (debt.amount as number), 0) || 0
           return (
             <div className="flex items-center">
-              <DollarSign className="w-4 h-4 ml-2 text-red-600" />
+              <DollarIcon className="w-4 h-4 ml-2 text-red-600" />
               <span className="font-semibold text-red-600">
                 {formatCurrency(totalDebts)}
               </span>
@@ -318,14 +318,14 @@ function PartnersPageContent() {
                   setIsModalOpen(true)
                 }}
               >
-                <Edit className="w-4 h-4" />
+                <EditIcon className="w-4 h-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setDeletingPartner(partner)}
               >
-                <Trash2 className="w-4 h-4" />
+                <TrashIcon className="w-4 h-4" />
               </Button>
             </div>
           )
@@ -373,7 +373,7 @@ function PartnersPageContent() {
             onClick={() => handleExport('excel')}
             className="flex items-center"
           >
-            <Download className="w-4 h-4 ml-2" />
+            <DownloadIcon className="w-4 h-4 ml-2" />
             Excel
           </Button>
           <Button
@@ -381,7 +381,7 @@ function PartnersPageContent() {
             onClick={() => handleExport('pdf')}
             className="flex items-center"
           >
-            <Download className="w-4 h-4 ml-2" />
+            <DownloadIcon className="w-4 h-4 ml-2" />
             PDF
           </Button>
           <Button
@@ -389,7 +389,7 @@ function PartnersPageContent() {
             onClick={refresh}
             className="flex items-center"
           >
-            <RefreshCw className="w-4 h-4 ml-2" />
+            <RefreshCwIcon className="w-4 h-4 ml-2" />
             تحديث
           </Button>
           <Button
@@ -399,7 +399,7 @@ function PartnersPageContent() {
             }}
             className="flex items-center"
           >
-            <Plus className="w-4 h-4 ml-2" />
+            <PlusIcon className="w-4 h-4 ml-2" />
             إضافة شريك جديد
           </Button>
         </div>
@@ -435,7 +435,7 @@ function PartnersPageContent() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="w-6 h-6 text-blue-600" />
+                <UsersIcon className="w-6 h-6 text-blue-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">إجمالي الشركاء</p>
@@ -449,7 +449,7 @@ function PartnersPageContent() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
-                <Building className="w-6 h-6 text-green-600" />
+                <BuildingIcon className="w-6 h-6 text-green-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">إجمالي الوحدات</p>
@@ -463,7 +463,7 @@ function PartnersPageContent() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-red-100 rounded-lg">
-                <DollarSign className="w-6 h-6 text-red-600" />
+                <DollarIcon className="w-6 h-6 text-red-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">إجمالي الديون</p>
@@ -479,7 +479,7 @@ function PartnersPageContent() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <MapPin className="w-6 h-6 text-purple-600" />
+                <MapPinIcon className="w-6 h-6 text-purple-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">متوسط الوحدات</p>
