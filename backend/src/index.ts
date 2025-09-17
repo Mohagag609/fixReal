@@ -19,6 +19,8 @@ import installmentRoutes from './routes/installments';
 import safeRoutes from './routes/safes';
 import partnerRoutes from './routes/partners';
 import brokerRoutes from './routes/brokers';
+import auditRoutes from './routes/audit';
+import notificationRoutes from './routes/notifications';
 
 const app = express();
 
@@ -83,6 +85,8 @@ app.use('/api/installments', installmentRoutes);
 app.use('/api/safes', safeRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/brokers', brokerRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // 404 handler for undefined routes
 app.use(notFoundHandler);
