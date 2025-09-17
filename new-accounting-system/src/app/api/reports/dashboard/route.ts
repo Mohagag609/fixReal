@@ -7,8 +7,8 @@ export const dynamic = 'force-static'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const _startDate = searchParams.get('startDate')
-    const _endDate = searchParams.get('endDate')
+    // const _startDate = searchParams.get('startDate')
+    // const _endDate = searchParams.get('endDate')
 
     // Date filter for future use
     // const dateFilter = {
