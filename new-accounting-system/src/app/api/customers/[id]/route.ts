@@ -20,7 +20,7 @@ const customerSchema = z.object({
 
 // GET /api/customers/[id] - Get customer by ID
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -139,7 +139,7 @@ export async function PUT(
 
 // DELETE /api/customers/[id] - Soft delete customer
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
