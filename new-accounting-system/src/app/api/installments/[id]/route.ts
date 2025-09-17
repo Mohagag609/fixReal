@@ -19,7 +19,7 @@ const installmentSchema = z.object({
 
 // GET /api/installments/[id] - Get installment by ID
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -117,7 +117,7 @@ export async function PUT(
 
 // DELETE /api/installments/[id] - Soft delete installment
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

@@ -17,7 +17,7 @@ const partnerSchema = z.object({
 
 // GET /api/partners/[id] - Get partner by ID
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -115,7 +115,7 @@ export async function PUT(
 
 // DELETE /api/partners/[id] - Soft delete partner
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
