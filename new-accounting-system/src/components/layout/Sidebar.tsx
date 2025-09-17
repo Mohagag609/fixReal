@@ -4,76 +4,64 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import {
-  LayoutDashboard,
-  Users,
-  Building,
-  FileText,
-  Wallet,
-  Receipt,
-  Calendar,
-  BarChart3,
-  Settings,
-  // Menu,
-  X,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { LayoutDashboardIcon, UsersIcon, BuildingIcon, FileTextIcon, WalletIcon, ReceiptIcon, CalendarIcon, BarChart3Icon, SettingsIcon } from '../icons'
+import { cn } from '../../lib/utils'
 
 const menuItems = [
   {
     title: 'لوحة التحكم',
     href: '/',
-    icon: LayoutDashboard,
+    icon: LayoutDashboardIcon,
   },
   {
     title: 'العملاء',
     href: '/customers',
-    icon: Users,
+    icon: UsersIcon,
   },
   {
     title: 'الوحدات',
     href: '/units',
-    icon: Building,
+    icon: BuildingIcon,
   },
   {
     title: 'العقود',
     href: '/contracts',
-    icon: FileText,
+    icon: FileTextIcon,
   },
   {
     title: 'الشركاء',
     href: '/partners',
-    icon: Users,
+    icon: UsersIcon,
   },
   {
     title: 'الخزائن',
     href: '/safes',
-    icon: Wallet,
+    icon: WalletIcon,
   },
   {
     title: 'الخزينة',
     href: '/treasury',
-    icon: Wallet,
+    icon: WalletIcon,
   },
   {
     title: 'الشيكات',
     href: '/vouchers',
-    icon: Receipt,
+    icon: ReceiptIcon,
   },
   {
     title: 'الأقساط',
     href: '/installments',
-    icon: Calendar,
+    icon: CalendarIcon,
   },
   {
     title: 'التقارير',
     href: '/reports',
-    icon: BarChart3,
+    icon: BarChart3Icon,
   },
   {
     title: 'الإعدادات',
     href: '/settings',
-    icon: Settings,
+    icon: SettingsIcon,
   },
 ]
 

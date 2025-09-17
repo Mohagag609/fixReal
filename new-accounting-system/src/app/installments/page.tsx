@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useMemo } from 'react'
 // import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Calendar, DollarSign, CheckCircle, Clock, AlertCircle } from 'lucide-react'
-import { DataTable } from '@/components/tables/DataTable'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Modal } from '@/components/ui/Modal'
-import { InstallmentForm } from '@/components/forms/InstallmentForm'
-import { formatDate, formatCurrency } from '@/lib/utils'
+import { PlusIcon, EditIcon, TrashIcon, CalendarIcon, DollarIcon, CheckCircle, Clock, AlertIcon } from '../../components/icons'
+import { DataTable } from '../../components/tables/DataTable'
+import { Button } from '../../components/ui/Button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
+import { Modal } from '../../components/ui/Modal'
+import { InstallmentForm } from '../../components/forms/InstallmentForm'
+import { formatDate, formatCurrency } from '../../lib/utils'
 import { ColumnDef } from '@tanstack/react-table'
 
 interface Installment {
@@ -132,7 +132,7 @@ export default function InstallmentsPage() {
         header: 'مبلغ القسط',
         cell: ({ row }) => (
           <div className="flex items-center">
-            <DollarSign className="w-4 h-4 ml-2 text-green-600" />
+            <DollarIcon className="w-4 h-4 ml-2 text-green-600" />
             <span className="font-semibold text-green-600">
               {formatCurrency(row.getValue('amount'))}
             </span>
@@ -144,7 +144,7 @@ export default function InstallmentsPage() {
         header: 'تاريخ الاستحقاق',
         cell: ({ row }) => (
           <div className="flex items-center text-gray-600">
-            <Calendar className="w-4 h-4 ml-2" />
+            <CalendarIcon className="w-4 h-4 ml-2" />
             {formatDate(row.getValue('dueDate'))}
           </div>
         ),
@@ -208,14 +208,14 @@ export default function InstallmentsPage() {
                   setIsModalOpen(true)
                 }}
               >
-                <Edit className="w-4 h-4" />
+                <EditIcon className="w-4 h-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setDeletingInstallment(installment)}
               >
-                <Trash2 className="w-4 h-4" />
+                <TrashIcon className="w-4 h-4" />
               </Button>
             </div>
           )
@@ -253,7 +253,7 @@ export default function InstallmentsPage() {
           }}
           className="flex items-center"
         >
-          <Plus className="w-4 h-4 ml-2" />
+          <PlusIcon className="w-4 h-4 ml-2" />
           إضافة قسط جديد
         </Button>
       </div>
@@ -264,7 +264,7 @@ export default function InstallmentsPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <Calendar className="w-6 h-6 text-blue-600" />
+                <CalendarIcon className="w-6 h-6 text-blue-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">إجمالي الأقساط</p>
@@ -310,7 +310,7 @@ export default function InstallmentsPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-red-100 rounded-lg">
-                <AlertCircle className="w-6 h-6 text-red-600" />
+                <AlertIcon className="w-6 h-6 text-red-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">المتأخر</p>

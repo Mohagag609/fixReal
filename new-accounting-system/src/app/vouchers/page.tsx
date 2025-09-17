@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useMemo } from 'react'
 // import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Receipt, Wallet, TrendingUp, TrendingDown, Calendar } from 'lucide-react'
-import { DataTable } from '@/components/tables/DataTable'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Modal } from '@/components/ui/Modal'
-import { VoucherForm } from '@/components/forms/VoucherForm'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { PlusIcon, EditIcon, TrashIcon, Receipt, Wallet, TrendingUp, TrendingDown, CalendarIcon } from '../../components/icons'
+import { DataTable } from '../../components/tables/DataTable'
+import { Button } from '../../components/ui/Button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
+import { Modal } from '../../components/ui/Modal'
+import { VoucherForm } from '../../components/forms/VoucherForm'
+import { formatCurrency, formatDate } from '../../lib/utils'
 import { ColumnDef } from '@tanstack/react-table'
 
 interface Voucher {
@@ -187,7 +187,7 @@ export default function VouchersPage() {
         header: 'التاريخ',
         cell: ({ row }) => (
           <div className="flex items-center text-sm text-gray-600">
-            <Calendar className="w-4 h-4 ml-2" />
+            <CalendarIcon className="w-4 h-4 ml-2" />
             {formatDate(row.getValue('date'))}
           </div>
         ),
@@ -207,14 +207,14 @@ export default function VouchersPage() {
                   setIsModalOpen(true)
                 }}
               >
-                <Edit className="w-4 h-4" />
+                <EditIcon className="w-4 h-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setDeletingVoucher(voucher)}
               >
-                <Trash2 className="w-4 h-4" />
+                <TrashIcon className="w-4 h-4" />
               </Button>
             </div>
           )
@@ -255,7 +255,7 @@ export default function VouchersPage() {
           }}
           className="flex items-center"
         >
-          <Plus className="w-4 h-4 ml-2" />
+          <PlusIcon className="w-4 h-4 ml-2" />
           إضافة شيك جديد
         </Button>
       </div>

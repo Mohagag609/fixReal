@@ -2,23 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { 
-  BarChart3, 
-  Download, 
-  Filter, 
-  Calendar, 
-  DollarSign, 
-  TrendingUp, 
-  TrendingDown,
-  Users,
-  Building,
-  FileText,
-  Wallet
-} from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Input } from '@/components/ui/Input'
-import { formatCurrency } from '@/lib/utils'
+import { BarChart3, Download, Filter, CalendarIcon, DollarIcon, TrendingUp, TrendingDown, UsersIcon, BuildingIcon, FileTextIcon, Wallet } from '../../components/icons'
+import { Button } from '../../components/ui/Button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
+import { Input } from '../../components/ui/Input'
+import { formatCurrency } from '../../lib/utils'
 
 interface ReportData {
   overview: {
@@ -176,7 +164,7 @@ export default function ReportsPage() {
             <CardContent className="p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="w-6 h-6 text-blue-600" />
+                  <UsersIcon className="w-6 h-6 text-blue-600" />
                 </div>
                 <div className="mr-4">
                   <p className="text-sm font-medium text-gray-600">العملاء</p>
@@ -196,7 +184,7 @@ export default function ReportsPage() {
             <CardContent className="p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-green-100 rounded-lg">
-                  <Building className="w-6 h-6 text-green-600" />
+                  <BuildingIcon className="w-6 h-6 text-green-600" />
                 </div>
                 <div className="mr-4">
                   <p className="text-sm font-medium text-gray-600">الوحدات</p>
@@ -216,7 +204,7 @@ export default function ReportsPage() {
             <CardContent className="p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-purple-100 rounded-lg">
-                  <FileText className="w-6 h-6 text-purple-600" />
+                  <FileTextIcon className="w-6 h-6 text-purple-600" />
                 </div>
                 <div className="mr-4">
                   <p className="text-sm font-medium text-gray-600">العقود</p>
@@ -258,7 +246,7 @@ export default function ReportsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <DollarSign className="w-5 h-5 ml-2" />
+                <DollarIcon className="w-5 h-5 ml-2" />
                 النظرة المالية
               </CardTitle>
             </CardHeader>
@@ -412,7 +400,7 @@ export default function ReportsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Calendar className="w-5 h-5 ml-2" />
+              <CalendarIcon className="w-5 h-5 ml-2" />
               المبيعات الشهرية
             </CardTitle>
           </CardHeader>

@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Menu, Bell, Search, User } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
+import { Menu, Bell, Search, UserIcon } from '../icons'
+import { Button } from '../../components/ui/Button'
+import { Input } from '../../components/ui/Input'
 
 interface HeaderProps {
   onMenuToggle: () => void
@@ -67,7 +67,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
               size="sm"
               className="p-2"
             >
-              <User className="w-5 h-5" />
+              <UserIcon className="w-5 h-5" />
             </Button>
           </div>
         </div>

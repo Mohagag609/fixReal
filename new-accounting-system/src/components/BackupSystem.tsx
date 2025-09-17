@@ -2,21 +2,10 @@
 
 import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Download, 
-  Upload, 
-  Database, 
-  AlertCircle, 
-  CheckCircle, 
-  Clock, 
-  HardDrive,
-  // RefreshCw,
-  // Trash2,
-  // Eye
-} from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Modal } from '@/components/ui/Modal'
+import { Download, Upload, Database, AlertIcon, CheckCircle, Clock, HardDrive, // RefreshCw, // Trash2, // Eye } from './icons'
+import { Button } from '../../components/ui/Button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
+import { Modal } from '../../components/ui/Modal'
 import { 
   createBackup, 
   downloadBackup, 
@@ -24,8 +13,8 @@ import {
   restoreBackup, 
   validateBackup, 
   getBackupInfo 
-} from '@/lib/backupUtils'
-import { BackupData } from '@/lib/backupUtils'
+} from '../../lib/backupUtils'
+import { BackupData } from '../../lib/backupUtils'
 
 interface BackupSystemProps {
   className?: string
@@ -180,7 +169,7 @@ export const BackupSystem: React.FC<BackupSystemProps> = ({ className = '' }) =>
                 exit={{ opacity: 0, y: -20 }}
                 className="flex items-center p-3 bg-red-50 border border-red-200 rounded-lg text-red-700"
               >
-                <AlertCircle className="w-4 h-4 ml-2" />
+                <AlertIcon className="w-4 h-4 ml-2" />
                 <span className="text-sm">{error}</span>
               </motion.div>
             )}

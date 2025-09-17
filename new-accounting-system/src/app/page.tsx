@@ -2,17 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import {
-  Users,
-  Building,
-  FileText,
-  Wallet,
-  TrendingUp,
-  DollarSign,
-} from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { UsersIcon, BuildingIcon, FileTextIcon, DollarIcon, WalletIcon, TrendingUpIcon } from '../components/icons'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
+import { Button } from '../components/ui/Button'
+import { formatCurrency, formatDate } from '../lib/utils'
 import Link from 'next/link'
 
 interface DashboardData {
@@ -131,7 +124,7 @@ export default function DashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="w-6 h-6 text-blue-600" />
+                  <UsersIcon className="w-6 h-6 text-blue-600" />
                 </div>
                 <div className="mr-4">
                   <p className="text-sm font-medium text-gray-600">العملاء</p>
@@ -151,7 +144,7 @@ export default function DashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-green-100 rounded-lg">
-                  <Building className="w-6 h-6 text-green-600" />
+                  <BuildingIcon className="w-6 h-6 text-green-600" />
                 </div>
                 <div className="mr-4">
                   <p className="text-sm font-medium text-gray-600">الوحدات</p>
@@ -171,7 +164,7 @@ export default function DashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-purple-100 rounded-lg">
-                  <FileText className="w-6 h-6 text-purple-600" />
+                  <FileTextIcon className="w-6 h-6 text-purple-600" />
                 </div>
                 <div className="mr-4">
                   <p className="text-sm font-medium text-gray-600">العقود</p>
@@ -191,7 +184,7 @@ export default function DashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-orange-100 rounded-lg">
-                  <Wallet className="w-6 h-6 text-orange-600" />
+                  <WalletIcon className="w-6 h-6 text-orange-600" />
                 </div>
                 <div className="mr-4">
                   <p className="text-sm font-medium text-gray-600">الخزائن</p>
@@ -213,7 +206,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <DollarSign className="w-5 h-5 ml-2" />
+                <DollarIcon className="w-5 h-5 ml-2" />
                 النظرة المالية
               </CardTitle>
             </CardHeader>
@@ -256,7 +249,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <TrendingUp className="w-5 h-5 ml-2" />
+                <TrendingUpIcon className="w-5 h-5 ml-2" />
                 إحصائيات الوحدات
               </CardTitle>
             </CardHeader>
@@ -293,7 +286,7 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span className="flex items-center">
-                  <FileText className="w-5 h-5 ml-2" />
+                  <FileTextIcon className="w-5 h-5 ml-2" />
                   العقود الأخيرة
                 </span>
                 <Link href="/contracts">
@@ -339,7 +332,7 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span className="flex items-center">
-                  <Wallet className="w-5 h-5 ml-2" />
+                  <WalletIcon className="w-5 h-5 ml-2" />
                   الشيكات الأخيرة
                 </span>
                 <Link href="/vouchers">
@@ -393,25 +386,25 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Link href="/customers">
                 <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center">
-                  <Users className="w-6 h-6 mb-2" />
+                  <UsersIcon className="w-6 h-6 mb-2" />
                   <span>إضافة عميل</span>
                 </Button>
               </Link>
               <Link href="/units">
                 <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center">
-                  <Building className="w-6 h-6 mb-2" />
+                  <BuildingIcon className="w-6 h-6 mb-2" />
                   <span>إضافة وحدة</span>
                 </Button>
               </Link>
               <Link href="/contracts">
                 <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center">
-                  <FileText className="w-6 h-6 mb-2" />
+                  <FileTextIcon className="w-6 h-6 mb-2" />
                   <span>إنشاء عقد</span>
                 </Button>
               </Link>
               <Link href="/vouchers">
                 <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center">
-                  <Wallet className="w-6 h-6 mb-2" />
+                  <WalletIcon className="w-6 h-6 mb-2" />
                   <span>إضافة شيك</span>
                 </Button>
               </Link>

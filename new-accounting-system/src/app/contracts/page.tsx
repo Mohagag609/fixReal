@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useMemo } from 'react'
 // import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, FileText, User, Building, DollarSign } from 'lucide-react'
-import { DataTable } from '@/components/tables/DataTable'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Modal } from '@/components/ui/Modal'
-import { ContractForm } from '@/components/forms/ContractForm'
-import { formatDate, formatCurrency } from '@/lib/utils'
+import { PlusIcon, EditIcon, TrashIcon, FileTextIcon, UserIcon, BuildingIcon, DollarIcon } from '../../components/icons'
+import { DataTable } from '../../components/tables/DataTable'
+import { Button } from '../../components/ui/Button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
+import { Modal } from '../../components/ui/Modal'
+import { ContractForm } from '../../components/forms/ContractForm'
+import { formatDate, formatCurrency } from '../../lib/utils'
 import { ColumnDef } from '@tanstack/react-table'
 
 interface Contract {
@@ -110,7 +110,7 @@ export default function ContractsPage() {
         header: 'كود الوحدة',
         cell: ({ row }) => (
           <div className="flex items-center">
-            <Building className="w-4 h-4 ml-2 text-blue-600" />
+            <BuildingIcon className="w-4 h-4 ml-2 text-blue-600" />
             <span className="font-medium text-blue-600">
               {row.original.unit.code}
             </span>
@@ -122,7 +122,7 @@ export default function ContractsPage() {
         header: 'العميل',
         cell: ({ row }) => (
           <div className="flex items-center">
-            <User className="w-4 h-4 ml-2 text-gray-600" />
+            <UserIcon className="w-4 h-4 ml-2 text-gray-600" />
             <div>
               <div className="font-medium text-gray-900">
                 {row.original.customer.name}
@@ -141,7 +141,7 @@ export default function ContractsPage() {
         header: 'السعر الإجمالي',
         cell: ({ row }) => (
           <div className="flex items-center">
-            <DollarSign className="w-4 h-4 ml-2 text-green-600" />
+            <DollarIcon className="w-4 h-4 ml-2 text-green-600" />
             <span className="font-semibold text-green-600">
               {formatCurrency(row.getValue('totalPrice'))}
             </span>
@@ -227,14 +227,14 @@ export default function ContractsPage() {
                   setIsModalOpen(true)
                 }}
               >
-                <Edit className="w-4 h-4" />
+                <EditIcon className="w-4 h-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setDeletingContract(contract)}
               >
-                <Trash2 className="w-4 h-4" />
+                <TrashIcon className="w-4 h-4" />
               </Button>
             </div>
           )
@@ -267,7 +267,7 @@ export default function ContractsPage() {
           }}
           className="flex items-center"
         >
-          <Plus className="w-4 h-4 ml-2" />
+          <PlusIcon className="w-4 h-4 ml-2" />
           إنشاء عقد جديد
         </Button>
       </div>
@@ -278,7 +278,7 @@ export default function ContractsPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <FileText className="w-6 h-6 text-blue-600" />
+                <FileTextIcon className="w-6 h-6 text-blue-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">إجمالي العقود</p>
@@ -292,7 +292,7 @@ export default function ContractsPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign className="w-6 h-6 text-green-600" />
+                <DollarIcon className="w-6 h-6 text-green-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">إجمالي المبيعات</p>
@@ -308,7 +308,7 @@ export default function ContractsPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <User className="w-6 h-6 text-purple-600" />
+                <UserIcon className="w-6 h-6 text-purple-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">عقود التقسيط</p>
@@ -324,7 +324,7 @@ export default function ContractsPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-orange-100 rounded-lg">
-                <Building className="w-6 h-6 text-orange-600" />
+                <BuildingIcon className="w-6 h-6 text-orange-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">عقود نقدية</p>

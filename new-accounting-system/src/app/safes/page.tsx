@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useMemo } from 'react'
 // import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Wallet, DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
-import { DataTable } from '@/components/tables/DataTable'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Modal } from '@/components/ui/Modal'
-import { SafeForm } from '@/components/forms/SafeForm'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { PlusIcon, EditIcon, TrashIcon, Wallet, DollarIcon, TrendingUp, TrendingDown } from '../../components/icons'
+import { DataTable } from '../../components/tables/DataTable'
+import { Button } from '../../components/ui/Button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
+import { Modal } from '../../components/ui/Modal'
+import { SafeForm } from '../../components/forms/SafeForm'
+import { formatCurrency, formatDate } from '../../lib/utils'
 import { ColumnDef } from '@tanstack/react-table'
 
 interface Safe {
@@ -119,7 +119,7 @@ export default function SafesPage() {
           const balance = row.getValue('balance') as number
           return (
             <div className="flex items-center">
-              <DollarSign className="w-4 h-4 ml-2 text-green-600" />
+              <DollarIcon className="w-4 h-4 ml-2 text-green-600" />
               <span className={`font-semibold ${
                 balance >= 0 ? 'text-green-600' : 'text-red-600'
               }`}>
@@ -185,14 +185,14 @@ export default function SafesPage() {
                   setIsModalOpen(true)
                 }}
               >
-                <Edit className="w-4 h-4" />
+                <EditIcon className="w-4 h-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setDeletingSafe(safe)}
               >
-                <Trash2 className="w-4 h-4" />
+                <TrashIcon className="w-4 h-4" />
               </Button>
             </div>
           )
@@ -228,7 +228,7 @@ export default function SafesPage() {
           }}
           className="flex items-center"
         >
-          <Plus className="w-4 h-4 ml-2" />
+          <PlusIcon className="w-4 h-4 ml-2" />
           إضافة خزينة جديدة
         </Button>
       </div>
@@ -253,7 +253,7 @@ export default function SafesPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign className="w-6 h-6 text-green-600" />
+                <DollarIcon className="w-6 h-6 text-green-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">إجمالي الرصيد</p>

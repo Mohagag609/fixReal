@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Filter, X } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
+import { SearchIcon, FilterIcon, XIcon } from './icons'
+import { Button } from './ui/Button'
+import { Input } from './ui/Input'
 
 export interface SearchFilter {
   field: string
@@ -120,7 +120,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     <div className={`space-y-4 ${className}`}>
       {/* Quick Search */}
       <div className="relative">
-        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <SearchIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
         <Input
           placeholder="البحث السريع..."
           value={searchText}
@@ -135,7 +135,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center"
       >
-        <Filter className="w-4 h-4 ml-2" />
+        <FilterIcon className="w-4 h-4 ml-2" />
         البحث المتقدم
         {filters.length > 0 && (
           <span className="bg-blue-600 text-white text-xs rounded-full px-2 py-1 mr-2">
@@ -219,7 +219,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                     onClick={() => removeFilter(index)}
                     className="p-2"
                   >
-                    <X className="w-4 h-4" />
+                    <XIcon className="w-4 h-4" />
                   </Button>
                 </div>
               ))}

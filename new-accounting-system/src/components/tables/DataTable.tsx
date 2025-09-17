@@ -13,10 +13,10 @@ import {
   SortingState,
   ColumnFiltersState,
 } from '@tanstack/react-table'
-import { ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { cn } from '@/lib/utils'
+import { ChevronLeft, ChevronRight, Search, Filter } from '../icons'
+import { Button } from '../../components/ui/Button'
+import { Input } from '../../components/ui/Input'
+import { cn } from '../../lib/utils'
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]

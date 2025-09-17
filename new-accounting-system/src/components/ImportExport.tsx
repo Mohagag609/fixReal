@@ -2,12 +2,12 @@
 
 import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Download, Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Modal } from '@/components/ui/Modal'
-import { exportData, prepareTableDataForExport, importFromCSV, validateImportData } from '@/lib/exportUtils'
-import { ExportOptions } from '@/lib/exportUtils'
+import { Download, Upload, FileTextIcon, AlertIcon, CheckCircle } from './icons'
+import { Button } from '../../components/ui/Button'
+// import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
+import { Modal } from '../../components/ui/Modal'
+import { exportData, prepareTableDataForExport, importFromCSV, validateImportData } from '../../lib/exportUtils'
+import { ExportOptions } from '../../lib/exportUtils'
 
 interface ImportExportProps<T> {
   data: T[]
@@ -153,7 +153,7 @@ export const ImportExport = <T,>({
           {importMode === 'export' ? (
             <div className="space-y-4">
               <div className="text-center">
-                <FileText className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+                <FileTextIcon className="w-12 h-12 text-blue-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900">تصدير البيانات</h3>
                 <p className="text-gray-600">اختر صيغة التصدير المطلوبة</p>
               </div>
@@ -163,21 +163,21 @@ export const ImportExport = <T,>({
                   onClick={() => handleExport('excel')}
                   className="flex items-center justify-center"
                 >
-                  <FileText className="w-4 h-4 ml-2" />
+                  <FileTextIcon className="w-4 h-4 ml-2" />
                   تصدير Excel
                 </Button>
                 <Button
                   onClick={() => handleExport('pdf')}
                   className="flex items-center justify-center"
                 >
-                  <FileText className="w-4 h-4 ml-2" />
+                  <FileTextIcon className="w-4 h-4 ml-2" />
                   تصدير PDF
                 </Button>
                 <Button
                   onClick={() => handleExport('csv')}
                   className="flex items-center justify-center"
                 >
-                  <FileText className="w-4 h-4 ml-2" />
+                  <FileTextIcon className="w-4 h-4 ml-2" />
                   تصدير CSV
                 </Button>
               </div>
@@ -274,7 +274,7 @@ export const ImportExport = <T,>({
                     className="space-y-2"
                   >
                     <div className="flex items-center text-red-600">
-                      <AlertCircle className="w-4 h-4 ml-2" />
+                      <AlertIcon className="w-4 h-4 ml-2" />
                       <span className="text-sm font-medium">أخطاء في البيانات:</span>
                     </div>
                     <div className="bg-red-50 border border-red-200 rounded-lg p-3">

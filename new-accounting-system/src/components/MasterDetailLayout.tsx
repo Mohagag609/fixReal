@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ChevronLeft, Maximize2, Minimize2 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { XIcon, ChevronLeftIcon, Maximize2Icon, Minimize2Icon } from './icons'
+import { Button } from './ui/Button'
 
 export interface MasterDetailLayoutProps {
   master: React.ReactNode

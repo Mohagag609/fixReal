@@ -2,21 +2,10 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { 
-  Settings, 
-  Save, 
-  Database, 
-  Bell, 
-  Shield, 
-  Palette, 
-  Globe,
-  // RefreshCw,
-  Download,
-  Upload
-} from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Input } from '@/components/ui/Input'
+import { SettingsIcon, SaveIcon, DatabaseIcon, BellIcon, ShieldIcon, PaletteIcon, GlobeIcon } from '../../components/icons'
+import { Button } from '../../components/ui/Button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
+import { Input } from '../../components/ui/Input'
 
 interface SystemSettings {
   companyName: string
@@ -116,11 +105,11 @@ export default function SettingsPage() {
   }
 
   const tabs = [
-    { id: 'general', label: 'عام', icon: Settings },
-    { id: 'database', label: 'قاعدة البيانات', icon: Database },
-    { id: 'notifications', label: 'الإشعارات', icon: Bell },
-    { id: 'security', label: 'الأمان', icon: Shield },
-    { id: 'appearance', label: 'المظهر', icon: Palette },
+    { id: 'general', label: 'عام', icon: SettingsIcon },
+    { id: 'database', label: 'قاعدة البيانات', icon: DatabaseIcon },
+    { id: 'notifications', label: 'الإشعارات', icon: BellIcon },
+    { id: 'security', label: 'الأمان', icon: ShieldIcon },
+    { id: 'appearance', label: 'المظهر', icon: PaletteIcon },
   ]
 
   return (
@@ -136,7 +125,7 @@ export default function SettingsPage() {
           loading={loading}
           className="flex items-center"
         >
-          <Save className="w-4 h-4 ml-2" />
+          <SaveIcon className="w-4 h-4 ml-2" />
           حفظ الإعدادات
         </Button>
       </div>
@@ -181,7 +170,7 @@ export default function SettingsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <Globe className="w-5 h-5 ml-2" />
+                    <GlobeIcon className="w-5 h-5 ml-2" />
                     معلومات الشركة
                   </CardTitle>
                 </CardHeader>
@@ -285,7 +274,7 @@ export default function SettingsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <Database className="w-5 h-5 ml-2" />
+                    <DatabaseIcon className="w-5 h-5 ml-2" />
                     إدارة قاعدة البيانات
                   </CardTitle>
                 </CardHeader>
@@ -352,7 +341,7 @@ export default function SettingsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <Bell className="w-5 h-5 ml-2" />
+                    <BellIcon className="w-5 h-5 ml-2" />
                     إعدادات الإشعارات
                   </CardTitle>
                 </CardHeader>
@@ -430,7 +419,7 @@ export default function SettingsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <Shield className="w-5 h-5 ml-2" />
+                    <ShieldIcon className="w-5 h-5 ml-2" />
                     إعدادات الأمان
                   </CardTitle>
                 </CardHeader>
@@ -501,7 +490,7 @@ export default function SettingsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <Palette className="w-5 h-5 ml-2" />
+                    <PaletteIcon className="w-5 h-5 ml-2" />
                     إعدادات المظهر
                   </CardTitle>
                 </CardHeader>

@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useMemo } from 'react'
 // import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Eye, Building, MapPin, DollarSign } from 'lucide-react'
-import { DataTable } from '@/components/tables/DataTable'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Modal } from '@/components/ui/Modal'
-import { UnitForm } from '@/components/forms/UnitForm'
-import { formatDate, formatCurrency } from '@/lib/utils'
+import { PlusIcon, EditIcon, TrashIcon, EyeIcon, BuildingIcon, MapPinIcon, DollarIcon } from '../../components/icons'
+import { DataTable } from '../../components/tables/DataTable'
+import { Button } from '../../components/ui/Button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
+import { Modal } from '../../components/ui/Modal'
+import { UnitForm } from '../../components/forms/UnitForm'
+import { formatDate, formatCurrency } from '../../lib/utils'
 import { ColumnDef } from '@tanstack/react-table'
 
 interface Unit {
@@ -137,7 +137,7 @@ export default function UnitsPage() {
         header: 'المساحة',
         cell: ({ row }) => (
           <div className="flex items-center text-gray-600">
-            <MapPin className="w-4 h-4 ml-2" />
+            <MapPinIcon className="w-4 h-4 ml-2" />
             {row.getValue('area') || 'غير محدد'}
           </div>
         ),
@@ -147,7 +147,7 @@ export default function UnitsPage() {
         header: 'المبنى',
         cell: ({ row }) => (
           <div className="flex items-center text-gray-600">
-            <Building className="w-4 h-4 ml-2" />
+            <BuildingIcon className="w-4 h-4 ml-2" />
             {row.getValue('building') || 'غير محدد'}
           </div>
         ),
@@ -157,7 +157,7 @@ export default function UnitsPage() {
         header: 'السعر',
         cell: ({ row }) => (
           <div className="flex items-center text-gray-900 font-medium">
-            <DollarSign className="w-4 h-4 ml-2" />
+            <DollarIcon className="w-4 h-4 ml-2" />
             {formatCurrency(row.getValue('totalPrice'))}
           </div>
         ),
@@ -215,14 +215,14 @@ export default function UnitsPage() {
                   setIsModalOpen(true)
                 }}
               >
-                <Edit className="w-4 h-4" />
+                <EditIcon className="w-4 h-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setDeletingUnit(unit)}
               >
-                <Trash2 className="w-4 h-4" />
+                <TrashIcon className="w-4 h-4" />
               </Button>
             </div>
           )
@@ -255,7 +255,7 @@ export default function UnitsPage() {
           }}
           className="flex items-center"
         >
-          <Plus className="w-4 h-4 ml-2" />
+          <PlusIcon className="w-4 h-4 ml-2" />
           إضافة وحدة جديدة
         </Button>
       </div>
@@ -266,7 +266,7 @@ export default function UnitsPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <Building className="w-6 h-6 text-blue-600" />
+                <BuildingIcon className="w-6 h-6 text-blue-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">إجمالي الوحدات</p>
@@ -280,7 +280,7 @@ export default function UnitsPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
-                <Eye className="w-6 h-6 text-green-600" />
+                <EyeIcon className="w-6 h-6 text-green-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">الوحدات المتاحة</p>
@@ -296,7 +296,7 @@ export default function UnitsPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <Edit className="w-6 h-6 text-purple-600" />
+                <EditIcon className="w-6 h-6 text-purple-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">الوحدات المباعة</p>
@@ -312,7 +312,7 @@ export default function UnitsPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-orange-100 rounded-lg">
-                <DollarSign className="w-6 h-6 text-orange-600" />
+                <DollarIcon className="w-6 h-6 text-orange-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">إجمالي القيمة</p>
