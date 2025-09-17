@@ -11,8 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 
 const brokerSchema = z.object({
   name: z.string().min(1, 'اسم الوسيط مطلوب'),
-  phone: z.string().optional(),
-  notes: z.string().optional(),
+  phone: z.string().optional().or(z.undefined()),
+  notes: z.string().optional().or(z.undefined()),
 })
 
 type BrokerFormData = z.infer<typeof brokerSchema>
