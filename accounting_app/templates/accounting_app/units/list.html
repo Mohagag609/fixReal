@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block page_title %}إدارة الوحدات{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">إدارة الوحدات</h2>
+            <p class="text-gray-600">عرض وإدارة الوحدات العقارية</p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <a href="/units/create/" class="bg-cyan-600 text-white px-6 py-3 rounded-xl hover:bg-cyan-700 transition-colors duration-200 hover-scale inline-flex items-center">
+                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                إضافة وحدة جديدة
+            </a>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">البحث</label>
+                <input type="text" name="search" value="{{ search }}" placeholder="كود الوحدة، الاسم، أو المبنى" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">الحالة</label>
+                <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
+                    <option value="">جميع الحالات</option>
+                    <option value="متاحة" {% if status == 'متاحة' %}selected{% endif %}>متاحة</option>
+                    <option value="محجوزة" {% if status == 'محجوزة' %}selected{% endif %}>محجوزة</option>
+                    <option value="مباعة" {% if status == 'مباعة' %}selected{% endif %}>مباعة</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">الترتيب</label>
+                <select name="order_by" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
+                    <option value="created_at" {% if order_by == 'created_at' %}selected{% endif %}>تاريخ الإنشاء</option>
+                    <option value="code" {% if order_by == 'code' %}selected{% endif %}>كود الوحدة</option>
+                    <option value="total_price" {% if order_by == 'total_price' %}selected{% endif %}>السعر</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="w-full bg-cyan-600 text-white px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors duration-200">
+                    <svg class="w-5 h-5 inline ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    بحث
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Units Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">كود الوحدة</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الاسم</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النوع</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الطابق</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المبنى</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السعر</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for unit in units %}
+                    <tr class="hover:bg-gray-50 transition-colors duration-200">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center ml-4">
+                                    <span class="text-cyan-600 font-medium text-sm">{{ unit.code|first }}</span>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ unit.code }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ unit.name|default:"-" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ unit.unit_type }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ unit.floor|default:"-" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ unit.building|default:"-" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ unit.total_price|floatformat:2 }} ريال</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if unit.status == 'متاحة' %}bg-green-100 text-green-800
+                                {% elif unit.status == 'محجوزة' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ unit.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2 space-x-reverse">
+                                <a href="/units/{{ unit.id }}/edit/" class="text-cyan-600 hover:text-cyan-900 transition-colors duration-200">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </a>
+                                <a href="/units/{{ unit.id }}/delete/" class="text-red-600 hover:text-red-900 transition-colors duration-200">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                            <p class="text-lg font-medium">لا توجد وحدات</p>
+                            <p class="text-sm">ابدأ بإضافة وحدة جديدة</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if units.has_other_pages %}
+        <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+            <div class="flex items-center justify-between">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if units.has_previous %}
+                        <a href="?page={{ units.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            السابق
+                        </a>
+                    {% endif %}
+                    {% if units.has_next %}
+                        <a href="?page={{ units.next_page_number }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            التالي
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            عرض
+                            <span class="font-medium">{{ units.start_index }}</span>
+                            إلى
+                            <span class="font-medium">{{ units.end_index }}</span>
+                            من
+                            <span class="font-medium">{{ units.paginator.count }}</span>
+                            نتيجة
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            {% if units.has_previous %}
+                                <a href="?page={{ units.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">السابق</span>
+                                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                            {% endif %}
+                            
+                            {% for num in units.paginator.page_range %}
+                                {% if units.number == num %}
+                                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-cyan-50 text-sm font-medium text-cyan-600">
+                                        {{ num }}
+                                    </span>
+                                {% elif num > units.number|add:'-3' and num < units.number|add:'3' %}
+                                    <a href="?page={{ num }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                        {{ num }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if units.has_next %}
+                                <a href="?page={{ units.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">التالي</span>
+                                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
