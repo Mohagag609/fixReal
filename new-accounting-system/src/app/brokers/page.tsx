@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { PlusIcon, EditIcon, TrashIcon, UsersIcon, DollarIcon, PhoneIcon, CalendarIcon, AlertIcon } from '@/components/icons'
+import { PlusIcon, EditIcon, TrashIcon, UsersIcon, DollarIcon, PhoneIcon, CalendarIcon, AlertIcon } from '../../components/icons'
 import { DataTable } from '@/components/tables/DataTable'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
