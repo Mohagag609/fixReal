@@ -54,9 +54,9 @@ function PartnersPageContent() {
   const [deletingPartner, setDeletingPartner] = useState<Partner | null>(null)
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null)
   const [showDetailPanel, setShowDetailPanel] = useState(false)
-  const [groupedData, setGroupedData] = useState<Record<string, Partner[]>>({})
-  const [searchFilters, setSearchFilters] = useState<Record<string, unknown>[]>([])
-  const [dateRange, setDateRange] = useState<{ from: string; to: string } | undefined>()
+  // const [groupedData, setGroupedData] = useState<Record<string, Partner[]>>({})
+  // const [searchFilters, setSearchFilters] = useState<Record<string, unknown>[]>([])
+  // const [dateRange, setDateRange] = useState<{ from: string; to: string } | undefined>()
 
   const { addNotification } = useNotifications()
 
@@ -155,8 +155,8 @@ function PartnersPageContent() {
       } else {
         throw new Error('فشل في حفظ البيانات')
       }
-    } catch (_error) {
-      console.error('Error saving partner:', _error)
+    } catch (error) {
+      console.error('Error saving partner:', error)
       addNotification({
         type: 'error',
         title: 'خطأ',
@@ -183,8 +183,8 @@ function PartnersPageContent() {
       } else {
         throw new Error('فشل في حذف الشريك')
       }
-    } catch (_error) {
-      console.error('Error deleting partner:', _error)
+    } catch (error) {
+      console.error('Error deleting partner:', error)
       addNotification({
         type: 'error',
         title: 'خطأ',
@@ -194,9 +194,9 @@ function PartnersPageContent() {
   }
 
   // Handle search
-  const handleSearch = (filters: Array<{ field: string; operator: string; value: string | number; value2?: string | number }>, dateRange?: { from: string; to: string }) => {
-    setSearchFilters(filters)
-    setDateRange(dateRange)
+  const handleSearch = (filters: Array<{ field: string; operator: string; value: string | number; value2?: string | number }>) => {
+    // setSearchFilters(filters)
+    // setDateRange(dateRange)
     
     // Convert filters to API format
     const apiFilters: Record<string, unknown> = {}
@@ -224,7 +224,8 @@ function PartnersPageContent() {
         title: 'تم التصدير',
         message: 'تم تصدير البيانات بنجاح'
       })
-    } catch (_error) {
+    } catch (error) {
+      console.error('Error exporting data:', error)
       addNotification({
         type: 'error',
         title: 'خطأ في التصدير',
@@ -409,8 +410,8 @@ function PartnersPageContent() {
       <AdvancedSearch
         onSearch={handleSearch}
         onClear={() => {
-          setSearchFilters([])
-          setDateRange(undefined)
+          // setSearchFilters([])
+          // setDateRange(undefined)
           clearFilters()
         }}
         searchFields={searchFields}
@@ -424,7 +425,7 @@ function PartnersPageContent() {
         <DataGrouping
           data={partners}
           groupingOptions={groupingOptions}
-          onGroupedDataChange={setGroupedData}
+          onGroupedDataChange={() => {}}
           onSortingChange={() => {}}
         />
       )}
