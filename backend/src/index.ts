@@ -10,6 +10,15 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 // Import routes
 import authRoutes from './routes/auth';
 import dashboardRoutes from './routes/dashboard';
+import customerRoutes from './routes/customers';
+import unitRoutes from './routes/units';
+import contractRoutes from './routes/contracts';
+import transactionRoutes from './routes/transactions';
+import reportRoutes from './routes/reports';
+import installmentRoutes from './routes/installments';
+import safeRoutes from './routes/safes';
+import partnerRoutes from './routes/partners';
+import brokerRoutes from './routes/brokers';
 
 const app = express();
 
@@ -65,6 +74,15 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/units', unitRoutes);
+app.use('/api/contracts', contractRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/installments', installmentRoutes);
+app.use('/api/safes', safeRoutes);
+app.use('/api/partners', partnerRoutes);
+app.use('/api/brokers', brokerRoutes);
 
 // 404 handler for undefined routes
 app.use(notFoundHandler);

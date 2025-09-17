@@ -1,17 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
-import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } from '../../models';
+import { Partner, PartnerCreateRequest, PartnerUpdateRequest, ApiResponse } from '../../models';
 
 @Component({
-  selector: 'app-customers',
+  selector: 'app-partners',
   template: `
     <div class="space-y-6">
       <!-- Page Header -->
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">إدارة العملاء</h1>
-          <p class="mt-2 text-gray-600">إدارة بيانات العملاء والمعلومات الشخصية</p>
+          <h1 class="text-3xl font-bold text-gray-900">إدارة الشركاء</h1>
+          <p class="mt-2 text-gray-600">إدارة بيانات الشركاء والمعلومات الشخصية</p>
         </div>
         <button 
           (click)="openCreateModal()"
@@ -19,7 +19,7 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
           <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
           </svg>
-          إضافة عميل جديد
+          إضافة شريك جديد
         </button>
       </div>
 
@@ -29,7 +29,7 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
           <div class="flex-1 min-w-64">
             <input 
               type="text" 
-              placeholder="البحث في العملاء..."
+              placeholder="البحث في الشركاء..."
               [(ngModel)]="searchTerm"
               (input)="onSearch()"
               class="form-input">
@@ -43,7 +43,7 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
             <option value="غير نشط">غير نشط</option>
           </select>
           <button 
-            (click)="loadCustomers()"
+            (click)="loadPartners()"
             class="btn btn-outline">
             <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -53,7 +53,7 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
         </div>
       </div>
 
-      <!-- Customers Table -->
+      <!-- Partners Table -->
       <div class="card">
         <div class="overflow-x-auto">
           <table class="table">
@@ -69,21 +69,21 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let customer of customers; let i = index" class="fade-in" [style.animation-delay]="(i * 0.1) + 's'">
-                <td class="font-medium">{{ customer.name }}</td>
-                <td>{{ customer.phone || '-' }}</td>
-                <td>{{ customer.nationalId || '-' }}</td>
-                <td>{{ customer.address || '-' }}</td>
+              <tr *ngFor="let partner of partners; let i = index" class="fade-in" [style.animation-delay]="(i * 0.1) + 's'">
+                <td class="font-medium">{{ partner.name }}</td>
+                <td>{{ partner.phone || '-' }}</td>
+                <td>{{ partner.nationalId || '-' }}</td>
+                <td>{{ partner.address || '-' }}</td>
                 <td>
-                  <span class="badge" [ngClass]="customer.status === 'نشط' ? 'badge-success' : 'badge-warning'">
-                    {{ customer.status }}
+                  <span class="badge" [ngClass]="partner.status === 'نشط' ? 'badge-success' : 'badge-warning'">
+                    {{ partner.status }}
                   </span>
                 </td>
-                <td>{{ customer.createdAt | date:'short' }}</td>
+                <td>{{ partner.createdAt | date:'short' }}</td>
                 <td>
                   <div class="flex items-center space-x-2 space-x-reverse">
                     <button 
-                      (click)="viewCustomer(customer)"
+                      (click)="viewPartner(partner)"
                       class="text-blue-600 hover:text-blue-800"
                       title="عرض التفاصيل">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,7 +92,7 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
                       </svg>
                     </button>
                     <button 
-                      (click)="editCustomer(customer)"
+                      (click)="editPartner(partner)"
                       class="text-green-600 hover:text-green-800"
                       title="تعديل">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -100,7 +100,7 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
                       </svg>
                     </button>
                     <button 
-                      (click)="deleteCustomer(customer)"
+                      (click)="deletePartner(partner)"
                       class="text-red-600 hover:text-red-800"
                       title="حذف">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,7 +117,7 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
         <!-- Pagination -->
         <div *ngIf="pagination && pagination.totalPages > 1" class="mt-6 flex items-center justify-between">
           <div class="text-sm text-gray-700">
-            عرض {{ (pagination.page - 1) * pagination.limit + 1 }} إلى {{ Math.min(pagination.page * pagination.limit, pagination.total) }} من {{ pagination.total }} عميل
+            عرض {{ (pagination.page - 1) * pagination.limit + 1 }} إلى {{ Math.min(pagination.page * pagination.limit, pagination.total) }} من {{ pagination.total }} شريك
           </div>
           <div class="flex items-center space-x-2 space-x-reverse">
             <button 
@@ -141,23 +141,23 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
         </div>
 
         <!-- Empty State -->
-        <div *ngIf="customers.length === 0 && !isLoading" class="text-center py-12">
+        <div *ngIf="partners.length === 0 && !isLoading" class="text-center py-12">
           <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
           </svg>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">لا توجد عملاء</h3>
-          <p class="text-gray-600 mb-4">ابدأ بإضافة عميل جديد لإدارة بياناته</p>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">لا توجد شركاء</h3>
+          <p class="text-gray-600 mb-4">ابدأ بإضافة شريك جديد لإدارة بياناته</p>
           <button 
             (click)="openCreateModal()"
             class="btn btn-primary">
-            إضافة عميل جديد
+            إضافة شريك جديد
           </button>
         </div>
 
         <!-- Loading State -->
         <div *ngIf="isLoading" class="text-center py-12">
           <div class="loading-spinner mx-auto mb-4"></div>
-          <p class="text-gray-600">جاري تحميل العملاء...</p>
+          <p class="text-gray-600">جاري تحميل الشركاء...</p>
         </div>
       </div>
     </div>
@@ -167,7 +167,7 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
       <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-semibold text-gray-900">
-            {{ isEditing ? 'تعديل العميل' : 'إضافة عميل جديد' }}
+            {{ isEditing ? 'تعديل الشريك' : 'إضافة شريك جديد' }}
           </h3>
           <button 
             (click)="closeModal()"
@@ -178,7 +178,7 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
           </button>
         </div>
 
-        <form [formGroup]="customerForm" (ngSubmit)="onSubmit()">
+        <form [formGroup]="partnerForm" (ngSubmit)="onSubmit()">
           <div class="space-y-4">
             <!-- Name -->
             <div>
@@ -187,10 +187,10 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
                 type="text" 
                 formControlName="name"
                 class="form-input"
-                [class.border-red-500]="customerForm.get('name')?.invalid && customerForm.get('name')?.touched">
-              <div *ngIf="customerForm.get('name')?.invalid && customerForm.get('name')?.touched" class="form-error">
-                <span *ngIf="customerForm.get('name')?.errors?.['required']">الاسم مطلوب</span>
-                <span *ngIf="customerForm.get('name')?.errors?.['minlength']">الاسم يجب أن يكون حرفين على الأقل</span>
+                [class.border-red-500]="partnerForm.get('name')?.invalid && partnerForm.get('name')?.touched">
+              <div *ngIf="partnerForm.get('name')?.invalid && partnerForm.get('name')?.touched" class="form-error">
+                <span *ngIf="partnerForm.get('name')?.errors?.['required']">الاسم مطلوب</span>
+                <span *ngIf="partnerForm.get('name')?.errors?.['minlength']">الاسم يجب أن يكون حرفين على الأقل</span>
               </div>
             </div>
 
@@ -264,9 +264,9 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
             </button>
             <button 
               type="submit"
-              [disabled]="customerForm.invalid || isSubmitting"
+              [disabled]="partnerForm.invalid || isSubmitting"
               class="btn btn-primary"
-              [class.opacity-50]="customerForm.invalid || isSubmitting">
+              [class.opacity-50]="partnerForm.invalid || isSubmitting">
               <svg *ngIf="isSubmitting" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -278,11 +278,11 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
       </div>
     </div>
 
-    <!-- Customer Details Modal -->
+    <!-- Partner Details Modal -->
     <div *ngIf="showDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg p-6 w-full max-w-2xl mx-4">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">تفاصيل العميل</h3>
+          <h3 class="text-lg font-semibold text-gray-900">تفاصيل الشريك</h3>
           <button 
             (click)="closeDetailsModal()"
             class="text-gray-400 hover:text-gray-600">
@@ -292,19 +292,19 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
           </button>
         </div>
 
-        <div *ngIf="selectedCustomer" class="space-y-6">
-          <!-- Customer Info -->
+        <div *ngIf="selectedPartner" class="space-y-6">
+          <!-- Partner Info -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h4 class="font-medium text-gray-900 mb-2">المعلومات الشخصية</h4>
               <div class="space-y-2">
-                <p><span class="font-medium">الاسم:</span> {{ selectedCustomer.name }}</p>
-                <p><span class="font-medium">الهاتف:</span> {{ selectedCustomer.phone || '-' }}</p>
-                <p><span class="font-medium">الرقم القومي:</span> {{ selectedCustomer.nationalId || '-' }}</p>
-                <p><span class="font-medium">العنوان:</span> {{ selectedCustomer.address || '-' }}</p>
+                <p><span class="font-medium">الاسم:</span> {{ selectedPartner.name }}</p>
+                <p><span class="font-medium">الهاتف:</span> {{ selectedPartner.phone || '-' }}</p>
+                <p><span class="font-medium">الرقم القومي:</span> {{ selectedPartner.nationalId || '-' }}</p>
+                <p><span class="font-medium">العنوان:</span> {{ selectedPartner.address || '-' }}</p>
                 <p><span class="font-medium">الحالة:</span> 
-                  <span class="badge" [ngClass]="selectedCustomer.status === 'نشط' ? 'badge-success' : 'badge-warning'">
-                    {{ selectedCustomer.status }}
+                  <span class="badge" [ngClass]="selectedPartner.status === 'نشط' ? 'badge-success' : 'badge-warning'">
+                    {{ selectedPartner.status }}
                   </span>
                 </p>
               </div>
@@ -312,31 +312,29 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
 
             <div>
               <h4 class="font-medium text-gray-900 mb-2">الإحصائيات</h4>
-              <div *ngIf="customerStats" class="space-y-2">
-                <p><span class="font-medium">إجمالي العقود:</span> {{ customerStats.totalContracts }}</p>
-                <p><span class="font-medium">إجمالي القيمة:</span> {{ customerStats.totalValue | number:'1.0-0' }} ج.م</p>
-                <p><span class="font-medium">المبلغ المدفوع:</span> {{ customerStats.paidAmount | number:'1.0-0' }} ج.م</p>
-                <p><span class="font-medium">المبلغ المعلق:</span> {{ customerStats.pendingAmount | number:'1.0-0' }} ج.م</p>
+              <div *ngIf="partnerStats" class="space-y-2">
+                <p><span class="font-medium">إجمالي الوحدات:</span> {{ partnerStats.totalUnits }}</p>
+                <p><span class="font-medium">إجمالي القيمة:</span> {{ partnerStats.totalValue | number:'1.0-0' }} ج.م</p>
               </div>
             </div>
           </div>
 
-          <!-- Customer Contracts -->
+          <!-- Partner Units -->
           <div>
-            <h4 class="font-medium text-gray-900 mb-2">عقود العميل</h4>
-            <div *ngIf="customerContracts.length > 0" class="space-y-2">
-              <div *ngFor="let contract of customerContracts" class="p-3 border border-gray-200 rounded-lg">
+            <h4 class="font-medium text-gray-900 mb-2">وحدات الشريك</h4>
+            <div *ngIf="partnerUnits.length > 0" class="space-y-2">
+              <div *ngFor="let unitPartner of partnerUnits" class="p-3 border border-gray-200 rounded-lg">
                 <div class="flex items-center justify-between">
                   <div>
-                    <p class="font-medium">{{ contract.unit?.name || 'وحدة غير محددة' }}</p>
-                    <p class="text-sm text-gray-600">{{ contract.totalPrice | number:'1.0-0' }} ج.م</p>
+                    <p class="font-medium">{{ unitPartner.unit?.name || unitPartner.unit?.code || 'وحدة غير محددة' }}</p>
+                    <p class="text-sm text-gray-600">{{ unitPartner.unit?.totalPrice | number:'1.0-0' }} ج.م</p>
                   </div>
-                  <span class="text-sm text-gray-500">{{ contract.start | date:'short' }}</span>
+                  <span class="text-sm text-gray-500">{{ unitPartner.createdAt | date:'short' }}</span>
                 </div>
               </div>
             </div>
-            <div *ngIf="customerContracts.length === 0" class="text-center py-4 text-gray-500">
-              لا توجد عقود لهذا العميل
+            <div *ngIf="partnerUnits.length === 0" class="text-center py-4 text-gray-500">
+              لا توجد وحدات لهذا الشريك
             </div>
           </div>
         </div>
@@ -345,11 +343,11 @@ import { Customer, CustomerCreateRequest, CustomerUpdateRequest, ApiResponse } f
   `,
   styles: []
 })
-export class CustomersComponent implements OnInit {
-  customers: Customer[] = [];
-  selectedCustomer: Customer | null = null;
-  customerStats: any = null;
-  customerContracts: any[] = [];
+export class PartnersComponent implements OnInit {
+  partners: Partner[] = [];
+  selectedPartner: Partner | null = null;
+  partnerStats: any = null;
+  partnerUnits: any[] = [];
   
   // Modal states
   showModal = false;
@@ -369,7 +367,7 @@ export class CustomersComponent implements OnInit {
   pagination: any = null;
 
   // Form
-  customerForm: FormGroup;
+  partnerForm: FormGroup;
 
   // Math for template
   Math = Math;
@@ -378,7 +376,7 @@ export class CustomersComponent implements OnInit {
     private formBuilder: FormBuilder,
     private apiService: ApiService
   ) {
-    this.customerForm = this.formBuilder.group({
+    this.partnerForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       phone: [''],
       nationalId: [''],
@@ -389,10 +387,10 @@ export class CustomersComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadCustomers();
+    this.loadPartners();
   }
 
-  loadCustomers(): void {
+  loadPartners(): void {
     this.isLoading = true;
     const params = {
       page: this.currentPage,
@@ -401,16 +399,16 @@ export class CustomersComponent implements OnInit {
       ...(this.statusFilter && { status: this.statusFilter })
     };
 
-    this.apiService.get<ApiResponse<Customer[]>>('/customers', params).subscribe({
+    this.apiService.get<ApiResponse<Partner[]>>('/partners', params).subscribe({
       next: (response) => {
         if (response.success && response.data) {
-          this.customers = response.data;
+          this.partners = response.data;
           this.pagination = response.pagination;
         }
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading customers:', error);
+        console.error('Error loading partners:', error);
         this.isLoading = false;
       }
     });
@@ -418,109 +416,109 @@ export class CustomersComponent implements OnInit {
 
   onSearch(): void {
     this.currentPage = 1;
-    this.loadCustomers();
+    this.loadPartners();
   }
 
   onFilterChange(): void {
     this.currentPage = 1;
-    this.loadCustomers();
+    this.loadPartners();
   }
 
   goToPage(page: number): void {
     this.currentPage = page;
-    this.loadCustomers();
+    this.loadPartners();
   }
 
   openCreateModal(): void {
     this.isEditing = false;
-    this.customerForm.reset();
-    this.customerForm.patchValue({ status: 'نشط' });
+    this.partnerForm.reset();
+    this.partnerForm.patchValue({ status: 'نشط' });
     this.showModal = true;
     this.errorMessage = '';
   }
 
-  editCustomer(customer: Customer): void {
+  editPartner(partner: Partner): void {
     this.isEditing = true;
-    this.customerForm.patchValue(customer);
+    this.partnerForm.patchValue(partner);
     this.showModal = true;
     this.errorMessage = '';
   }
 
-  viewCustomer(customer: Customer): void {
-    this.selectedCustomer = customer;
-    this.loadCustomerDetails(customer.id);
+  viewPartner(partner: Partner): void {
+    this.selectedPartner = partner;
+    this.loadPartnerDetails(partner.id);
     this.showDetailsModal = true;
   }
 
-  loadCustomerDetails(customerId: string): void {
-    // Load customer stats
-    this.apiService.get<ApiResponse>(`/customers/${customerId}/stats`).subscribe({
+  loadPartnerDetails(partnerId: string): void {
+    // Load partner stats
+    this.apiService.get<ApiResponse>(`/partners/${partnerId}/stats`).subscribe({
       next: (response) => {
         if (response.success && response.data) {
-          this.customerStats = response.data;
+          this.partnerStats = response.data;
         }
       }
     });
 
-    // Load customer contracts
-    this.apiService.get<ApiResponse>(`/customers/${customerId}/contracts`).subscribe({
+    // Load partner units
+    this.apiService.get<ApiResponse>(`/partners/${partnerId}/units`).subscribe({
       next: (response) => {
         if (response.success && response.data) {
-          this.customerContracts = response.data;
+          this.partnerUnits = response.data;
         }
       }
     });
   }
 
-  deleteCustomer(customer: Customer): void {
-    if (confirm(`هل أنت متأكد من حذف العميل "${customer.name}"؟`)) {
-      this.apiService.delete<ApiResponse>(`/customers/${customer.id}`).subscribe({
+  deletePartner(partner: Partner): void {
+    if (confirm(`هل أنت متأكد من حذف الشريك "${partner.name}"؟`)) {
+      this.apiService.delete<ApiResponse>(`/partners/${partner.id}`).subscribe({
         next: (response) => {
           if (response.success) {
-            this.loadCustomers();
+            this.loadPartners();
           }
         },
         error: (error) => {
-          console.error('Error deleting customer:', error);
+          console.error('Error deleting partner:', error);
         }
       });
     }
   }
 
   onSubmit(): void {
-    if (this.customerForm.valid) {
+    if (this.partnerForm.valid) {
       this.isSubmitting = true;
       this.errorMessage = '';
 
-      const customerData = this.customerForm.value;
+      const partnerData = this.partnerForm.value;
 
-      if (this.isEditing && this.selectedCustomer) {
-        // Update customer
-        this.apiService.put<ApiResponse<Customer>>(`/customers/${this.selectedCustomer.id}`, customerData).subscribe({
+      if (this.isEditing && this.selectedPartner) {
+        // Update partner
+        this.apiService.put<ApiResponse<Partner>>(`/partners/${this.selectedPartner.id}`, partnerData).subscribe({
           next: (response) => {
             if (response.success) {
               this.closeModal();
-              this.loadCustomers();
+              this.loadPartners();
             }
             this.isSubmitting = false;
           },
           error: (error) => {
-            this.errorMessage = error.message || 'حدث خطأ أثناء تحديث العميل';
+            this.errorMessage = error.message || 'حدث خطأ أثناء تحديث الشريك';
             this.isSubmitting = false;
           }
         });
       } else {
-        // Create customer
-        this.apiService.post<ApiResponse<Customer>>('/customers', customerData).subscribe({
+        // Create partner
+        this.apiService.post<ApiResponse<Partner>>('/partners', partnerData).subscribe({
           next: (response) => {
             if (response.success) {
               this.closeModal();
-              this.loadCustomers();
+              this.loadPartners();
             }
             this.isSubmitting = false;
           },
           error: (error) => {
-            this.errorMessage = error.message || 'حدث خطأ أثناء إضافة العميل';
+            this.errorMessage = error.message || 'حدث خطأ أثناء إضافة الشريك';
             this.isSubmitting = false;
           }
         });
@@ -531,15 +529,15 @@ export class CustomersComponent implements OnInit {
   closeModal(): void {
     this.showModal = false;
     this.isEditing = false;
-    this.selectedCustomer = null;
-    this.customerForm.reset();
+    this.selectedPartner = null;
+    this.partnerForm.reset();
     this.errorMessage = '';
   }
 
   closeDetailsModal(): void {
     this.showDetailsModal = false;
-    this.selectedCustomer = null;
-    this.customerStats = null;
-    this.customerContracts = [];
+    this.selectedPartner = null;
+    this.partnerStats = null;
+    this.partnerUnits = [];
   }
 }
