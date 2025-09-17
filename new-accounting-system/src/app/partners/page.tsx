@@ -111,7 +111,7 @@ function PartnersPageContent() {
   }, [refresh])
 
   // Handle create/update partner
-  const handleSavePartner = async (partnerData: Partial<Partner>) => {
+  const handleSavePartner = async (partnerData: { name: string; phone?: string | undefined; notes?: string | undefined }) => {
     try {
       // Check for duplicates
       if (partners) {

@@ -11,8 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 
 const partnerSchema = z.object({
   name: z.string().min(1, 'اسم الشريك مطلوب'),
-  phone: z.string().optional(),
-  notes: z.string().optional(),
+  phone: z.string().optional().or(z.undefined()),
+  notes: z.string().optional().or(z.undefined()),
 })
 
 type PartnerFormData = z.infer<typeof partnerSchema>
@@ -20,8 +20,8 @@ type PartnerFormData = z.infer<typeof partnerSchema>
 interface Partner {
   id: string
   name: string
-  phone?: string
-  notes?: string
+  phone?: string | undefined
+  notes?: string | undefined
   createdAt: string
   unitPartners: Array<{
     id: string
@@ -49,7 +49,7 @@ interface Partner {
 
 interface PartnerFormProps {
   partner?: Partner | null
-  onSave: (data: PartnerFormData) => void
+  onSave: (data: PartnerFormData) => Promise<void>
   onCancel: () => void
 }
 
