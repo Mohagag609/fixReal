@@ -177,23 +177,23 @@ export default function SettingsPage() {
                     <Input
                       label="اسم الشركة"
                       value={settings.companyName}
-                      onChange={(e) => setSettings(prev => ({ ...prev, companyName: e.target.value }))}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings(prev => ({ ...prev, companyName: e.target.value }))}
                     />
                     <Input
                       label="رقم الهاتف"
                       value={settings.companyPhone}
-                      onChange={(e) => setSettings(prev => ({ ...prev, companyPhone: e.target.value }))}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings(prev => ({ ...prev, companyPhone: e.target.value }))}
                     />
                     <Input
                       label="البريد الإلكتروني"
                       type="email"
                       value={settings.companyEmail}
-                      onChange={(e) => setSettings(prev => ({ ...prev, companyEmail: e.target.value }))}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings(prev => ({ ...prev, companyEmail: e.target.value }))}
                     />
                     <Input
                       label="العملة"
                       value={settings.currency}
-                      onChange={(e) => setSettings(prev => ({ ...prev, currency: e.target.value }))}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings(prev => ({ ...prev, currency: e.target.value }))}
                     />
                   </div>
                   <div>
@@ -202,7 +202,7 @@ export default function SettingsPage() {
                     </label>
                     <textarea
                       value={settings.companyAddress}
-                      onChange={(e) => setSettings(prev => ({ ...prev, companyAddress: e.target.value }))}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setSettings(prev => ({ ...prev, companyAddress: e.target.value }))}
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
@@ -222,7 +222,7 @@ export default function SettingsPage() {
                       </label>
                       <select
                         value={settings.language}
-                        onChange={(e) => setSettings(prev => ({ ...prev, language: e.target.value }))}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSettings(prev => ({ ...prev, language: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="ar">العربية</option>
@@ -235,7 +235,7 @@ export default function SettingsPage() {
                       </label>
                       <select
                         value={settings.timezone}
-                        onChange={(e) => setSettings(prev => ({ ...prev, timezone: e.target.value }))}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSettings(prev => ({ ...prev, timezone: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="Africa/Cairo">القاهرة</option>
@@ -248,7 +248,7 @@ export default function SettingsPage() {
                       </label>
                       <select
                         value={settings.dateFormat}
-                        onChange={(e) => setSettings(prev => ({ ...prev, dateFormat: e.target.value }))}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSettings(prev => ({ ...prev, dateFormat: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="DD/MM/YYYY">DD/MM/YYYY</option>
@@ -314,7 +314,7 @@ export default function SettingsPage() {
                     </label>
                     <select
                       value={settings.backupFrequency}
-                      onChange={(e) => setSettings(prev => ({ ...prev, backupFrequency: e.target.value }))}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSettings(prev => ({ ...prev, backupFrequency: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="daily">يومي</option>
@@ -350,7 +350,7 @@ export default function SettingsPage() {
                         <input
                           type="checkbox"
                           checked={settings.notifications.email}
-                          onChange={(e) => setSettings(prev => ({
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings(prev => ({
                             ...prev,
                             notifications: { ...prev.notifications, email: e.target.checked }
                           }))}
@@ -369,7 +369,7 @@ export default function SettingsPage() {
                         <input
                           type="checkbox"
                           checked={settings.notifications.sms}
-                          onChange={(e) => setSettings(prev => ({
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings(prev => ({
                             ...prev,
                             notifications: { ...prev.notifications, sms: e.target.checked }
                           }))}
@@ -388,7 +388,7 @@ export default function SettingsPage() {
                         <input
                           type="checkbox"
                           checked={settings.notifications.push}
-                          onChange={(e) => setSettings(prev => ({
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings(prev => ({
                             ...prev,
                             notifications: { ...prev.notifications, push: e.target.checked }
                           }))}
@@ -423,7 +423,7 @@ export default function SettingsPage() {
                     <input
                       type="number"
                       value={settings.security.sessionTimeout}
-                      onChange={(e) => setSettings(prev => ({
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings(prev => ({
                         ...prev,
                         security: { ...prev.security, sessionTimeout: parseInt(e.target.value) }
                       }))}
@@ -437,7 +437,7 @@ export default function SettingsPage() {
                     </label>
                     <select
                       value={settings.security.passwordPolicy}
-                      onChange={(e) => setSettings(prev => ({
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSettings(prev => ({
                         ...prev,
                         security: { ...prev.security, passwordPolicy: e.target.value }
                       }))}
@@ -458,7 +458,7 @@ export default function SettingsPage() {
                       <input
                         type="checkbox"
                         checked={settings.security.twoFactor}
-                        onChange={(e) => setSettings(prev => ({
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings(prev => ({
                           ...prev,
                           security: { ...prev.security, twoFactor: e.target.checked }
                         }))}
@@ -491,7 +491,7 @@ export default function SettingsPage() {
                     </label>
                     <select
                       value={settings.appearance.theme}
-                      onChange={(e) => setSettings(prev => ({
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSettings(prev => ({
                         ...prev,
                         appearance: { ...prev.appearance, theme: e.target.value }
                       }))}
@@ -511,7 +511,7 @@ export default function SettingsPage() {
                       <input
                         type="color"
                         value={settings.appearance.primaryColor}
-                        onChange={(e) => setSettings(prev => ({
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings(prev => ({
                           ...prev,
                           appearance: { ...prev.appearance, primaryColor: e.target.value }
                         }))}
@@ -530,7 +530,7 @@ export default function SettingsPage() {
                       <input
                         type="checkbox"
                         checked={settings.appearance.sidebarCollapsed}
-                        onChange={(e) => setSettings(prev => ({
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings(prev => ({
                           ...prev,
                           appearance: { ...prev.appearance, sidebarCollapsed: e.target.checked }
                         }))}
