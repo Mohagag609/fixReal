@@ -4,7 +4,7 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboardIcon, UsersIcon, BuildingIcon, FileTextIcon, WalletIcon, ReceiptIcon, CalendarIcon, BarChart3Icon, SettingsIcon } from '../icons'
+import { LayoutDashboardIcon, UsersIcon, BuildingIcon, FileTextIcon, WalletIcon, ReceiptIcon, CalendarIcon, BarChart3Icon, SettingsIcon, X } from '../icons'
 import { cn } from '../../lib/utils'
 
 const menuItems = [

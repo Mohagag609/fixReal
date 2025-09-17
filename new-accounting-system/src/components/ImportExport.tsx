@@ -3,11 +3,11 @@
 import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Download, Upload, FileTextIcon, AlertIcon, CheckCircle } from './icons'
-import { Button } from '../../components/ui/Button'
-// import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
-import { Modal } from '../../components/ui/Modal'
-import { exportData, prepareTableDataForExport, importFromCSV, validateImportData } from '../../lib/exportUtils'
-import { ExportOptions } from '../../lib/exportUtils'
+import { Button } from './ui/Button'
+// import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
+import { Modal } from './ui/Modal'
+import { exportData, prepareTableDataForExport, importFromCSV, validateImportData } from '../lib/exportUtils'
+import { ExportOptions } from '../lib/exportUtils'
 
 interface ImportExportProps<T> {
   data: T[]

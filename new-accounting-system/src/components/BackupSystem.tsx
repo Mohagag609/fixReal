@@ -2,10 +2,10 @@
 
 import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Download, Upload, Database, AlertIcon, CheckCircle, Clock, HardDrive, // RefreshCw, // Trash2, // Eye } from './icons'
-import { Button } from '../../components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
-import { Modal } from '../../components/ui/Modal'
+import { Download, Upload, DatabaseIcon, AlertIcon, CheckCircle, Clock, HardDriveIcon, Database, HardDrive } from './icons'
+import { Button } from './ui/Button'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
+import { Modal } from './ui/Modal'
 import { 
   createBackup, 
   downloadBackup, 
@@ -13,8 +13,8 @@ import {
   restoreBackup, 
   validateBackup, 
   getBackupInfo 
-} from '../../lib/backupUtils'
-import { BackupData } from '../../lib/backupUtils'
+} from '../lib/backupUtils'
+import { BackupData } from '../lib/backupUtils'
 
 interface BackupSystemProps {
   className?: string

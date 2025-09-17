@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 // import { motion } from 'framer-motion'
-import { PlusIcon, EditIcon, TrashIcon, CalendarIcon, DollarIcon, CheckCircle, Clock, AlertIcon } from '../../components/icons'
+import { PlusIcon, EditIcon, TrashIcon, CalendarIcon, DollarIcon, CheckCircle, Clock, AlertIcon, AlertCircle } from '../../components/icons'
 import { DataTable } from '../../components/tables/DataTable'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'

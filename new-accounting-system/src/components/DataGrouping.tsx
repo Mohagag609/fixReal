@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDownIcon, ChevronRightIcon, BarChart3Icon, FilterIcon, SortAscIcon, SortDescIcon } from './icons'
+import { ChevronDownIcon, ChevronRightIcon, BarChart3Icon, FilterIcon, SortAscIcon, SortDescIcon, ChevronDown, ChevronRight, BarChart3, Filter, SortAsc, SortDesc } from './icons'
 import { Button } from './ui/Button'
 
 export interface GroupingOption {

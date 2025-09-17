@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { XIcon, ChevronLeftIcon, Maximize2Icon, Minimize2Icon } from './icons'
+import { XIcon, ChevronLeftIcon, Maximize2Icon, Minimize2Icon, X, ChevronLeft, Minimize2, Maximize2 } from './icons'
 import { Button } from './ui/Button'
 
 export interface MasterDetailLayoutProps {

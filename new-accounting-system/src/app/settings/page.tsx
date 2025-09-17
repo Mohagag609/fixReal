@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { SettingsIcon, SaveIcon, DatabaseIcon, BellIcon, ShieldIcon, PaletteIcon, GlobeIcon } from '../../components/icons'
+import { SettingsIcon, SaveIcon, DatabaseIcon, BellIcon, ShieldIcon, PaletteIcon, GlobeIcon, Download, Upload } from '../../components/icons'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
