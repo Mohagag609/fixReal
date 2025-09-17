@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Plus, Edit, Trash2, Users, DollarSign, Phone, Calendar, AlertCircle } from 'lucide-react'
+import { FiPlus, FiEdit, FiTrash2, FiUsers, FiDollarSign, FiPhone, FiCalendar, FiAlertCircle } from 'react-icons/fi'
 import { DataTable } from '@/components/tables/DataTable'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -95,7 +95,7 @@ export default function BrokersPage() {
         header: 'اسم الوسيط',
         cell: ({ row }) => (
           <div className="flex items-center">
-            <Users className="w-4 h-4 ml-2 text-blue-600" />
+            <FiUsers className="w-4 h-4 ml-2 text-blue-600" />
             <span className="font-medium text-gray-900">
               {row.getValue('name')}
             </span>
@@ -107,7 +107,7 @@ export default function BrokersPage() {
         header: 'الهاتف',
         cell: ({ row }) => (
           <div className="flex items-center text-gray-600">
-            <Phone className="w-4 h-4 ml-2" />
+            <FiPhone className="w-4 h-4 ml-2" />
             {row.getValue('phone') || 'غير محدد'}
           </div>
         ),
@@ -120,7 +120,7 @@ export default function BrokersPage() {
           const totalDues = dues?.reduce((sum, due) => sum + due.amount, 0) || 0
           return (
             <div className="flex items-center">
-              <DollarSign className="w-4 h-4 ml-2 text-red-600" />
+              <FiDollarSign className="w-4 h-4 ml-2 text-red-600" />
               <span className="font-semibold text-red-600">
                 {formatCurrency(totalDues)}
               </span>
@@ -140,7 +140,7 @@ export default function BrokersPage() {
           return (
             <div className="flex items-center">
               {overdueCount > 0 && (
-                <AlertCircle className="w-4 h-4 ml-2 text-red-600" />
+                <FiAlertCircle className="w-4 h-4 ml-2 text-red-600" />
               )}
               <span className={`text-sm font-medium ${
                 overdueCount > 0 ? 'text-red-600' : 'text-gray-600'
@@ -156,7 +156,7 @@ export default function BrokersPage() {
         header: 'تاريخ الإنشاء',
         cell: ({ row }) => (
           <div className="flex items-center text-gray-600">
-            <Calendar className="w-4 h-4 ml-2" />
+            <FiCalendar className="w-4 h-4 ml-2" />
             {formatDate(row.getValue('createdAt'))}
           </div>
         ),
@@ -176,14 +176,14 @@ export default function BrokersPage() {
                   setIsModalOpen(true)
                 }}
               >
-                <Edit className="w-4 h-4" />
+                <FiEdit className="w-4 h-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setDeletingBroker(broker)}
               >
-                <Trash2 className="w-4 h-4" />
+                <FiTrash2 className="w-4 h-4" />
               </Button>
             </div>
           )
@@ -226,7 +226,7 @@ export default function BrokersPage() {
           }}
           className="flex items-center"
         >
-          <Plus className="w-4 h-4 ml-2" />
+          <FiPlus className="w-4 h-4 ml-2" />
           إضافة وسيط جديد
         </Button>
       </div>
@@ -237,7 +237,7 @@ export default function BrokersPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="w-6 h-6 text-blue-600" />
+                <FiUsers className="w-6 h-6 text-blue-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">إجمالي الوسطاء</p>
@@ -251,7 +251,7 @@ export default function BrokersPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign className="w-6 h-6 text-green-600" />
+                <FiDollarSign className="w-6 h-6 text-green-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">إجمالي العمولات</p>
@@ -267,7 +267,7 @@ export default function BrokersPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-red-100 rounded-lg">
-                <AlertCircle className="w-6 h-6 text-red-600" />
+                <FiAlertCircle className="w-6 h-6 text-red-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">العمولات المتأخرة</p>
@@ -283,7 +283,7 @@ export default function BrokersPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <Calendar className="w-6 h-6 text-purple-600" />
+                <FiCalendar className="w-6 h-6 text-purple-600" />
               </div>
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">متوسط العمولة</p>
