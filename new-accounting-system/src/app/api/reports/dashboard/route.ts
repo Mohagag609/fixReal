@@ -6,7 +6,7 @@ export const dynamic = 'force-static'
 // GET /api/reports/dashboard - Get dashboard statistics
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    // const { searchParams } = new URL(request.url)
     // const _startDate = searchParams.get('startDate')
     // const _endDate = searchParams.get('endDate')
 
