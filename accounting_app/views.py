@@ -1166,3 +1166,89 @@ class UnitRemovePartnerView(DeleteView):
         context = super().get_context_data(**kwargs)
         context['unit'] = self.unit
         return context
+
+
+# Unit Partner Group Management Views
+class UnitPartnerGroupsView(DetailView):
+    """عرض مجموعات شركاء الوحدة"""
+    model = Unit
+    template_name = 'accounting_app/units/partner_groups.html'
+    context_object_name = 'unit'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        unit = self.get_object()
+        
+        # حساب إجمالي الشركاء من جميع المجموعات
+        total_partners = 0
+        for unit_partner_group in unit.unit_partner_groups.all():
+            total_partners += unit_partner_group.partner_group.partners.count()
+        
+        context['total_partners'] = total_partners
+        
+        return context
+
+
+class UnitAddPartnerGroupView(CreateView):
+    """إضافة مجموعة شركاء للوحدة"""
+    model = UnitPartnerGroup
+    template_name = 'accounting_app/units/add_partner_group.html'
+    fields = ['partner_group']
+    
+    def dispatch(self, request, *args, **kwargs):
+        self.unit = get_object_or_404(Unit, pk=kwargs['unit_id'])
+        return super().dispatch(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        form.instance.unit = self.unit
+        
+        # التحقق من عدم وجود المجموعة مسبقاً
+        if UnitPartnerGroup.objects.filter(
+            unit=self.unit, 
+            partner_group=form.instance.partner_group,
+            deleted_at__isnull=True
+        ).exists():
+            form.add_error('partner_group', 'هذه المجموعة مرتبطة بالوحدة بالفعل')
+            return self.form_invalid(form)
+        
+        response = super().form_valid(form)
+        messages.success(self.request, 'تم إضافة مجموعة الشركاء بنجاح')
+        return response
+    
+    def get_success_url(self):
+        return f'/units/{self.unit.id}/partner-groups/'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['unit'] = self.unit
+        
+        # حساب إجمالي الشركاء
+        total_partners = 0
+        for unit_partner_group in self.unit.unit_partner_groups.all():
+            total_partners += unit_partner_group.partner_group.partners.count()
+        
+        context['total_partners'] = total_partners
+        
+        return context
+
+
+class UnitRemovePartnerGroupView(DeleteView):
+    """إزالة مجموعة شركاء من الوحدة"""
+    model = UnitPartnerGroup
+    template_name = 'accounting_app/units/confirm_remove_partner_group.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        self.unit = get_object_or_404(Unit, pk=kwargs['unit_id'])
+        return super().dispatch(request, *args, **kwargs)
+    
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.deleted_at = timezone.now()
+        self.object.save()
+        messages.success(request, 'تم إزالة مجموعة الشركاء بنجاح')
+        return redirect(f'/units/{self.unit.id}/partner-groups/')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['unit'] = self.unit
+        return context

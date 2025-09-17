@@ -74,6 +74,11 @@ urlpatterns = [
     path('units/<int:unit_id>/edit-partner/<int:pk>/', views.UnitEditPartnerView.as_view(), name='unit_edit_partner'),
     path('units/<int:unit_id>/remove-partner/<int:pk>/', views.UnitRemovePartnerView.as_view(), name='unit_remove_partner'),
     
+    # Unit Partner Groups
+    path('units/<int:unit_id>/partner-groups/', views.UnitPartnerGroupsView.as_view(), name='unit_partner_groups'),
+    path('units/<int:unit_id>/add-partner-group/', views.UnitAddPartnerGroupView.as_view(), name='unit_add_partner_group'),
+    path('units/<int:unit_id>/remove-partner-group/<int:pk>/', views.UnitRemovePartnerGroupView.as_view(), name='unit_remove_partner_group'),
+    
     # API endpoints
     path('api/customers/', views.get_customers_api, name='api_customers'),
     path('api/units/', views.get_units_api, name='api_units'),
