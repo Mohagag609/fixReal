@@ -1,38 +1,49 @@
-import { Router } from 'express';
-import { settingsController } from '../controllers/settingsController';
-import { authMiddleware } from '../middleware/authMiddleware';
-import { validateSettings, validateBulkSettings, validateImportSettings } from '../validations/settingsValidation';
+import { Router } from 'express'
+import { SettingsController } from '../controllers/settingsController'
+import { authMiddleware } from '../middleware/auth'
 
-const router = Router();
+const router = Router()
 
-// Apply authentication middleware to all routes
-router.use(authMiddleware);
+// تطبيق middleware المصادقة على جميع المسارات
+router.use(authMiddleware)
 
-// Get all settings
-router.get('/', settingsController.getAllSettings);
+// الحصول على جميع الإعدادات
+router.get('/', SettingsController.getAllSettings)
 
-// Get setting by key
-router.get('/key/:key', settingsController.getSettingByKey);
+// الحصول على إعداد محدد
+router.get('/:key', SettingsController.getSetting)
 
-// Create new setting
-router.post('/', validateSettings, settingsController.createSetting);
+// تحديث إعداد
+router.put('/:key', SettingsController.updateSetting)
 
-// Update setting by ID
-router.put('/:id', validateSettings, settingsController.updateSetting);
+// تحديث عدة إعدادات
+router.put('/', SettingsController.updateSettings)
 
-// Update multiple settings (bulk update)
-router.put('/bulk', validateBulkSettings, settingsController.updateMultipleSettings);
+// حذف إعداد
+router.delete('/:key', SettingsController.deleteSetting)
 
-// Delete setting
-router.delete('/:id', settingsController.deleteSetting);
+// الحصول على إعدادات النظام
+router.get('/system/all', SettingsController.getSystemSettings)
 
-// Export settings
-router.get('/export', settingsController.exportSettings);
+// تحديث إعدادات النظام
+router.put('/system/update', SettingsController.updateSystemSettings)
 
-// Import settings
-router.post('/import', validateImportSettings, settingsController.importSettings);
+// إعادة تعيين الإعدادات للقيم الافتراضية
+router.post('/system/reset', SettingsController.resetToDefaults)
 
-// Reset to default settings
-router.post('/reset', settingsController.resetToDefault);
+// تصدير الإعدادات
+router.get('/export/data', SettingsController.exportSettings)
 
-export default router;
+// استيراد الإعدادات
+router.post('/import/data', SettingsController.importSettings)
+
+// الحصول على إعدادات التطبيق
+router.get('/app/config', SettingsController.getAppSettings)
+
+// الحصول على إعدادات الأمان
+router.get('/security/config', SettingsController.getSecuritySettings)
+
+// الحصول على إعدادات البريد الإلكتروني
+router.get('/email/config', SettingsController.getEmailSettings)
+
+export default router

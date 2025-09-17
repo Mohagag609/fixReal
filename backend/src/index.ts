@@ -28,7 +28,12 @@ import brokerDueRoutes from './routes/brokerDues';
 import voucherRoutes from './routes/vouchers';
 import transferRoutes from './routes/transfers';
 import settingsRoutes from './routes/settings';
-import searchRoutes from './routes/search';
+import backupRoutes from './routes/backup';
+import reportBuilderRoutes from './routes/reportBuilder';
+import performanceRoutes from './routes/performance';
+import adminRoutes from './routes/admin';
+import userManagementRoutes from './routes/userManagement';
+import advancedSearchRoutes from './routes/advancedSearch';
 
 const app = express();
 
@@ -102,7 +107,12 @@ app.use('/api/broker-dues', brokerDueRoutes);
 app.use('/api/vouchers', voucherRoutes);
 app.use('/api/transfers', transferRoutes);
 app.use('/api/settings', settingsRoutes);
-app.use('/api/search', searchRoutes);
+app.use('/api/backup', backupRoutes);
+app.use('/api/report-builder', reportBuilderRoutes);
+app.use('/api/performance', performanceRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/users', userManagementRoutes);
+app.use('/api/search', advancedSearchRoutes);
 
 // 404 handler for undefined routes
 app.use(notFoundHandler);
