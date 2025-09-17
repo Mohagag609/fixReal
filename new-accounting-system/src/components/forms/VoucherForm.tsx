@@ -14,9 +14,9 @@ const voucherSchema = z.object({
   amount: z.number().min(0.01, 'المبلغ يجب أن يكون أكبر من صفر'),
   safeId: z.string().min(1, 'الخزينة مطلوبة'),
   description: z.string().min(1, 'الوصف مطلوب'),
-  payer: z.string().optional(),
-  beneficiary: z.string().optional(),
-  linkedRef: z.string().optional(),
+  payer: z.string().optional().or(z.undefined()),
+  beneficiary: z.string().optional().or(z.undefined()),
+  linkedRef: z.string().optional().or(z.undefined()),
 })
 
 type VoucherFormData = z.infer<typeof voucherSchema>
@@ -28,22 +28,22 @@ interface Voucher {
   amount: number
   safeId: string
   description: string
-  payer?: string
-  beneficiary?: string
-  linkedRef?: string
+  payer?: string | undefined
+  beneficiary?: string | undefined
+  linkedRef?: string | undefined
   createdAt: string
   safe: {
     name: string
   }
   unit?: {
     code: string
-    name?: string
+    name?: string | undefined
   }
 }
 
 interface VoucherFormProps {
   voucher?: Voucher | null
-  onSave: (data: VoucherFormData) => void
+  onSave: (data: VoucherFormData) => Promise<void>
   onCancel: () => void
 }
 

@@ -17,16 +17,16 @@ interface Voucher {
   amount: number
   safeId: string
   description: string
-  payer?: string
-  beneficiary?: string
-  linkedRef?: string
+  payer?: string | undefined
+  beneficiary?: string | undefined
+  linkedRef?: string | undefined
   createdAt: string
   safe: {
     name: string
   }
   unit?: {
     code: string
-    name?: string
+    name?: string | undefined
   }
 }
 
@@ -56,7 +56,16 @@ export default function VouchersPage() {
   }, [])
 
   // Handle create/update voucher
-  const handleSaveVoucher = async (voucherData: Partial<Voucher>) => {
+  const handleSaveVoucher = async (voucherData: {
+    type: "receipt" | "payment";
+    date: string;
+    amount: number;
+    safeId: string;
+    description: string;
+    payer?: string | undefined;
+    beneficiary?: string | undefined;
+    linkedRef?: string | undefined;
+  }) => {
     try {
       const url = editingVoucher ? `/api/vouchers/${editingVoucher.id}` : '/api/vouchers'
       const method = editingVoucher ? 'PUT' : 'POST'
