@@ -53,7 +53,14 @@ export default function CustomersPage() {
   }, [])
 
   // Handle create/update customer
-  const handleSaveCustomer = async (customerData: Partial<Customer>) => {
+  const handleSaveCustomer = async (customerData: { 
+    name: string; 
+    status: "نشط" | "غير نشط"; 
+    phone?: string | undefined; 
+    nationalId?: string | undefined; 
+    address?: string | undefined; 
+    notes?: string | undefined; 
+  }) => {
     try {
       const url = editingCustomer ? `/api/customers/${editingCustomer.id}` : '/api/customers'
       const method = editingCustomer ? 'PUT' : 'POST'

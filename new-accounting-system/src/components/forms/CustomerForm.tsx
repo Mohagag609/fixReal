@@ -11,11 +11,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 
 const customerSchema = z.object({
   name: z.string().min(1, 'الاسم مطلوب'),
-  phone: z.string().optional(),
-  nationalId: z.string().optional(),
-  address: z.string().optional(),
+  phone: z.string().optional().or(z.undefined()),
+  nationalId: z.string().optional().or(z.undefined()),
+  address: z.string().optional().or(z.undefined()),
   status: z.enum(['نشط', 'غير نشط']),
-  notes: z.string().optional(),
+  notes: z.string().optional().or(z.undefined()),
 })
 
 type CustomerFormData = z.infer<typeof customerSchema>
@@ -38,7 +38,7 @@ interface Customer {
 
 interface CustomerFormProps {
   customer?: Customer | null
-  onSave: (data: CustomerFormData) => void
+  onSave: (data: CustomerFormData) => Promise<void>
   onCancel: () => void
 }
 
