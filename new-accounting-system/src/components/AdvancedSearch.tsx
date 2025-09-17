@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { SearchIcon, FilterIcon, XIcon } from './icons'
 import { Button } from './ui/Button'
 import { Input } from './ui/Input'
@@ -92,7 +92,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     onClear()
   }
 
-  const handleQuickSearch = (text: string) => {
+  const handleQuickSearch = useCallback((text: string) => {
     if (text.trim()) {
       const quickFilters: SearchFilter[] = searchFields
         .filter(field => field.type === 'text')
@@ -106,7 +106,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     } else {
       onClear()
     }
-  }
+  }, [searchFields, onSearch, onClear])
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -114,7 +114,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     }, 300)
 
     return () => clearTimeout(timeoutId)
-  }, [searchText])
+  }, [searchText, handleQuickSearch])
 
   return (
     <div className={`space-y-4 ${className}`}>

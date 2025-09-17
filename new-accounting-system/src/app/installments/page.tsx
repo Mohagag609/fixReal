@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { PlusIcon, EditIcon, TrashIcon, CalendarIcon, DollarIcon, CheckCircle, Clock, AlertIcon, AlertCircle } from '../../components/icons'
 import { DataTable } from '../../components/tables/DataTable'
 import { Button } from '../../components/ui/Button'
@@ -95,7 +95,7 @@ export default function InstallmentsPage() {
   }
 
   // Handle mark as paid
-  const handleMarkAsPaid = async (installment: Installment) => {
+  const handleMarkAsPaid = useCallback(async (installment: Installment) => {
     try {
       const response = await fetch(`/api/installments/${installment.id}`, {
         method: 'PUT',
@@ -109,7 +109,7 @@ export default function InstallmentsPage() {
     } catch (error) {
       console.error('Error marking installment as paid:', error)
     }
-  }
+  }, [])
 
   // Table columns
   const columns: ColumnDef<Installment>[] = useMemo(
@@ -227,7 +227,7 @@ export default function InstallmentsPage() {
         },
       },
     ],
-    []
+    [handleMarkAsPaid]
   )
 
   if (loading) {

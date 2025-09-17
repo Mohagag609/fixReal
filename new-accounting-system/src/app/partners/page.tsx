@@ -275,7 +275,7 @@ function PartnersPageContent() {
         header: 'الديون',
         cell: ({ row }) => {
           const debts = row.getValue('partnerDebts') as Array<Record<string, unknown>>
-          const totalDebts = debts?.reduce((sum, debt) => sum + (debt.amount as number), 0) || 0
+          const totalDebts = debts?.reduce((sum, debt) => sum + (debt['amount'] as number), 0) || 0
           return (
             <div className="flex items-center">
               <DollarIcon className="w-4 h-4 ml-2 text-red-600" />
