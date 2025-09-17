@@ -128,7 +128,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
             return (
               <Link
                 key={item.href}
-                href={item.href as string}
+                href={item.href as any}
                 onClick={() => {
                   // Close sidebar on mobile after navigation
                   if (window.innerWidth < 1024) {
