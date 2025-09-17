@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { ChevronDownIcon, ChevronRightIcon, BarChart3Icon, FilterIcon, SortAscIcon, SortDescIcon, ChevronDown, ChevronRight, BarChart3, Filter, SortAsc, SortDesc } from './icons'
+import { ChevronDown, ChevronRight, BarChart3, Filter, SortAsc, SortDesc } from './icons'
 import { Button } from './ui/Button'
 
 export interface GroupingOption {

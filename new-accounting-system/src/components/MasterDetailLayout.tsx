@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { XIcon, ChevronLeftIcon, Maximize2Icon, Minimize2Icon, X, ChevronLeft, Minimize2, Maximize2 } from './icons'
+import { X, ChevronLeft, Minimize2, Maximize2 } from './icons'
 import { Button } from './ui/Button'
 
 export interface MasterDetailLayoutProps {

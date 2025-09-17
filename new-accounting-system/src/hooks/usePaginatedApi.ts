@@ -240,6 +240,7 @@ export const usePaginatedApi = <T>(
         }
       }
     }
+    return undefined
   }, [autoRefresh, refreshInterval, refresh])
 
   // Cleanup

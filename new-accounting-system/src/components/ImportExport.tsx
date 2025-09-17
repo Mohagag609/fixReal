@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
-import { Download, Upload, FileTextIcon, AlertIcon, CheckCircle } from './icons'
+import { Download, Upload, FileTextIcon, AlertIcon } from './icons'
 import { Button } from './ui/Button'
 // import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
 import { Modal } from './ui/Modal'
