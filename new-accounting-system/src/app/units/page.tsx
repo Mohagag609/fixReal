@@ -13,14 +13,14 @@ import { ColumnDef } from '@tanstack/react-table'
 interface Unit {
   id: string
   code: string
-  name?: string
+  name?: string | undefined
   unitType: string
-  area?: string
-  floor?: string
-  building?: string
+  area?: string | undefined
+  floor?: string | undefined
+  building?: string | undefined
   totalPrice: number
   status: string
-  notes?: string
+  notes?: string | undefined
   createdAt: string
   contracts: Array<{
     id: string
@@ -32,7 +32,7 @@ interface Unit {
     percentage: number
     partner: {
       name: string
-      phone?: string
+      phone?: string | undefined
     }
   }>
 }
@@ -63,7 +63,17 @@ export default function UnitsPage() {
   }, [])
 
   // Handle create/update unit
-  const handleSaveUnit = async (unitData: Partial<Unit>) => {
+  const handleSaveUnit = async (unitData: {
+    code: string;
+    unitType: "سكني" | "تجاري" | "إداري" | "مخزن";
+    totalPrice: number;
+    status: "متاحة" | "مباعة" | "محجوزة";
+    name?: string | undefined;
+    area?: string | undefined;
+    floor?: string | undefined;
+    building?: string | undefined;
+    notes?: string | undefined;
+  }) => {
     try {
       const url = editingUnit ? `/api/units/${editingUnit.id}` : '/api/units'
       const method = editingUnit ? 'PUT' : 'POST'

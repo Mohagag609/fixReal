@@ -10,14 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 
 const unitSchema = z.object({
   code: z.string().min(1, 'كود الوحدة مطلوب'),
-  name: z.string().optional(),
+  name: z.string().optional().or(z.undefined()),
   unitType: z.enum(['سكني', 'تجاري', 'إداري', 'مخزن']),
-  area: z.string().optional(),
-  floor: z.string().optional(),
-  building: z.string().optional(),
+  area: z.string().optional().or(z.undefined()),
+  floor: z.string().optional().or(z.undefined()),
+  building: z.string().optional().or(z.undefined()),
   totalPrice: z.number().min(0, 'السعر يجب أن يكون أكبر من أو يساوي صفر'),
   status: z.enum(['متاحة', 'مباعة', 'محجوزة']),
-  notes: z.string().optional(),
+  notes: z.string().optional().or(z.undefined()),
 })
 
 type UnitFormData = z.infer<typeof unitSchema>
@@ -25,14 +25,14 @@ type UnitFormData = z.infer<typeof unitSchema>
 interface Unit {
   id: string
   code: string
-  name?: string
+  name?: string | undefined
   unitType: string
-  area?: string
-  floor?: string
-  building?: string
+  area?: string | undefined
+  floor?: string | undefined
+  building?: string | undefined
   totalPrice: number
   status: string
-  notes?: string
+  notes?: string | undefined
   createdAt: string
   contracts: Array<{
     id: string
@@ -44,14 +44,14 @@ interface Unit {
     percentage: number
     partner: {
       name: string
-      phone?: string
+      phone?: string | undefined
     }
   }>
 }
 
 interface UnitFormProps {
   unit?: Unit | null
-  onSave: (data: UnitFormData) => void
+  onSave: (data: UnitFormData) => Promise<void>
   onCancel: () => void
 }
 
