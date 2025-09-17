@@ -57,9 +57,11 @@
     "@types/numeral": "^2.0.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@hookform/resolvers": "^5.2.2",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
     "lucide-react": "^0.544.0",
+    "react-hook-form": "^7.62.0",
     "tailwindcss": "^4",
     "tsx": "^4.20.5",
     "typescript": "^5"

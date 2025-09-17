@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Button } from '../ui/Button'
+import { Input } from '../ui/Input'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card'
 
 const safeSchema = z.object({
   name: z.string().min(1, 'اسم الخزينة مطلوب'),
