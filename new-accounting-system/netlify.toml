@@ -1,6 +1,7 @@
 [build]
   command = "npm run build"
   publish = ".next"
+  base = "new-accounting-system"
 
 [build.environment]
   NODE_VERSION = "18"
