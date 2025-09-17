@@ -1,135 +1,199 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
-import { ApiResponse } from '../models';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  private baseUrl = environment.apiUrl;
+  private apiUrl = 'http://localhost:3000/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {}
 
-  /**
-   * GET request
-   */
-  get<T>(endpoint: string, params?: any): Observable<T> {
-    const httpParams = this.buildHttpParams(params);
-    return this.http.get<T>(`${this.baseUrl}${endpoint}`, { params: httpParams })
-      .pipe(
-        catchError(this.handleError)
-      );
+  private getHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
   }
 
-  /**
-   * POST request
-   */
-  post<T>(endpoint: string, data: any): Observable<T> {
-    return this.http.post<T>(`${this.baseUrl}${endpoint}`, data)
-      .pipe(
-        catchError(this.handleError)
-      );
+  // Dashboard
+  getDashboardStats(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/dashboard/stats`, {
+      headers: this.getHeaders()
+    });
   }
 
-  /**
-   * PUT request
-   */
-  put<T>(endpoint: string, data: any): Observable<T> {
-    return this.http.put<T>(`${this.baseUrl}${endpoint}`, data)
-      .pipe(
-        catchError(this.handleError)
-      );
+  // Customers
+  getCustomers(page = 1, limit = 10): Observable<any> {
+    return this.http.get(`${this.apiUrl}/customers?page=${page}&limit=${limit}`, {
+      headers: this.getHeaders()
+    });
   }
 
-  /**
-   * PATCH request
-   */
-  patch<T>(endpoint: string, data: any): Observable<T> {
-    return this.http.patch<T>(`${this.baseUrl}${endpoint}`, data)
-      .pipe(
-        catchError(this.handleError)
-      );
+  getCustomer(id: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/customers/${id}`, {
+      headers: this.getHeaders()
+    });
   }
 
-  /**
-   * DELETE request
-   */
-  delete<T>(endpoint: string): Observable<T> {
-    return this.http.delete<T>(`${this.baseUrl}${endpoint}`)
-      .pipe(
-        catchError(this.handleError)
-      );
+  createCustomer(customer: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/customers`, customer, {
+      headers: this.getHeaders()
+    });
   }
 
-  /**
-   * Upload file
-   */
-  uploadFile<T>(endpoint: string, file: File, additionalData?: any): Observable<T> {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    if (additionalData) {
-      Object.keys(additionalData).forEach(key => {
-        formData.append(key, additionalData[key]);
-      });
-    }
-
-    return this.http.post<T>(`${this.baseUrl}${endpoint}`, formData)
-      .pipe(
-        catchError(this.handleError)
-      );
+  updateCustomer(id: string, customer: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/customers/${id}`, customer, {
+      headers: this.getHeaders()
+    });
   }
 
-  /**
-   * Download file
-   */
-  downloadFile(endpoint: string, filename?: string): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}${endpoint}`, {
-      responseType: 'blob'
-    }).pipe(
-      catchError(this.handleError)
-    );
+  deleteCustomer(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/customers/${id}`, {
+      headers: this.getHeaders()
+    });
   }
 
-  /**
-   * Build HTTP params from object
-   */
-  private buildHttpParams(params: any): HttpParams {
-    let httpParams = new HttpParams();
-    
-    if (params) {
-      Object.keys(params).forEach(key => {
-        if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
-          httpParams = httpParams.set(key, params[key].toString());
-        }
-      });
-    }
-    
-    return httpParams;
+  // Units
+  getUnits(page = 1, limit = 10): Observable<any> {
+    return this.http.get(`${this.apiUrl}/units?page=${page}&limit=${limit}`, {
+      headers: this.getHeaders()
+    });
   }
 
-  /**
-   * Handle HTTP errors
-   */
-  private handleError(error: any): Observable<never> {
-    let errorMessage = 'حدث خطأ غير متوقع';
-    
-    if (error.error) {
-      if (error.error.message) {
-        errorMessage = error.error.message;
-      } else if (error.error.error) {
-        errorMessage = error.error.error;
-      }
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
+  getUnit(id: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/units/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
 
-    // Log error for debugging
-    console.error('API Error:', error);
+  createUnit(unit: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/units`, unit, {
+      headers: this.getHeaders()
+    });
+  }
 
-    return throwError(() => new Error(errorMessage));
+  updateUnit(id: string, unit: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/units/${id}`, unit, {
+      headers: this.getHeaders()
+    });
+  }
+
+  deleteUnit(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/units/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  // Contracts
+  getContracts(page = 1, limit = 10): Observable<any> {
+    return this.http.get(`${this.apiUrl}/contracts?page=${page}&limit=${limit}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  getContract(id: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/contracts/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  createContract(contract: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/contracts`, contract, {
+      headers: this.getHeaders()
+    });
+  }
+
+  updateContract(id: string, contract: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/contracts/${id}`, contract, {
+      headers: this.getHeaders()
+    });
+  }
+
+  deleteContract(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/contracts/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  // Transactions
+  getTransactions(page = 1, limit = 10): Observable<any> {
+    return this.http.get(`${this.apiUrl}/transactions?page=${page}&limit=${limit}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  getTransaction(id: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/transactions/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  createTransaction(transaction: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/transactions`, transaction, {
+      headers: this.getHeaders()
+    });
+  }
+
+  updateTransaction(id: string, transaction: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/transactions/${id}`, transaction, {
+      headers: this.getHeaders()
+    });
+  }
+
+  deleteTransaction(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/transactions/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  // Invoices
+  getInvoices(page = 1, limit = 10): Observable<any> {
+    return this.http.get(`${this.apiUrl}/invoices?page=${page}&limit=${limit}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  getInvoice(id: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/invoices/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  createInvoice(invoice: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/invoices`, invoice, {
+      headers: this.getHeaders()
+    });
+  }
+
+  updateInvoice(id: string, invoice: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/invoices/${id}`, invoice, {
+      headers: this.getHeaders()
+    });
+  }
+
+  deleteInvoice(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/invoices/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  // Reports
+  getReports(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/reports`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  generateReport(reportData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reports/generate`, reportData, {
+      headers: this.getHeaders()
+    });
   }
 }

@@ -1,0 +1,247 @@
+<div class="min-h-screen bg-gray-50 p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">الإعدادات</h1>
+          <p class="text-gray-600 mt-1">إدارة إعدادات النظام والتطبيق</p>
+        </div>
+        <div class="flex space-x-3 rtl:space-x-reverse">
+          <button
+            (click)="exportSettings()"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            تصدير الإعدادات
+          </button>
+          <label class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors cursor-pointer">
+            استيراد الإعدادات
+            <input type="file" accept=".json" (change)="importSettings($event)" class="hidden">
+          </label>
+          <button
+            (click)="showAddModal = true"
+            class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            إضافة إعداد جديد
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">البحث</label>
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="ابحث في الإعدادات..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          >
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">الفئة</label>
+          <select
+            [(ngModel)]="selectedCategory"
+            (change)="onCategoryChange()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="جميع الفئات">جميع الفئات</option>
+            <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+          </select>
+        </div>
+        <div class="flex items-end">
+          <button
+            (click)="loadSettings()"
+            class="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            تحديث
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Form -->
+    <div class="bg-white rounded-lg shadow-sm p-6">
+      <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div *ngFor="let setting of filteredSettings" class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">
+              <span class="inline-flex items-center space-x-2 rtl:space-x-reverse">
+                <span>{{ getSettingTypeIcon(setting.type) }}</span>
+                <span>{{ setting.key }}</span>
+                <span [class]="'px-2 py-1 text-xs rounded-full ' + getCategoryColor(setting.category)">
+                  {{ setting.category }}
+                </span>
+              </span>
+              <p *ngIf="setting.description" class="text-xs text-gray-500 mt-1">{{ setting.description }}</p>
+            </label>
+            
+            <!-- Text Input -->
+            <input
+              *ngIf="setting.type === 'text'"
+              type="text"
+              [formControlName]="setting.key"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+            
+            <!-- Number Input -->
+            <input
+              *ngIf="setting.type === 'number'"
+              type="number"
+              [formControlName]="setting.key"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+            
+            <!-- Boolean Input -->
+            <select
+              *ngIf="setting.type === 'boolean'"
+              [formControlName]="setting.key"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="true">نعم</option>
+              <option value="false">لا</option>
+            </select>
+            
+            <!-- Select Input -->
+            <select
+              *ngIf="setting.type === 'select'"
+              [formControlName]="setting.key"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option *ngFor="let option of setting.options" [value]="option">{{ option }}</option>
+            </select>
+            
+            <!-- Textarea Input -->
+            <textarea
+              *ngIf="setting.type === 'textarea'"
+              [formControlName]="setting.key"
+              rows="3"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            ></textarea>
+            
+            <button
+              type="button"
+              (click)="deleteSetting(setting.id)"
+              class="text-red-600 hover:text-red-800 text-sm"
+            >
+              حذف
+            </button>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex justify-end space-x-3 rtl:space-x-reverse mt-8 pt-6 border-t border-gray-200">
+          <button
+            type="button"
+            (click)="resetSettings()"
+            class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            إعادة تعيين
+          </button>
+          <button
+            type="submit"
+            [disabled]="isSaving"
+            class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          >
+            <span *ngIf="isSaving">جاري الحفظ...</span>
+            <span *ngIf="!isSaving">حفظ الإعدادات</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Add Setting Modal -->
+    <div *ngIf="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">إضافة إعداد جديد</h3>
+        
+        <form [formGroup]="newSettingForm" (ngSubmit)="addSetting()">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">المفتاح</label>
+              <input
+                type="text"
+                formControlName="key"
+                placeholder="setting_key"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">القيمة</label>
+              <input
+                type="text"
+                formControlName="value"
+                placeholder="القيمة الافتراضية"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
+              <input
+                type="text"
+                formControlName="description"
+                placeholder="وصف الإعداد"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">الفئة</label>
+              <select
+                formControlName="category"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">النوع</label>
+              <select
+                formControlName="type"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="text">نص</option>
+                <option value="number">رقم</option>
+                <option value="boolean">نعم/لا</option>
+                <option value="select">قائمة</option>
+                <option value="textarea">نص طويل</option>
+              </select>
+            </div>
+            
+            <div *ngIf="newSettingForm.get('type')?.value === 'select'">
+              <label class="block text-sm font-medium text-gray-700 mb-1">الخيارات (مفصولة بفاصلة)</label>
+              <input
+                type="text"
+                formControlName="options"
+                placeholder="خيار1, خيار2, خيار3"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              >
+            </div>
+          </div>
+          
+          <div class="flex justify-end space-x-3 rtl:space-x-reverse mt-6">
+            <button
+              type="button"
+              (click)="showAddModal = false; newSettingForm.reset()"
+              class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              إلغاء
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              إضافة
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

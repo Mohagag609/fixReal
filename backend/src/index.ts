@@ -19,6 +19,21 @@ import installmentRoutes from './routes/installments';
 import safeRoutes from './routes/safes';
 import partnerRoutes from './routes/partners';
 import brokerRoutes from './routes/brokers';
+import auditRoutes from './routes/audit';
+import notificationRoutes from './routes/notifications';
+import exportRoutes from './routes/export';
+import partnerGroupRoutes from './routes/partnerGroups';
+import partnerDebtRoutes from './routes/partnerDebts';
+import brokerDueRoutes from './routes/brokerDues';
+import voucherRoutes from './routes/vouchers';
+import transferRoutes from './routes/transfers';
+import settingsRoutes from './routes/settings';
+import backupRoutes from './routes/backup';
+import reportBuilderRoutes from './routes/reportBuilder';
+import performanceRoutes from './routes/performance';
+import adminRoutes from './routes/admin';
+import userManagementRoutes from './routes/userManagement';
+import advancedSearchRoutes from './routes/advancedSearch';
 
 const app = express();
 
@@ -83,6 +98,21 @@ app.use('/api/installments', installmentRoutes);
 app.use('/api/safes', safeRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/brokers', brokerRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/export', exportRoutes);
+app.use('/api/partner-groups', partnerGroupRoutes);
+app.use('/api/partner-debts', partnerDebtRoutes);
+app.use('/api/broker-dues', brokerDueRoutes);
+app.use('/api/vouchers', voucherRoutes);
+app.use('/api/transfers', transferRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/backup', backupRoutes);
+app.use('/api/report-builder', reportBuilderRoutes);
+app.use('/api/performance', performanceRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/users', userManagementRoutes);
+app.use('/api/search', advancedSearchRoutes);
 
 // 404 handler for undefined routes
 app.use(notFoundHandler);

@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "estate-management-frontend": {
+    "accounting-frontend": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/estate-management-frontend",
+            "outputPath": "dist/accounting-frontend",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": [
@@ -65,10 +65,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "estate-management-frontend:build:production"
+              "buildTarget": "accounting-frontend:build:production"
             },
             "development": {
-              "buildTarget": "estate-management-frontend:build:development"
+              "buildTarget": "accounting-frontend:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -76,7 +76,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "buildTarget": "estate-management-frontend:build"
+            "buildTarget": "accounting-frontend:build"
           }
         },
         "test": {

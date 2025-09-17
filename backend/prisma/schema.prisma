@@ -10,387 +10,422 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Customers - مطابق لـ golden-dataset.json
-model Customer {
-  id         String  @id @default(cuid())
-  name       String
-  phone      String? @unique
-  nationalId String? @unique
-  address    String?
-  status     String  @default("نشط")
-  notes      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  deletedAt  DateTime?
-  
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  isActive  Boolean  @default(true)
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  contracts Contract[]
-  
-  // Performance indexes for frequently queried columns
-  @@index([status, deletedAt]) // For filtering active customers
-  @@index([name]) // For name searches
-  @@index([phone]) // For phone lookups
-  @@index([createdAt]) // For date-based queries
+  auditLogs      AuditLog[]
+  notifications  Notification[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions String[]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users       User[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  resource    String
+  action      String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  notes     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  contracts    Contract[]
+  transactions Transaction[]
+  invoices     Invoice[]
+  vouchers     Voucher[]
+
   @@map("customers")
 }
 
-// Units - مطابق لـ golden-dataset.json
 model Unit {
-  id        String  @id @default(cuid())
-  code      String  @unique
-  name      String?
-  unitType  String  @default("سكني")
-  area      String?
-  floor     String?
-  building  String?
-  totalPrice Float  @default(0)
-  status    String  @default("متاحة")
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-  
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  location    String?
+  price       Decimal  @default(0)
+  notes       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   // Relations
-  contracts         Contract[]
-  installments      Installment[]
-  vouchers          Voucher[]
-  unitPartners      UnitPartner[]
-  unitPartnerGroups UnitPartnerGroup[]
-  
-  // Performance indexes for frequently queried columns
-  @@index([status, deletedAt]) // For filtering available units
-  @@index([unitType, deletedAt]) // For filtering by type
-  @@index([totalPrice]) // For price range queries
-  @@index([createdAt]) // For date-based queries
-  @@index([code]) // For code lookups
+  contracts       Contract[]
+  transactions    Transaction[]
+  partnerGroups   UnitPartnerGroup[]
+
   @@map("units")
 }
 
-// Partners - مطابق لـ golden-dataset.json
-model Partner {
-  id        String  @id @default(cuid())
-  name      String
-  phone     String?
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-  
-  // Relations
-  unitPartners         UnitPartner[]
-  partnerDebts         PartnerDebt[]
-  partnerGroupPartners PartnerGroupPartner[]
-  
-  // Performance indexes
-  @@index([name]) // For name searches
-  @@index([phone]) // For phone lookups
-  @@index([deletedAt]) // For filtering active partners
-  @@map("partners")
-}
-
-// UnitPartners - مطابق لـ golden-dataset.json
-model UnitPartner {
-  id        String  @id @default(cuid())
-  unitId    String
-  partnerId String
-  percentage Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-  
-  // Relations
-  unit    Unit    @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  partner Partner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
-  
-  // Performance indexes
-  @@index([unitId, deletedAt]) // For unit partner lookups
-  @@index([partnerId, deletedAt]) // For partner unit lookups
-  @@unique([unitId, partnerId])
-  @@map("unit_partners")
-}
-
-// Contracts - مطابق لـ golden-dataset.json
 model Contract {
-  id              String   @id @default(cuid())
-  unitId          String
-  customerId      String
-  start           DateTime
-  totalPrice      Float
-  discountAmount  Float    @default(0)
-  brokerName      String?
-  brokerPercent   Float    @default(0)
-  brokerAmount    Float    @default(0)
-  commissionSafeId String?
-  downPaymentSafeId String?
-  maintenanceDeposit Float @default(0)
-  installmentType String   @default("شهري")
-  installmentCount Int     @default(0)
-  extraAnnual     Int      @default(0)
-  annualPaymentValue Float @default(0)
-  downPayment     Float    @default(0)
-  paymentType     String   @default("installment")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  deletedAt       DateTime?
-  
+  id            String    @id @default(cuid())
+  contractNumber String   @unique
+  customerId     String
+  unitId         String
+  contractDate   DateTime
+  amount         Decimal  @default(0)
+  status         String   @default("active")
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
   // Relations
-  unit      Unit  @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  customer  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  
-  // Performance indexes
-  @@index([unitId, deletedAt]) // For unit contract lookups
-  @@index([customerId, deletedAt]) // For customer contract lookups
-  @@index([start]) // For date range queries
-  @@index([totalPrice]) // For price range queries
-  @@index([createdAt]) // For date-based queries
+  customer     Customer     @relation(fields: [customerId], references: [id])
+  unit         Unit         @relation(fields: [unitId], references: [id])
+  installments Installment[]
+  transactions Transaction[]
+  invoices     Invoice[]
+  vouchers     Voucher[]
+
   @@map("contracts")
 }
 
-// Installments - مطابق لـ golden-dataset.json
 model Installment {
-  id        String   @id @default(cuid())
-  unitId    String
-  amount    Float
-  dueDate   DateTime
-  status    String   @default("معلق")
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-  
+  id          String    @id @default(cuid())
+  contractId  String
+  amount      Decimal
+  dueDate     DateTime
+  paidDate    DateTime?
+  status      String    @default("pending")
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
   // Relations
-  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  
-  // Performance indexes
-  @@index([unitId, deletedAt]) // For unit installment lookups
-  @@index([status, deletedAt]) // For status filtering
-  @@index([dueDate]) // For date range queries
-  @@index([amount]) // For amount range queries
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
   @@map("installments")
 }
 
-// PartnerDebts - مطابق لـ golden-dataset.json
-model PartnerDebt {
-  id        String   @id @default(cuid())
-  partnerId String
-  amount    Float
-  dueDate   DateTime
-  status    String   @default("معلق")
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-  
-  // Relations
-  partner Partner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
-  
-  @@map("partner_debts")
-}
-
-// Safes - مطابق لـ golden-dataset.json
-model Safe {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  balance   Float    @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-  
-  // Relations
-  vouchers        Voucher[]
-  transfersFrom   Transfer[] @relation("TransferFrom")
-  transfersTo     Transfer[] @relation("TransferTo")
-  
-  @@map("safes")
-}
-
-// Transfers - مطابق لـ golden-dataset.json
-model Transfer {
-  id          String   @id @default(cuid())
-  fromSafeId  String
-  toSafeId    String
-  amount      Float
+model Transaction {
+  id          String    @id @default(cuid())
+  customerId  String?
+  unitId      String?
+  contractId  String?
+  type        String    // income, expense, transfer
+  amount      Decimal
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
-  
+  date        DateTime  @default(now())
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
   // Relations
-  fromSafe Safe @relation("TransferFrom", fields: [fromSafeId], references: [id], onDelete: Cascade)
-  toSafe   Safe @relation("TransferTo", fields: [toSafeId], references: [id], onDelete: Cascade)
-  
-  @@map("transfers")
+  customer Customer? @relation(fields: [customerId], references: [id])
+  unit     Unit?     @relation(fields: [unitId], references: [id])
+  contract Contract? @relation(fields: [contractId], references: [id])
+
+  @@map("transactions")
 }
 
-// Vouchers - مطابق لـ golden-dataset.json
-model Voucher {
-  id          String   @id @default(cuid())
-  type        String   // receipt or payment
-  date        DateTime
-  amount      Float
-  safeId      String
-  description String
-  payer       String?
-  beneficiary String?
-  linkedRef   String?  // Reference to unit, contract, etc.
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
-  
+model Invoice {
+  id            String    @id @default(cuid())
+  invoiceNumber String    @unique
+  customerId    String
+  contractId    String?
+  amount        Decimal
+  tax           Decimal   @default(0)
+  total         Decimal
+  status        String    @default("pending")
+  dueDate       DateTime?
+  paidDate      DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
   // Relations
-  safe Safe @relation(fields: [safeId], references: [id], onDelete: Cascade)
-  unit Unit? @relation(fields: [linkedRef], references: [id], onDelete: SetNull)
-  
-  @@map("vouchers")
+  customer Customer  @relation(fields: [customerId], references: [id])
+  contract Contract? @relation(fields: [contractId], references: [id])
+
+  @@map("invoices")
 }
 
-// Brokers - مطابق لـ golden-dataset.json
-model Broker {
+model Partner {
   id        String   @id @default(cuid())
-  name      String   @unique
+  name      String
+  email     String?
   phone     String?
+  address   String?
   notes     String?
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-  
+
   // Relations
-  brokerDues BrokerDue[]
-  
-  @@map("brokers")
+  partnerGroups PartnerGroupPartner[]
+  debts         PartnerDebt[]
+
+  @@map("partners")
 }
 
-// BrokerDues - مطابق لـ golden-dataset.json
-model BrokerDue {
-  id        String   @id @default(cuid())
-  brokerId  String
-  amount    Float
-  dueDate   DateTime
-  status    String   @default("معلق")
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-  
-  // Relations
-  broker Broker @relation(fields: [brokerId], references: [id], onDelete: Cascade)
-  
-  @@map("broker_dues")
-}
-
-// PartnerGroups - مطابق لـ golden-dataset.json
 model PartnerGroup {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-  
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   // Relations
-  partners         PartnerGroupPartner[]
-  unitPartnerGroups UnitPartnerGroup[]
-  
+  partners      PartnerGroupPartner[]
+  units         UnitPartnerGroup[]
+
   @@map("partner_groups")
 }
 
-// PartnerGroupPartner - ربط الشركاء بالمجموعات
 model PartnerGroupPartner {
-  id              String   @id @default(cuid())
+  id            String       @id @default(cuid())
   partnerGroupId String
-  partnerId       String
-  percentage      Float
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  deletedAt       DateTime?
-  
-  // Relations
-  partnerGroup PartnerGroup @relation(fields: [partnerGroupId], references: [id], onDelete: Cascade)
-  partner      Partner      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
-  
+  partnerId     String
+  partnerGroup  PartnerGroup @relation(fields: [partnerGroupId], references: [id], onDelete: Cascade)
+  partner       Partner      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
   @@unique([partnerGroupId, partnerId])
   @@map("partner_group_partners")
 }
 
-// UnitPartnerGroup - ربط الوحدات بمجموعات الشركاء
 model UnitPartnerGroup {
-  id              String   @id @default(cuid())
-  unitId          String
-  partnerGroupId  String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  deletedAt       DateTime?
-  
-  // Relations
-  unit         Unit        @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  partnerGroup PartnerGroup @relation(fields: [partnerGroupId], references: [id], onDelete: Cascade)
-  
+  id            String       @id @default(cuid())
+  unitId        String
+  partnerGroupId String
+  unit          Unit         @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  partnerGroup  PartnerGroup @relation(fields: [partnerGroupId], references: [id], onDelete: Cascade)
+
   @@unique([unitId, partnerGroupId])
   @@map("unit_partner_groups")
 }
 
-// AuditLog - مطابق لـ golden-dataset.json
-model AuditLog {
-  id          String   @id @default(cuid())
-  action      String
-  entityType  String
-  entityId    String
-  oldValues   String?  // JSON string
-  newValues   String?  // JSON string
-  userId      String?
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
-  
-  @@map("audit_logs")
+model PartnerDebt {
+  id          String    @id @default(cuid())
+  partnerId   String
+  amount      Decimal
+  description String?
+  dueDate     DateTime?
+  paidDate    DateTime?
+  status      String    @default("pending")
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  partner Partner @relation(fields: [partnerId], references: [id])
+
+  @@map("partner_debts")
 }
 
-// Settings - مطابق لـ golden-dataset.json
-model Settings {
-  id    String @id @default(cuid())
-  key   String @unique
-  value String
-  
-  @@map("settings")
-}
-
-// KeyVal - مطابق لـ golden-dataset.json
-model KeyVal {
-  id    String @id @default(cuid())
-  key   String @unique
-  value String
-  
-  @@map("keyval")
-}
-
-// Users - للمصادقة
-model User {
+model Broker {
   id        String   @id @default(cuid())
-  username  String   @unique
-  password  String
-  email     String?  @unique
-  name      String?
-  role      String   @default("admin")
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  notes     String?
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  @@map("users")
+
+  // Relations
+  dues BrokerDue[]
+
+  @@map("brokers")
 }
 
-// Notifications - للنوتيفيكيشن
+model BrokerDue {
+  id          String    @id @default(cuid())
+  brokerId    String
+  amount      Decimal
+  description String?
+  dueDate     DateTime?
+  paidDate    DateTime?
+  status      String    @default("pending")
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  broker Broker @relation(fields: [brokerId], references: [id])
+
+  @@map("broker_dues")
+}
+
+model Safe {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  location    String?
+  balance     Decimal  @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  transfers Transfer[]
+
+  @@map("safes")
+}
+
+model Transfer {
+  id          String    @id @default(cuid())
+  fromSafeId  String
+  toSafeId    String
+  amount      Decimal
+  description String?
+  date        DateTime  @default(now())
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  fromSafe Safe @relation("TransferFrom", fields: [fromSafeId], references: [id])
+  toSafe   Safe @relation("TransferTo", fields: [toSafeId], references: [id])
+
+  @@map("transfers")
+}
+
+model Voucher {
+  id            String    @id @default(cuid())
+  voucherNumber String    @unique
+  type          String    // receipt, payment
+  customerId    String?
+  contractId    String?
+  amount        Decimal
+  description   String?
+  date          DateTime  @default(now())
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  customer Customer? @relation(fields: [customerId], references: [id])
+  contract Contract? @relation(fields: [contractId], references: [id])
+
+  @@map("vouchers")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  resource  String?
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
 model Notification {
-  id              String    @id @default(cuid())
-  type            String    // critical, important, info
-  title           String
-  message         String
-  category        String
-  acknowledged    Boolean   @default(false)
-  acknowledgedAt  DateTime?
-  acknowledgedBy  String?
-  createdAt       DateTime  @default(now())
-  expiresAt       DateTime?
-  data            String?   // JSON string
-  
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("info")
+  isRead    Boolean  @default(false)
+  data      Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
   @@map("notifications")
+}
+
+model Settings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model KeyVal {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("key_vals")
+}
+
+model ReportTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String
+  fields      Json
+  filters     Json
+  sorts       Json
+  groups      Json
+  format      String   @default("table")
+  chartType   String?
+  isPublic    Boolean  @default(false)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("report_templates")
 }
