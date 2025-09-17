@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+// import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -14,7 +14,7 @@ import {
   Calendar,
   BarChart3,
   Settings,
-  Menu,
+  // Menu,
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'

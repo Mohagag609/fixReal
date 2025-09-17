@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Users, Building, DollarSign, Phone, MapPin, Search, Filter, Download, Upload, RefreshCw } from 'lucide-react'
+// import { motion } from 'framer-motion'
+import { Plus, Edit, Trash2, Users, Building, DollarSign, Phone, MapPin, Download, RefreshCw } from 'lucide-react'
 import { DataTable } from '@/components/tables/DataTable'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -54,22 +54,22 @@ function PartnersPageContent() {
   const [deletingPartner, setDeletingPartner] = useState<Partner | null>(null)
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null)
   const [showDetailPanel, setShowDetailPanel] = useState(false)
-  const [groupedData, setGroupedData] = useState<Record<string, Partner[]>>({})
-  const [searchFilters, setSearchFilters] = useState<Record<string, unknown>[]>([])
-  const [dateRange, setDateRange] = useState<{ from: string; to: string } | undefined>()
+  // const [groupedData, setGroupedData] = useState<Record<string, Partner[]>>({})
+  // const [searchFilters, setSearchFilters] = useState<Record<string, unknown>[]>([])
+  // const [dateRange, setDateRange] = useState<{ from: string; to: string } | undefined>()
 
-  const { notifications, addNotification, removeNotification } = useNotifications()
+  const { addNotification } = useNotifications()
 
   // Use paginated API hook
   const {
     data: partners,
     loading,
-    error,
+    // error,
     pagination,
     refresh,
-    setSearch,
+    // setSearch,
     setFilters,
-    setPage,
+    // setPage,
     clearFilters,
     hasNextPage,
     hasPrevPage,
@@ -155,8 +155,8 @@ function PartnersPageContent() {
       } else {
         throw new Error('فشل في حفظ البيانات')
       }
-    } catch (error) {
-      console.error('Error saving partner:', error)
+    } catch (_error) {
+      console.error('Error saving partner:', _error)
       addNotification({
         type: 'error',
         title: 'خطأ',
@@ -183,8 +183,8 @@ function PartnersPageContent() {
       } else {
         throw new Error('فشل في حذف الشريك')
       }
-    } catch (error) {
-      console.error('Error deleting partner:', error)
+    } catch (_error) {
+      console.error('Error deleting partner:', _error)
       addNotification({
         type: 'error',
         title: 'خطأ',
@@ -224,7 +224,7 @@ function PartnersPageContent() {
         title: 'تم التصدير',
         message: 'تم تصدير البيانات بنجاح'
       })
-    } catch (error) {
+    } catch (_error) {
       addNotification({
         type: 'error',
         title: 'خطأ في التصدير',

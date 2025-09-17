@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Filter, X, Calendar, DollarSign, User, Building } from 'lucide-react'
+import { Search, Filter, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 
@@ -78,7 +78,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 
   const handleSearch = () => {
     const activeFilters = filters.filter(f => f.value !== '')
-    const activeDateRanges = Object.entries(dateRanges).filter(([_, range]) => 
+    const activeDateRanges = Object.entries(dateRanges).filter(([, range]) => 
       range.from || range.to
     )
     

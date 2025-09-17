@@ -18,7 +18,7 @@ import {
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils'
 
 interface ReportData {
   overview: {
@@ -343,7 +343,7 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {charts.unitTypesDistribution.map((item, index) => (
+                {charts.unitTypesDistribution.map((item) => (
                   <div key={item.unitType} className="flex items-center justify-between">
                     <span className="text-gray-600">{item.unitType}</span>
                     <div className="flex items-center space-x-2 space-x-reverse">
@@ -378,7 +378,7 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {charts.paymentStatusDistribution.map((item, index) => (
+                {charts.paymentStatusDistribution.map((item) => (
                   <div key={item.status} className="flex items-center justify-between">
                     <span className="text-gray-600">{item.status}</span>
                     <div className="flex items-center space-x-2 space-x-reverse">

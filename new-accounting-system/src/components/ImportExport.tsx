@@ -2,12 +2,12 @@
 
 import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Download, Upload, FileText, AlertCircle, CheckCircle, X } from 'lucide-react'
+import { Download, Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { exportData, prepareTableDataForExport, importFromCSV, validateImportData } from '@/lib/exportUtils'
-import { ExportData, ExportOptions } from '@/lib/exportUtils'
+import { ExportOptions } from '@/lib/exportUtils'
 
 interface ImportExportProps<T> {
   data: T[]

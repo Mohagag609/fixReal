@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Settings, 
@@ -10,7 +10,7 @@ import {
   Shield, 
   Palette, 
   Globe,
-  RefreshCw,
+  // RefreshCw,
   Download,
   Upload
 } from 'lucide-react'

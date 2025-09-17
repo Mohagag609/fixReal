@@ -20,9 +20,9 @@ export interface BackupOptions {
 
 export const createBackup = async (options: BackupOptions = {}): Promise<BackupData> => {
   const {
-    includeData = true,
-    includeSchema = true,
-    compress = false,
+    // includeData = true,
+    // includeSchema = true,
+    // compress = false,
     tables = [],
   } = options
 

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-// import { motion } from 'framer-motion'
 import { Plus, Edit, Trash2, Users, DollarSign, Phone, Calendar, AlertCircle } from 'lucide-react'
 import { DataTable } from '@/components/tables/DataTable'
 import { Button } from '@/components/ui/Button'

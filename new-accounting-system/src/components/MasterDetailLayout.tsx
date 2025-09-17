@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react'
+import { X, ChevronLeft, Maximize2, Minimize2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
 export interface MasterDetailLayoutProps {
@@ -22,8 +22,8 @@ export const MasterDetailLayout: React.FC<MasterDetailLayoutProps> = ({
   detail,
   isDetailOpen,
   onDetailClose,
-  onDetailOpen,
-  selectedItem,
+  // onDetailOpen,
+  // selectedItem,
   className = '',
   masterWidth = '50%',
   detailWidth = '50%',

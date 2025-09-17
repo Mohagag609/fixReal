@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Eye, FileText, User, Building, DollarSign } from 'lucide-react'
+// import { motion } from 'framer-motion'
+import { Plus, Edit, Trash2, FileText, User, Building, DollarSign } from 'lucide-react'
 import { DataTable } from '@/components/tables/DataTable'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'

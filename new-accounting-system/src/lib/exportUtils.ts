@@ -229,7 +229,7 @@ export const importFromCSV = (file: File): Promise<Array<Record<string, string>>
   })
 }
 
-export const validateImportData = <T>(
+export const validateImportData = (
   data: Array<Record<string, string>>,
   requiredFields: string[],
   validator?: (row: Record<string, string>) => string | null

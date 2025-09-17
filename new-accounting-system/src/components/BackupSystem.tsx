@@ -10,9 +10,9 @@ import {
   CheckCircle, 
   Clock, 
   HardDrive,
-  RefreshCw,
-  Trash2,
-  Eye
+  // RefreshCw,
+  // Trash2,
+  // Eye
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -39,7 +39,7 @@ export const BackupSystem: React.FC<BackupSystemProps> = ({ className = '' }) =>
   const [success, setSuccess] = useState<string | null>(null)
   const [backupData, setBackupData] = useState<BackupData | null>(null)
   const [backupInfo, setBackupInfo] = useState<Record<string, unknown> | null>(null)
-  const [showPreview, setShowPreview] = useState(false)
+  // const [showPreview, setShowPreview] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleCreateBackup = async () => {

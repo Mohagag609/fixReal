@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { motion } from 'framer-motion'
+// import { motion } from 'framer-motion'
 import { Plus, Edit, Trash2, Calendar, DollarSign, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import { DataTable } from '@/components/tables/DataTable'
 import { Button } from '@/components/ui/Button'
@@ -233,7 +233,7 @@ export default function InstallmentsPage() {
     )
   }
 
-  const totalAmount = installments.reduce((sum, i) => sum + i.amount, 0)
+  // const totalAmount = installments.reduce((sum, i) => sum + i.amount, 0)
   const paidAmount = installments.filter(i => i.status === 'مدفوع').reduce((sum, i) => sum + i.amount, 0)
   const pendingAmount = installments.filter(i => i.status === 'معلق').reduce((sum, i) => sum + i.amount, 0)
   const overdueAmount = installments.filter(i => i.status === 'متأخر').reduce((sum, i) => sum + i.amount, 0)
