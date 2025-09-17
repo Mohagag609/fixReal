@@ -87,9 +87,14 @@ export async function PUT(
       )
     }
 
+    // Filter out undefined values to satisfy Prisma's exactOptionalPropertyTypes
+    const updateData = Object.fromEntries(
+      Object.entries(validatedData).filter(([_, value]) => value !== undefined)
+    )
+
     const partner = await prisma.partner.update({
       where: { id: id },
-      data: validatedData,
+      data: updateData,
     })
 
     return NextResponse.json(partner)

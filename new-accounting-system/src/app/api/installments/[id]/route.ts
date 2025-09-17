@@ -84,9 +84,14 @@ export async function PUT(
       )
     }
 
+    // Filter out undefined values to satisfy Prisma's exactOptionalPropertyTypes
+    const updateData = Object.fromEntries(
+      Object.entries(validatedData).filter(([_, value]) => value !== undefined)
+    )
+
     const installment = await prisma.installment.update({
       where: { id: id },
-      data: validatedData,
+      data: updateData,
       include: {
         unit: {
           select: { code: true, name: true, totalPrice: true },
