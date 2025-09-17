@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+// import { motion } from 'framer-motion' // Temporarily disabled for Netlify
 import { BarChart3, Download, Filter, CalendarIcon, DollarIcon, TrendingUp, TrendingDown, UsersIcon, BuildingIcon, FileTextIcon, Wallet } from '../../components/icons'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
@@ -155,10 +155,8 @@ export default function ReportsPage() {
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+        <div
+          className="animate-fade-in-up"
         >
           <Card>
             <CardContent className="p-6">
@@ -173,12 +171,10 @@ export default function ReportsPage() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+        <div
+          className="animate-fade-in-up"
         >
           <Card>
             <CardContent className="p-6">
@@ -193,12 +189,10 @@ export default function ReportsPage() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+        <div
+          className="animate-fade-in-up"
         >
           <Card>
             <CardContent className="p-6">
@@ -213,12 +207,10 @@ export default function ReportsPage() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+        <div
+          className="animate-fade-in-up"
         >
           <Card>
             <CardContent className="p-6">
@@ -233,15 +225,13 @@ export default function ReportsPage() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
 
       {/* Financial Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
+        <div
+          className="animate-fade-in-left"
         >
           <Card>
             <CardHeader>
@@ -279,12 +269,10 @@ export default function ReportsPage() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6 }}
+        <div
+          className="animate-fade-in-right"
         >
           <Card>
             <CardHeader>
@@ -312,15 +300,13 @@ export default function ReportsPage() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
+        <div
+          className="animate-fade-in-up"
         >
           <Card>
             <CardHeader>
@@ -350,12 +336,10 @@ export default function ReportsPage() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
+        <div
+          className="animate-fade-in-up"
         >
           <Card>
             <CardHeader>
@@ -388,14 +372,12 @@ export default function ReportsPage() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
 
       {/* Monthly Sales Chart */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9 }}
+      <div
+        className="animate-fade-in-up"
       >
         <Card>
           <CardHeader>
@@ -427,7 +409,7 @@ export default function ReportsPage() {
             </div>
           </CardContent>
         </Card>
-      </motion.div>
+      </div>
     </div>
   )
 }
