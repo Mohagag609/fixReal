@@ -47,6 +47,9 @@
   "peerDependencies": {
     "lucide-react": "^0.544.0"
   },
+  "optionalDependencies": {
+    "lucide-react": "^0.544.0"
+  },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
