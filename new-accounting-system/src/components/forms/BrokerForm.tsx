@@ -33,7 +33,7 @@ interface Broker {
 
 interface BrokerFormProps {
   broker?: Broker | null
-  onSave: (data: BrokerFormData) => void
+  onSave: (data: BrokerFormData) => Promise<void>
   onCancel: () => void
 }
 

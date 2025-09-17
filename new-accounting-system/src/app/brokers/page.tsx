@@ -50,7 +50,7 @@ export default function BrokersPage() {
   }, [])
 
   // Handle create/update broker
-  const handleSaveBroker = async (brokerData: Partial<Broker>) => {
+  const handleSaveBroker = async (brokerData: { name: string; phone?: string; notes?: string }) => {
     try {
       const url = editingBroker ? `/api/brokers/${editingBroker.id}` : '/api/brokers'
       const method = editingBroker ? 'PUT' : 'POST'
