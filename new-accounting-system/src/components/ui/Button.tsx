@@ -3,7 +3,7 @@
 import { forwardRef } from 'react'
 import { cn } from '@/lib/utils'
 
-interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'onDrag'> {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'outline'
   size?: 'sm' | 'md' | 'lg'
   loading?: boolean
@@ -47,10 +47,21 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           className
         )}
         disabled={disabled || loading}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
         {...props}
       >
         {loading ? (
           <div
             className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"
+          />
+        ) : icon ? (
+          <span className="mr-2">{icon}</span>
+        ) : null}
+        {children}
+      </button>
+    )
+  }
+)
+
+Button.displayName = 'Button'
+
+export { Button }

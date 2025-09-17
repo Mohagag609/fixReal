@@ -185,7 +185,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                       <Input
                         type={searchFields.find(f => f.key === filter.field)?.type || 'text'}
                         value={filter.value}
-                        onChange={(e) => updateFilter(index, { value: e.target.value })}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFilter(index, { value: e.target.value })}
                         placeholder="من"
                         className="w-24"
                       />
@@ -193,7 +193,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                       <Input
                         type={searchFields.find(f => f.key === filter.field)?.type || 'text'}
                         value={filter.value2 || ''}
-                        onChange={(e) => updateFilter(index, { value2: e.target.value })}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFilter(index, { value2: e.target.value })}
                         placeholder="إلى"
                         className="w-24"
                       />

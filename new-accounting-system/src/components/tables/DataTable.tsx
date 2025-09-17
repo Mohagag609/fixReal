@@ -107,3 +107,66 @@ export function DataTable<TData, TValue>({
                 <tr
                   key={row.id}
                   className="hover:bg-gray-50 transition-colors"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="px-6 py-4 text-center text-sm text-gray-500"
+                >
+                  لا توجد بيانات
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-700">
+          عرض {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} إلى{' '}
+          {Math.min(
+            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+            table.getFilteredRowModel().rows.length
+          )}{' '}
+          من {table.getFilteredRowModel().rows.length} نتيجة
+        </div>
+        
+        <div className="flex items-center space-x-2 space-x-reverse">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+          
+          <span className="text-sm text-gray-700">
+            صفحة {table.getState().pagination.pageIndex + 1} من {table.getPageCount()}
+          </span>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}

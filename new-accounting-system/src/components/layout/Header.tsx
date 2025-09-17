@@ -48,5 +48,22 @@ export function Header({ onMenuToggle }: HeaderProps) {
             className="relative p-2"
           >
             <Bell className="w-5 h-5" />
-            <div span
+            <span
               className="absolute -top-1 -left-1 w-3 h-3 bg-red-500 rounded-full"
+            />
+          </Button>
+
+          {/* User menu */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center space-x-2 space-x-reverse"
+          >
+            <UserIcon className="w-5 h-5" />
+            <span className="hidden md:block">المستخدم</span>
+          </Button>
+        </div>
+      </div>
+    </header>
+  )
+}

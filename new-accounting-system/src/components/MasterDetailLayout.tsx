@@ -91,48 +91,61 @@ export const MasterDetailLayout: React.FC<MasterDetailLayoutProps> = ({
   return (
     <div className={`flex h-full ${className}`}>
       {/* Master Panel */}
-      <div>
-            <div className="flex flex-col h-full">
-              {/* Detail Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center space-x-2 space-x-reverse">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onDetailClose}
-                    className="flex items-center"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    التفاصيل
-                  </h2>
-                </div>
-                
-                <div className="flex items-center space-x-2 space-x-reverse">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleFullscreen}
-                    className="flex items-center"
-                  >
-                    {isFullscreen ? (
-                      <Minimize2 className="w-4 h-4" />
-                    ) : (
-                      <Maximize2 className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
+      <div
+        className={`${isDetailOpen ? 'hidden' : 'block'}`}
+        style={{ width: isDetailOpen ? '0%' : masterWidth }}
+      >
+        {master}
+      </div>
 
-              {/* Detail Content */}
-              <div className="flex-1 overflow-auto">
-                {detail}
+      {/* Detail Panel */}
+      {isDetailOpen && (
+        <div
+          className={`${isFullscreen ? 'fixed inset-0 z-50' : 'block'}`}
+          style={{ 
+            width: isFullscreen ? '100%' : detailWidth 
+          }}
+        >
+          <div className="flex flex-col h-full">
+            {/* Detail Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center space-x-2 space-x-reverse">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onDetailClose}
+                  className="flex items-center"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  التفاصيل
+                </h2>
+              </div>
+              
+              <div className="flex items-center space-x-2 space-x-reverse">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleFullscreen}
+                  className="flex items-center"
+                >
+                  {isFullscreen ? (
+                    <Minimize2 className="w-4 h-4" />
+                  ) : (
+                    <Maximize2 className="w-4 h-4" />
+                  )}
+                </Button>
               </div>
             </div>
+
+            {/* Detail Content */}
+            <div className="flex-1 overflow-auto">
+              {detail}
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

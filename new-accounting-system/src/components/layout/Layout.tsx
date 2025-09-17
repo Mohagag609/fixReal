@@ -26,4 +26,10 @@ export function Layout({ children }: LayoutProps) {
         <Header onMenuToggle={toggleSidebar} />
         
         {/* Page content */}
-        <main
+        <main className="p-6">
+          {children}
+        </main>
+      </div>
+    </div>
+  )
+}
