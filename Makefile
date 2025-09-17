@@ -1,75 +1,104 @@
-# Makefile لإدارة مشروع إدارة العقارات مع Docker
+# Estate Management System Makefile
 
-.PHONY: help build up down dev logs clean restart status
+.PHONY: help install dev build start test clean docker-up docker-down docker-build
 
-# المساعدة
+# Default target
 help:
-	@echo "أوامر Docker المتاحة:"
-	@echo "  make build     - بناء الصور"
-	@echo "  make up        - تشغيل المشروع (الإنتاج)"
-	@echo "  make dev       - تشغيل المشروع (التطوير)"
-	@echo "  make down      - إيقاف المشروع"
-	@echo "  make logs      - عرض السجلات"
-	@echo "  make clean     - تنظيف الصور والحاويات"
-	@echo "  make restart   - إعادة تشغيل المشروع"
-	@echo "  make status    - عرض حالة الخدمات"
+	@echo "Estate Management System - Available Commands:"
+	@echo ""
+	@echo "Development:"
+	@echo "  install     - Install all dependencies"
+	@echo "  dev         - Start development servers"
+	@echo "  build       - Build all projects"
+	@echo "  start       - Start production servers"
+	@echo "  test        - Run all tests"
+	@echo "  clean       - Clean all build artifacts"
+	@echo ""
+	@echo "Docker:"
+	@echo "  docker-up   - Start all services with Docker"
+	@echo "  docker-down - Stop all Docker services"
+	@echo "  docker-build- Build all Docker images"
+	@echo ""
+	@echo "Database:"
+	@echo "  db-setup    - Setup database and run migrations"
+	@echo "  db-seed     - Seed database with sample data"
+	@echo "  db-reset    - Reset database"
 
-# بناء الصور
+# Install dependencies
+install:
+	@echo "Installing backend dependencies..."
+	cd backend && npm install
+	@echo "Installing frontend dependencies..."
+	cd frontend && npm install
+
+# Development
+dev:
+	@echo "Starting development servers..."
+	@echo "Backend: http://localhost:3001"
+	@echo "Frontend: http://localhost:4200"
+	@echo "Database: localhost:5432"
+	@echo ""
+	@echo "Press Ctrl+C to stop all services"
+	@trap 'kill 0' INT; \
+	cd backend && npm run dev & \
+	cd frontend && npm start & \
+	wait
+
+# Build all projects
 build:
+	@echo "Building backend..."
+	cd backend && npm run build
+	@echo "Building frontend..."
+	cd frontend && npm run build
+
+# Start production
+start:
+	@echo "Starting production servers..."
+	cd backend && npm start &
+	cd frontend && npm start
+
+# Run tests
+test:
+	@echo "Running backend tests..."
+	cd backend && npm test
+	@echo "Running frontend tests..."
+	cd frontend && npm test
+
+# Clean build artifacts
+clean:
+	@echo "Cleaning build artifacts..."
+	cd backend && rm -rf dist node_modules
+	cd frontend && rm -rf dist node_modules
+	docker system prune -f
+
+# Docker commands
+docker-up:
+	@echo "Starting all services with Docker..."
+	docker-compose up --build
+
+docker-down:
+	@echo "Stopping all Docker services..."
+	docker-compose down
+
+docker-build:
+	@echo "Building all Docker images..."
 	docker-compose build
 
-# تشغيل المشروع في وضع الإنتاج
-up:
-	docker-compose up -d
-	@echo "تم تشغيل المشروع على http://localhost:3000"
-
-# تشغيل المشروع في وضع التطوير
-dev:
-	docker-compose -f docker-compose.dev.yml up -d
-	@echo "تم تشغيل المشروع في وضع التطوير على http://localhost:3000"
-
-# إيقاف المشروع
-down:
-	docker-compose down
-	docker-compose -f docker-compose.dev.yml down
-
-# عرض السجلات
-logs:
-	docker-compose logs -f
-
-# عرض سجلات التطوير
-logs-dev:
-	docker-compose -f docker-compose.dev.yml logs -f
-
-# تنظيف الصور والحاويات
-clean:
-	docker-compose down -v
-	docker-compose -f docker-compose.dev.yml down -v
-	docker system prune -f
-	docker volume prune -f
-
-# إعادة تشغيل المشروع
-restart: down up
-
-# عرض حالة الخدمات
-status:
-	docker-compose ps
-	docker-compose -f docker-compose.dev.yml ps
-
-# إعداد قاعدة البيانات
+# Database commands
 db-setup:
-	docker-compose exec app npx prisma migrate deploy
-	docker-compose exec app npx prisma db seed
+	@echo "Setting up database..."
+	cd backend && npx prisma generate
+	cd backend && npx prisma db push
 
-# إعداد قاعدة البيانات للتطوير
-db-setup-dev:
-	docker-compose -f docker-compose.dev.yml exec app npx prisma migrate deploy
-	docker-compose -f docker-compose.dev.yml exec app npx prisma db seed
+db-seed:
+	@echo "Seeding database..."
+	cd backend && npm run db:seed
 
-# إنشاء مستخدم إداري
-create-admin:
-	docker-compose exec app node scripts/create-admin.js
+db-reset:
+	@echo "Resetting database..."
+	cd backend && npx prisma migrate reset --force
 
-# إنشاء مستخدم إداري للتطوير
-create-admin-dev:
-	docker-compose -f docker-compose.dev.yml exec app node scripts/create-admin.js
+# Quick start
+quick-start: install db-setup db-seed
+	@echo "Quick start completed!"
+	@echo "Run 'make dev' to start development servers"
