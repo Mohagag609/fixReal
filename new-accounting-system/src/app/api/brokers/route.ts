@@ -81,8 +81,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Filter out undefined values to satisfy Prisma's exactOptionalPropertyTypes
+    const createData = {
+      name: validatedData.name,
+      ...(validatedData.phone !== undefined && { phone: validatedData.phone }),
+      ...(validatedData.notes !== undefined && { notes: validatedData.notes }),
+    }
+
     const broker = await prisma.broker.create({
-      data: validatedData,
+      data: createData,
     })
 
     return NextResponse.json(broker, { status: 201 })

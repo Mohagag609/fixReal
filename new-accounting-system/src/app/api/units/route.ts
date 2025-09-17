@@ -104,8 +104,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Filter out undefined values to satisfy Prisma's exactOptionalPropertyTypes
+    const createData = {
+      code: validatedData.code,
+      unitType: validatedData.unitType,
+      totalPrice: validatedData.totalPrice,
+      status: validatedData.status,
+      ...(validatedData.name !== undefined && { name: validatedData.name }),
+      ...(validatedData.area !== undefined && { area: validatedData.area }),
+      ...(validatedData.floor !== undefined && { floor: validatedData.floor }),
+      ...(validatedData.building !== undefined && { building: validatedData.building }),
+      ...(validatedData.notes !== undefined && { notes: validatedData.notes }),
+    }
+
     const unit = await prisma.unit.create({
-      data: validatedData,
+      data: createData,
     })
 
     return NextResponse.json(unit, { status: 201 })

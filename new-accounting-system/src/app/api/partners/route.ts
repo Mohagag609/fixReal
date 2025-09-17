@@ -86,8 +86,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = partnerSchema.parse(body)
 
+    // Filter out undefined values to satisfy Prisma's exactOptionalPropertyTypes
+    const createData = {
+      name: validatedData.name,
+      ...(validatedData.phone !== undefined && { phone: validatedData.phone }),
+      ...(validatedData.notes !== undefined && { notes: validatedData.notes }),
+    }
+
     const partner = await prisma.partner.create({
-      data: validatedData,
+      data: createData,
     })
 
     return NextResponse.json(partner, { status: 201 })

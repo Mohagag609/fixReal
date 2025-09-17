@@ -89,8 +89,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Filter out undefined values to satisfy Prisma's exactOptionalPropertyTypes
+    const createData = {
+      unitId: validatedData.unitId,
+      amount: validatedData.amount,
+      dueDate: validatedData.dueDate,
+      status: validatedData.status,
+      ...(validatedData.notes !== undefined && { notes: validatedData.notes }),
+    }
+
     const installment = await prisma.installment.create({
-      data: validatedData,
+      data: createData,
       include: {
         unit: {
           select: { code: true, name: true, totalPrice: true },

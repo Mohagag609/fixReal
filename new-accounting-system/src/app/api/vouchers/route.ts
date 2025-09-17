@@ -112,9 +112,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Filter out undefined values to satisfy Prisma's exactOptionalPropertyTypes
+    const createData = {
+      type: validatedData.type,
+      date: validatedData.date,
+      amount: validatedData.amount,
+      safeId: validatedData.safeId,
+      description: validatedData.description,
+      ...(validatedData.payer !== undefined && { payer: validatedData.payer }),
+      ...(validatedData.beneficiary !== undefined && { beneficiary: validatedData.beneficiary }),
+      ...(validatedData.linkedRef !== undefined && { linkedRef: validatedData.linkedRef }),
+    }
+
     // Create voucher
     const voucher = await prisma.voucher.create({
-      data: validatedData,
+      data: createData,
       include: {
         safe: {
           select: { name: true },

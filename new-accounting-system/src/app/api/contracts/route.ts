@@ -127,9 +127,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Filter out undefined values to satisfy Prisma's exactOptionalPropertyTypes
+    const createData = {
+      unitId: validatedData.unitId,
+      customerId: validatedData.customerId,
+      start: validatedData.start,
+      totalPrice: validatedData.totalPrice,
+      discountAmount: validatedData.discountAmount,
+      brokerPercent: validatedData.brokerPercent,
+      brokerAmount: validatedData.brokerAmount,
+      maintenanceDeposit: validatedData.maintenanceDeposit,
+      installmentType: validatedData.installmentType,
+      installmentCount: validatedData.installmentCount,
+      extraAnnual: validatedData.extraAnnual,
+      annualPaymentValue: validatedData.annualPaymentValue,
+      downPayment: validatedData.downPayment,
+      paymentType: validatedData.paymentType,
+      ...(validatedData.brokerName !== undefined && { brokerName: validatedData.brokerName }),
+      ...(validatedData.commissionSafeId !== undefined && { commissionSafeId: validatedData.commissionSafeId }),
+      ...(validatedData.downPaymentSafeId !== undefined && { downPaymentSafeId: validatedData.downPaymentSafeId }),
+    }
+
     // Create contract
     const contract = await prisma.contract.create({
-      data: validatedData,
+      data: createData,
       include: {
         unit: {
           select: { code: true, name: true, totalPrice: true },

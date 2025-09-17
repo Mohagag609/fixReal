@@ -101,8 +101,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Filter out undefined values to satisfy Prisma's exactOptionalPropertyTypes
+    const createData = {
+      name: validatedData.name,
+      status: validatedData.status,
+      ...(validatedData.phone !== undefined && { phone: validatedData.phone }),
+      ...(validatedData.nationalId !== undefined && { nationalId: validatedData.nationalId }),
+      ...(validatedData.address !== undefined && { address: validatedData.address }),
+      ...(validatedData.notes !== undefined && { notes: validatedData.notes }),
+    }
+
     const customer = await prisma.customer.create({
-      data: validatedData,
+      data: createData,
     })
 
     return NextResponse.json(customer, { status: 201 })
