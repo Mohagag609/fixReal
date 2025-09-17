@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
+export const dynamic = 'force-static'
+
 const voucherSchema = z.object({
   type: z.enum(['receipt', 'payment'], { message: 'نوع الشيك مطلوب' }),
   date: z.string().transform((str) => new Date(str)),

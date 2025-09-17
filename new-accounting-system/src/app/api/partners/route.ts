@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
+export const dynamic = 'force-static'
+
 const partnerSchema = z.object({
   name: z.string().min(1, 'اسم الشريك مطلوب'),
   phone: z.string().optional(),

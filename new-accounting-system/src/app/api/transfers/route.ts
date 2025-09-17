@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
+export const dynamic = 'force-static'
+
 const transferSchema = z.object({
   fromSafeId: z.string().min(1, 'الخزينة المصدر مطلوبة'),
   toSafeId: z.string().min(1, 'الخزينة الوجهة مطلوبة'),

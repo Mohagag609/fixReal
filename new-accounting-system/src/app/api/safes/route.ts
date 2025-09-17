@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
+export const dynamic = 'force-static'
+
 const safeSchema = z.object({
   name: z.string().min(1, 'اسم الخزينة مطلوب'),
   balance: z.number().min(0, 'الرصيد يجب أن يكون أكبر من أو يساوي صفر'),

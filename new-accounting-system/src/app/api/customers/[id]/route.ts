@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
+export const dynamic = 'force-static'
+
+export async function generateStaticParams() {
+  // Return empty array for static generation
+  return [];
+}
+
 const customerSchema = z.object({
   name: z.string().min(1, 'الاسم مطلوب'),
   phone: z.string().optional(),
