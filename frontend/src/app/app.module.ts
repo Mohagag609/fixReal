@@ -16,6 +16,14 @@ import { UnitsComponent } from './components/units/units.component';
 import { ContractsComponent } from './components/contracts/contracts.component';
 import { TransactionsComponent } from './components/transactions/transactions.component';
 import { ReportsComponent } from './components/reports/reports.component';
+import { InstallmentsComponent } from './components/installments/installments.component';
+import { SafesComponent } from './components/safes/safes.component';
+import { PartnersComponent } from './components/partners/partners.component';
+import { BrokersComponent } from './components/brokers/brokers.component';
+import { SettingsComponent } from './components/settings/settings.component';
+import { NotificationsComponent } from './components/notifications/notifications.component';
+import { ExportImportComponent } from './components/export-import/export-import.component';
+import { AdvancedSearchComponent } from './components/advanced-search/advanced-search.component';
 import { LoadingSpinnerComponent } from './components/shared/loading-spinner/loading-spinner.component';
 import { NotificationComponent } from './components/shared/notification/notification.component';
 
@@ -38,6 +46,14 @@ import { ErrorInterceptor } from './interceptors/error.interceptor';
     ContractsComponent,
     TransactionsComponent,
     ReportsComponent,
+    InstallmentsComponent,
+    SafesComponent,
+    PartnersComponent,
+    BrokersComponent,
+    SettingsComponent,
+    NotificationsComponent,
+    ExportImportComponent,
+    AdvancedSearchComponent,
     LoadingSpinnerComponent,
     NotificationComponent
   ],

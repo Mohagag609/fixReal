@@ -1,0 +1,280 @@
+<div class="min-h-screen bg-gray-50 p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">تصدير واستيراد البيانات</h1>
+          <p class="text-gray-600 mt-1">إدارة تصدير واستيراد البيانات من وإلى النظام</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Export Section -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="flex items-center mb-6">
+          <span class="text-3xl mr-3">📤</span>
+          <div>
+            <h2 class="text-xl font-semibold text-gray-900">تصدير البيانات</h2>
+            <p class="text-gray-600">تصدير البيانات بصيغ مختلفة</p>
+          </div>
+        </div>
+
+        <form [formGroup]="exportForm" (ngSubmit)="exportData()">
+          <!-- Entities Selection -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-3">الكيانات المراد تصديرها</label>
+            <div class="grid grid-cols-2 gap-3">
+              <label *ngFor="let entity of availableEntities" 
+                     class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                     [class.bg-indigo-50]="exportForm.get('entities')?.value?.includes(entity.value)"
+                     [class.border-indigo-500]="exportForm.get('entities')?.value?.includes(entity.value)">
+                <input
+                  type="checkbox"
+                  [value]="entity.value"
+                  (change)="onEntitySelectionChange($event)"
+                  class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-3"
+                >
+                <span class="text-2xl mr-2">{{ entity.icon }}</span>
+                <span class="text-sm font-medium">{{ entity.label }}</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Format Selection -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-3">صيغة التصدير</label>
+            <div class="grid grid-cols-3 gap-3">
+              <label *ngFor="let format of exportFormats" 
+                     class="flex items-center justify-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                     [class.bg-indigo-50]="exportForm.get('format')?.value === format.value"
+                     [class.border-indigo-500]="exportForm.get('format')?.value === format.value">
+                <input
+                  type="radio"
+                  [value]="format.value"
+                  formControlName="format"
+                  class="text-indigo-600 focus:ring-indigo-500 mr-2"
+                >
+                <span class="text-2xl mr-2">{{ format.icon }}</span>
+                <span class="text-sm font-medium">{{ format.label }}</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Date Range -->
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">من تاريخ</label>
+              <input
+                type="date"
+                formControlName="dateFrom"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              >
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">إلى تاريخ</label>
+              <input
+                type="date"
+                formControlName="dateTo"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              >
+            </div>
+          </div>
+
+          <!-- Options -->
+          <div class="space-y-3 mb-6">
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                formControlName="includeDeleted"
+                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-3"
+              >
+              <span class="text-sm text-gray-700">تضمين البيانات المحذوفة</span>
+            </label>
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                formControlName="includeRelations"
+                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-3"
+              >
+              <span class="text-sm text-gray-700">تضمين العلاقات والمراجع</span>
+            </label>
+          </div>
+
+          <!-- Export Button -->
+          <button
+            type="submit"
+            [disabled]="isExporting || !exportForm.valid"
+            class="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <span *ngIf="isExporting">جاري التصدير...</span>
+            <span *ngIf="!isExporting">تصدير البيانات</span>
+          </button>
+
+          <!-- Export Progress -->
+          <div *ngIf="isExporting" class="mt-4">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+              <span>{{ exportStatus }}</span>
+              <span>{{ Math.round(exportProgress) }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" 
+                   [style.width.%]="exportProgress"></div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Import Section -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="flex items-center mb-6">
+          <span class="text-3xl mr-3">📥</span>
+          <div>
+            <h2 class="text-xl font-semibold text-gray-900">استيراد البيانات</h2>
+            <p class="text-gray-600">استيراد البيانات من ملفات مختلفة</p>
+          </div>
+        </div>
+
+        <form [formGroup]="importForm" (ngSubmit)="importData()">
+          <!-- File Selection -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">اختر الملف</label>
+            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition-colors">
+              <div class="space-y-1 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <div class="flex text-sm text-gray-600">
+                  <label class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                    <span>اختر ملف</span>
+                    <input
+                      type="file"
+                      (change)="onFileSelected($event)"
+                      accept=".json,.xlsx,.xls,.csv"
+                      class="sr-only"
+                    >
+                  </label>
+                  <p class="pl-1">أو اسحب الملف هنا</p>
+                </div>
+                <p class="text-xs text-gray-500">JSON, Excel, CSV حتى 10MB</p>
+              </div>
+            </div>
+            <div *ngIf="importForm.get('file')?.value" class="mt-2 text-sm text-gray-600">
+              📄 {{ importForm.get('file')?.value?.name }}
+            </div>
+          </div>
+
+          <!-- Entity Selection -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-3">نوع البيانات</label>
+            <select
+              formControlName="entity"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="">اختر نوع البيانات</option>
+              <option *ngFor="let entity of availableEntities" [value]="entity.value">
+                {{ entity.icon }} {{ entity.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Template Download -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">تحميل قالب</label>
+            <button
+              type="button"
+              (click)="downloadTemplate(importForm.get('entity')?.value)"
+              [disabled]="!importForm.get('entity')?.value"
+              class="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              📋 تحميل قالب Excel
+            </button>
+          </div>
+
+          <!-- Options -->
+          <div class="space-y-3 mb-6">
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                formControlName="updateExisting"
+                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-3"
+              >
+              <span class="text-sm text-gray-700">تحديث البيانات الموجودة</span>
+            </label>
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                formControlName="validateData"
+                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-3"
+              >
+              <span class="text-sm text-gray-700">التحقق من صحة البيانات</span>
+            </label>
+          </div>
+
+          <!-- Validate Button -->
+          <button
+            type="button"
+            (click)="validateImportFile()"
+            [disabled]="!importForm.get('file')?.value || !importForm.get('entity')?.value"
+            class="w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-3"
+          >
+            🔍 التحقق من صحة الملف
+          </button>
+
+          <!-- Import Button -->
+          <button
+            type="submit"
+            [disabled]="isImporting || !importForm.valid"
+            class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <span *ngIf="isImporting">جاري الاستيراد...</span>
+            <span *ngIf="!isImporting">استيراد البيانات</span>
+          </button>
+
+          <!-- Import Progress -->
+          <div *ngIf="isImporting" class="mt-4">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+              <span>{{ importStatus }}</span>
+              <span>{{ Math.round(importProgress) }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-green-600 h-2 rounded-full transition-all duration-300" 
+                   [style.width.%]="importProgress"></div>
+            </div>
+          </div>
+
+          <!-- Import Status -->
+          <div *ngIf="importStatus && !isImporting" class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p class="text-sm text-blue-800">{{ importStatus }}</p>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mt-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">💡 نصائح للتصدير والاستيراد</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h4 class="font-medium text-gray-900 mb-2">📤 التصدير</h4>
+          <ul class="text-sm text-gray-600 space-y-1">
+            <li>• JSON: أفضل للنسخ الاحتياطية الكاملة</li>
+            <li>• Excel: مناسب للتحليل والمراجعة</li>
+            <li>• CSV: سهل القراءة والتعديل</li>
+            <li>• تأكد من تحديد نطاق التاريخ المناسب</li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-medium text-gray-900 mb-2">📥 الاستيراد</h4>
+          <ul class="text-sm text-gray-600 space-y-1">
+            <li>• استخدم القوالب المتوفرة للدقة</li>
+            <li>• تحقق من صحة البيانات قبل الاستيراد</li>
+            <li>• احتفظ بنسخة احتياطية قبل الاستيراد</li>
+            <li>• راجع النتائج بعد الاستيراد</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

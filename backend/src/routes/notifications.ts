@@ -1,34 +1,44 @@
-import { Router } from 'express'
-import { NotificationController } from '../controllers/notificationController'
-import { authMiddleware } from '../middleware/auth'
+import { Router } from 'express';
+import { notificationsController } from '../controllers/notificationsController';
+import { authMiddleware } from '../middleware/authMiddleware';
+import { validateNotification, validateNotificationUpdate, validateNotificationFilters } from '../validations/notificationsValidation';
 
-const router = Router()
+const router = Router();
 
-// تطبيق middleware المصادقة على جميع المسارات
-router.use(authMiddleware)
+// Apply authentication middleware to all routes
+router.use(authMiddleware);
 
-// الحصول على الإشعارات
-router.get('/', NotificationController.getNotifications)
+// Get all notifications with filters
+router.get('/', validateNotificationFilters, notificationsController.getAllNotifications);
 
-// الحصول على إشعار محدد
-router.get('/:id', NotificationController.getNotificationById)
+// Get notification by ID
+router.get('/:id', notificationsController.getNotificationById);
 
-// تأكيد الإشعار
-router.patch('/:id/acknowledge', NotificationController.acknowledgeNotification)
+// Create new notification
+router.post('/', validateNotification, notificationsController.createNotification);
 
-// تأكيد جميع الإشعارات
-router.patch('/acknowledge-all', NotificationController.acknowledgeAllNotifications)
+// Update notification
+router.put('/:id', validateNotificationUpdate, notificationsController.updateNotification);
 
-// حذف الإشعار
-router.delete('/:id', NotificationController.deleteNotification)
+// Acknowledge notification
+router.put('/:id/acknowledge', notificationsController.acknowledgeNotification);
 
-// حذف الإشعارات المنتهية الصلاحية
-router.delete('/expired', NotificationController.deleteExpiredNotifications)
+// Acknowledge all notifications
+router.put('/acknowledge-all', notificationsController.acknowledgeAllNotifications);
 
-// الحصول على إحصائيات الإشعارات
-router.get('/stats/overview', NotificationController.getNotificationStats)
+// Unacknowledge notification
+router.put('/:id/unacknowledge', notificationsController.unacknowledgeNotification);
 
-// إنشاء إشعارات تلقائية
-router.post('/system/create', NotificationController.createSystemNotifications)
+// Delete notification
+router.delete('/:id', notificationsController.deleteNotification);
 
-export default router
+// Delete all acknowledged notifications
+router.delete('/acknowledged', notificationsController.deleteAcknowledgedNotifications);
+
+// Get unread count
+router.get('/unread/count', notificationsController.getUnreadCount);
+
+// Clean expired notifications
+router.post('/clean-expired', notificationsController.cleanExpiredNotifications);
+
+export default router;

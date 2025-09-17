@@ -13,6 +13,10 @@ import { InstallmentsComponent } from './components/installments/installments.co
 import { SafesComponent } from './components/safes/safes.component';
 import { PartnersComponent } from './components/partners/partners.component';
 import { BrokersComponent } from './components/brokers/brokers.component';
+import { SettingsComponent } from './components/settings/settings.component';
+import { NotificationsComponent } from './components/notifications/notifications.component';
+import { ExportImportComponent } from './components/export-import/export-import.component';
+import { AdvancedSearchComponent } from './components/advanced-search/advanced-search.component';
 
 const routes: Routes = [
   {
@@ -78,6 +82,26 @@ const routes: Routes = [
         path: 'brokers',
         component: BrokersComponent,
         data: { title: 'الوسطاء' }
+      },
+      {
+        path: 'settings',
+        component: SettingsComponent,
+        data: { title: 'الإعدادات' }
+      },
+      {
+        path: 'notifications',
+        component: NotificationsComponent,
+        data: { title: 'الإشعارات' }
+      },
+      {
+        path: 'export-import',
+        component: ExportImportComponent,
+        data: { title: 'تصدير واستيراد' }
+      },
+      {
+        path: 'search',
+        component: AdvancedSearchComponent,
+        data: { title: 'البحث المتقدم' }
       }
     ]
   },
