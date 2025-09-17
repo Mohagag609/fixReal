@@ -138,10 +138,18 @@ export async function PUT(
         data: { balance: { increment: validatedData.amount } },
       })
 
+      // Filter out undefined values to satisfy Prisma's exactOptionalPropertyTypes
+      const updateData = {
+        fromSafeId: validatedData.fromSafeId,
+        toSafeId: validatedData.toSafeId,
+        amount: validatedData.amount,
+        ...(validatedData.description !== undefined && { description: validatedData.description }),
+      }
+
       // Update transfer
       const transfer = await tx.transfer.update({
         where: { id: id },
-        data: validatedData,
+        data: updateData,
         include: {
           fromSafe: {
             select: { name: true },
