@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { PlusIcon, EditIcon, TrashIcon, UsersIcon, DollarIcon, PhoneIcon, CalendarIcon, AlertIcon } from '../../components/icons'
-import { DataTable } from '@/components/tables/DataTable'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Modal } from '@/components/ui/Modal'
-import { BrokerForm } from '@/components/forms/BrokerForm'
-import { formatDate, formatCurrency } from '@/lib/utils'
+import { DataTable } from '../../components/tables/DataTable'
+import { Button } from '../../components/ui/Button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
+import { Modal } from '../../components/ui/Modal'
+import { BrokerForm } from '../../components/forms/BrokerForm'
+import { formatDate, formatCurrency } from '../../lib/utils'
 import { ColumnDef } from '@tanstack/react-table'
 
 interface Broker {
