@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "npm ci && npm run build"
   publish = ".next"
 
 [build.environment]
@@ -8,6 +8,9 @@
   PRISMA_GENERATE_DATAPROXY = "true"
   DATABASE_URL = "postgresql://placeholder:placeholder@placeholder:5432/placeholder"
   DATABASE_PROVIDER = "postgresql"
+  NPM_CONFIG_PRODUCTION = "false"
+  NPM_CONFIG_AUDIT = "false"
+  NPM_CONFIG_FUND = "false"
 
 [functions]
   node_bundler = "esbuild"
