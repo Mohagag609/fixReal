@@ -12,8 +12,8 @@ export interface ExportOptions {
 export interface ExportData {
   headers: string[]
   rows: (string | number)[][]
-  title?: string
-  subtitle?: string
+  title?: string | undefined
+  subtitle?: string | undefined
 }
 
 export const exportToExcel = (data: ExportData, options: ExportOptions = { format: 'excel' }) => {
