@@ -1,5 +1,5 @@
 [build]
-  command = "npm install && npm run build"
+  command = "npm install --legacy-peer-deps && npm run build"
   publish = ".next"
   functions = "netlify/functions"
 
@@ -16,6 +16,7 @@
   NEXT_TELEMETRY_DISABLED = "1"
   NPM_CONFIG_SAVE_EXACT = "true"
   NPM_CONFIG_PACKAGE_LOCK = "true"
+  NPM_CONFIG_LEGACY_PEER_DEPS = "true"
 
 [functions]
   node_bundler = "esbuild"

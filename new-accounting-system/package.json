@@ -44,6 +44,9 @@
     "tailwind-merge": "^3.3.1",
     "zod": "^4.1.9"
   },
+  "peerDependencies": {
+    "lucide-react": "^0.544.0"
+  },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
