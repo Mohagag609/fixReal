@@ -1,9 +1,9 @@
 'use client'
 
-import { forwardRef } from 'react'
+import { forwardRef, InputHTMLAttributes } from 'react'
 import { cn } from '@/lib/utils'
 
-interface InputProps extends Omit<HTMLMotionProps<'input'>, 'onDrag'> {
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
   icon?: React.ReactNode
@@ -24,7 +24,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               {icon}
             </div>
           )}
-          <div input
+          <input
             ref={ref}
             className={cn(
               'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200',
@@ -32,7 +32,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               icon && 'pr-10',
               className
             )}
-            whileFocus={{ scale: 1.01 }}
             {...props}
           />
         </div>
