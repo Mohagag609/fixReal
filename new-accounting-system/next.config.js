@@ -7,8 +7,8 @@ const nextConfig = {
   //   unoptimized: true,
   // },
   typedRoutes: true,
-  serverExternalPackages: ['@prisma/client', 'prisma', 'framer-motion'],
-  transpilePackages: ['lucide-react'],
+  serverExternalPackages: ['@prisma/client', 'prisma'],
+  transpilePackages: ['lucide-react', 'framer-motion'],
   // Environment variables for build time
   env: {
     DATABASE_URL: process.env.DATABASE_URL,
