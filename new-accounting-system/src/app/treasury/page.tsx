@@ -15,7 +15,7 @@ interface Transfer {
   fromSafeId: string
   toSafeId: string
   amount: number
-  description?: string
+  description?: string | undefined
   createdAt: string
   fromSafe: {
     name: string
@@ -65,7 +65,12 @@ export default function TreasuryPage() {
   }, [])
 
   // Handle create/update transfer
-  const handleSaveTransfer = async (transferData: Partial<Transfer>) => {
+  const handleSaveTransfer = async (transferData: {
+    amount: number;
+    fromSafeId: string;
+    toSafeId: string;
+    description?: string | undefined;
+  }) => {
     try {
       const url = editingTransfer ? `/api/transfers/${editingTransfer.id}` : '/api/transfers'
       const method = editingTransfer ? 'PUT' : 'POST'

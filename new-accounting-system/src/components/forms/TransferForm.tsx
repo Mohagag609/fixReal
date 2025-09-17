@@ -12,7 +12,7 @@ const transferSchema = z.object({
   fromSafeId: z.string().min(1, 'الخزينة المصدر مطلوبة'),
   toSafeId: z.string().min(1, 'الخزينة الوجهة مطلوبة'),
   amount: z.number().min(0.01, 'المبلغ يجب أن يكون أكبر من صفر'),
-  description: z.string().optional(),
+  description: z.string().optional().or(z.undefined()),
 })
 
 type TransferFormData = z.infer<typeof transferSchema>
@@ -22,7 +22,7 @@ interface Transfer {
   fromSafeId: string
   toSafeId: string
   amount: number
-  description?: string
+  description?: string | undefined
   createdAt: string
   fromSafe: {
     name: string
@@ -41,7 +41,7 @@ interface Safe {
 interface TransferFormProps {
   transfer?: Transfer | null
   safes: Safe[]
-  onSave: (data: TransferFormData) => void
+  onSave: (data: TransferFormData) => Promise<void>
   onCancel: () => void
 }
 
