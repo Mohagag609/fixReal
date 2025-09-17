@@ -4,7 +4,7 @@ import { prisma } from '../../../../lib/prisma'
 export const dynamic = 'force-static'
 
 // GET /api/reports/dashboard - Get dashboard statistics
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // const { searchParams } = new URL(request.url)
     // const _startDate = searchParams.get('startDate')
