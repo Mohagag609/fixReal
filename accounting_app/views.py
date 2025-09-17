@@ -1033,3 +1033,136 @@ class BrokerDueListView(ListView):
         context['status'] = self.request.GET.get('status', '')
         context['order_by'] = self.request.GET.get('order_by', 'due_date')
         return context
+
+
+# Unit Partner Management Views
+class UnitPartnersView(DetailView):
+    """عرض شركاء الوحدة"""
+    model = Unit
+    template_name = 'accounting_app/units/partners.html'
+    context_object_name = 'unit'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        unit = self.get_object()
+        
+        # حساب إجمالي النسب
+        total_percentage = unit.unit_partners.aggregate(
+            total=models.Sum('percentage')
+        )['total'] or 0
+        
+        context['total_percentage'] = total_percentage
+        
+        return context
+
+
+class UnitAddPartnerView(CreateView):
+    """إضافة شريك للوحدة"""
+    model = UnitPartner
+    template_name = 'accounting_app/units/add_partner.html'
+    fields = ['partner', 'percentage']
+    
+    def dispatch(self, request, *args, **kwargs):
+        self.unit = get_object_or_404(Unit, pk=kwargs['unit_id'])
+        return super().dispatch(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        form.instance.unit = self.unit
+        
+        # التحقق من أن النسبة لا تتجاوز 100%
+        current_total = self.unit.unit_partners.aggregate(
+            total=models.Sum('percentage')
+        )['total'] or 0
+        
+        if current_total + form.instance.percentage > 100:
+            form.add_error('percentage', 'إجمالي النسب لا يمكن أن يتجاوز 100%')
+            return self.form_invalid(form)
+        
+        response = super().form_valid(form)
+        messages.success(self.request, 'تم إضافة الشريك بنجاح')
+        return response
+    
+    def get_success_url(self):
+        return f'/units/{self.unit.id}/partners/'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['unit'] = self.unit
+        
+        # حساب النسبة المتبقية
+        current_total = self.unit.unit_partners.aggregate(
+            total=models.Sum('percentage')
+        )['total'] or 0
+        
+        context['total_percentage'] = current_total
+        context['remaining_percentage'] = 100 - current_total
+        
+        return context
+
+
+class UnitEditPartnerView(UpdateView):
+    """تعديل شريك الوحدة"""
+    model = UnitPartner
+    template_name = 'accounting_app/units/edit_partner.html'
+    fields = ['partner', 'percentage']
+    
+    def dispatch(self, request, *args, **kwargs):
+        self.unit = get_object_or_404(Unit, pk=kwargs['unit_id'])
+        return super().dispatch(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        # التحقق من أن النسبة لا تتجاوز 100%
+        current_total = self.unit.unit_partners.exclude(
+            id=self.object.id
+        ).aggregate(
+            total=models.Sum('percentage')
+        )['total'] or 0
+        
+        if current_total + form.instance.percentage > 100:
+            form.add_error('percentage', 'إجمالي النسب لا يمكن أن يتجاوز 100%')
+            return self.form_invalid(form)
+        
+        response = super().form_valid(form)
+        messages.success(self.request, 'تم تحديث الشريك بنجاح')
+        return response
+    
+    def get_success_url(self):
+        return f'/units/{self.unit.id}/partners/'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['unit'] = self.unit
+        
+        # حساب النسبة المتبقية
+        current_total = self.unit.unit_partners.exclude(
+            id=self.object.id
+        ).aggregate(
+            total=models.Sum('percentage')
+        )['total'] or 0
+        
+        context['total_percentage'] = current_total
+        context['remaining_percentage'] = 100 - current_total
+        
+        return context
+
+
+class UnitRemovePartnerView(DeleteView):
+    """حذف شريك الوحدة"""
+    model = UnitPartner
+    template_name = 'accounting_app/units/confirm_remove_partner.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        self.unit = get_object_or_404(Unit, pk=kwargs['unit_id'])
+        return super().dispatch(request, *args, **kwargs)
+    
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.deleted_at = timezone.now()
+        self.object.save()
+        messages.success(request, 'تم حذف الشريك بنجاح')
+        return redirect(f'/units/{self.unit.id}/partners/')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['unit'] = self.unit
+        return context

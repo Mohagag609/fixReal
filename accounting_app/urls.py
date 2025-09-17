@@ -68,6 +68,12 @@ urlpatterns = [
     path('partner-debts/', views.PartnerDebtListView.as_view(), name='partner_debt_list'),
     path('broker-dues/', views.BrokerDueListView.as_view(), name='broker_due_list'),
     
+    # Unit Partners
+    path('units/<int:unit_id>/partners/', views.UnitPartnersView.as_view(), name='unit_partners'),
+    path('units/<int:unit_id>/add-partner/', views.UnitAddPartnerView.as_view(), name='unit_add_partner'),
+    path('units/<int:unit_id>/edit-partner/<int:pk>/', views.UnitEditPartnerView.as_view(), name='unit_edit_partner'),
+    path('units/<int:unit_id>/remove-partner/<int:pk>/', views.UnitRemovePartnerView.as_view(), name='unit_remove_partner'),
+    
     # API endpoints
     path('api/customers/', views.get_customers_api, name='api_customers'),
     path('api/units/', views.get_units_api, name='api_units'),
