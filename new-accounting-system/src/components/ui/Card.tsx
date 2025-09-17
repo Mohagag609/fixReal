@@ -1,7 +1,6 @@
 'use client'
 
 import { HTMLAttributes, forwardRef } from 'react'
-import { motion, HTMLMotionProps } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 interface CardProps extends Omit<HTMLMotionProps<'div'>, 'onDrag'> {
@@ -12,7 +11,7 @@ interface CardProps extends Omit<HTMLMotionProps<'div'>, 'onDrag'> {
 const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ className, hover = false, clickable = false, children, ...props }, ref) => {
     return (
-      <motion.div
+      <div
         ref={ref}
         className={cn(
           'bg-white rounded-xl shadow-sm border border-gray-200 p-6',
@@ -25,7 +24,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
         {...props}
       >
         {children}
-      </motion.div>
+      </div>
     )
   }
 )

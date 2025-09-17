@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-// import { motion } from 'framer-motion' // Temporarily disabled for Netlify
 import { BarChart3, Download, Filter, CalendarIcon, DollarIcon, TrendingUp, TrendingDown, UsersIcon, BuildingIcon, FileTextIcon, Wallet } from '../../components/icons'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'

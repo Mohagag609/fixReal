@@ -1,7 +1,6 @@
 'use client'
 
 import { forwardRef } from 'react'
-import { motion, HTMLMotionProps } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'onDrag'> {
@@ -39,7 +38,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     }
 
     return (
-      <motion.button
+      <button
         ref={ref}
         className={cn(
           baseClasses,
@@ -53,20 +52,5 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {loading ? (
-          <motion.div
+          <div
             className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          />
-        ) : icon ? (
-          <span className="mr-2">{icon}</span>
-        ) : null}
-        {children as React.ReactNode}
-      </motion.button>
-    )
-  }
-)
-
-Button.displayName = 'Button'
-
-export { Button }

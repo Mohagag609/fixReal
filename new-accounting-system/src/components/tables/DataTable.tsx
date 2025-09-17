@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import {
   useReactTable,
   getCoreRowModel,
@@ -105,87 +104,6 @@ export function DataTable<TData, TValue>({
           <tbody className="bg-white divide-y divide-gray-200">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <motion.tr
+                <tr
                   key={row.id}
                   className="hover:bg-gray-50 transition-colors"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
-                </motion.tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="px-6 py-12 text-center text-sm text-gray-500"
-                >
-                  لا توجد بيانات
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-700">
-          عرض {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} إلى{' '}
-          {Math.min(
-            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-            table.getFilteredRowModel().rows.length
-          )}{' '}
-          من {table.getFilteredRowModel().rows.length} نتيجة
-        </div>
-        
-        <div className="flex items-center space-x-2 space-x-reverse">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <ChevronRight className="w-4 h-4" />
-            السابق
-          </Button>
-          
-          <div className="flex items-center space-x-1 space-x-reverse">
-            {Array.from({ length: table.getPageCount() }, (_, i) => (
-              <Button
-                key={i}
-                variant={table.getState().pagination.pageIndex === i ? 'primary' : 'outline'}
-                size="sm"
-                onClick={() => table.setPageIndex(i)}
-                className="w-8 h-8 p-0"
-              >
-                {i + 1}
-              </Button>
-            ))}
-          </div>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            التالي
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
-}

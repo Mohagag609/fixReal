@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-// import { motion } from 'framer-motion'
 import { PlusIcon, EditIcon, TrashIcon, FileTextIcon, UserIcon, BuildingIcon, DollarIcon } from '../../components/icons'
 import { DataTable } from '../../components/tables/DataTable'
 import { Button } from '../../components/ui/Button'

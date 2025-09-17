@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Download, Upload, FileTextIcon, AlertIcon, CheckCircle } from './icons'
 import { Button } from './ui/Button'
 // import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
@@ -216,61 +215,9 @@ export const ImportExport = <T,>({
               </div>
 
               {/* Import Results */}
-              <AnimatePresence>
+              <div>
                 {importData.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="space-y-3"
-                  >
-                    <div className="flex items-center text-green-600">
-                      <CheckCircle className="w-4 h-4 ml-2" />
-                      <span className="text-sm font-medium">
-                        تم العثور على {importData.length} صف
-                      </span>
-                    </div>
-                    
-                    <div className="max-h-40 overflow-y-auto border rounded-lg">
-                      <table className="w-full text-sm">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            {columns.slice(0, 5).map(col => (
-                              <th key={col.key} className="px-3 py-2 text-right">
-                                {col.label}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {importData.slice(0, 10).map((row, index) => (
-                            <tr key={index} className="border-t">
-                              {columns.slice(0, 5).map(col => (
-                                <td key={col.key} className="px-3 py-2 text-right">
-                                  {row[col.label] || row[col.key] || '-'}
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      {importData.length > 10 && (
-                        <div className="text-center text-sm text-gray-500 py-2">
-                          ... و {importData.length - 10} صف إضافي
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Import Errors */}
-              <AnimatePresence>
-                {importErrors.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
+                  <div
                     className="space-y-2"
                   >
                     <div className="flex items-center text-red-600">
@@ -284,9 +231,9 @@ export const ImportExport = <T,>({
                         ))}
                       </ul>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
+              </div>
 
               {/* Actions */}
               <div className="flex justify-end space-x-2 space-x-reverse">

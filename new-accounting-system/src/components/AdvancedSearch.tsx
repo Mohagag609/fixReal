@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { SearchIcon, FilterIcon, XIcon } from './icons'
 import { Button } from './ui/Button'
 import { Input } from './ui/Input'
@@ -124,7 +123,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         <Input
           placeholder="البحث السريع..."
           value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
           className="pr-10"
         />
       </div>
@@ -145,13 +144,9 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       </Button>
 
       {/* Advanced Search Panel */}
-      <AnimatePresence>
+      <div>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
+          <div
             className="bg-gray-50 rounded-lg p-4 space-y-4"
           >
             {/* Filters */}
@@ -275,9 +270,9 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                 تطبيق البحث
               </Button>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   )
 }

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -217,9 +216,7 @@ export function UnitForm({ unit, onSave, onCancel }: UnitFormProps) {
       </Card>
 
       {/* Form Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+      <div
         className="flex justify-end space-x-3 space-x-reverse pt-6 border-t border-gray-200"
       >
         <Button
@@ -237,7 +234,7 @@ export function UnitForm({ unit, onSave, onCancel }: UnitFormProps) {
         >
           {unit ? 'تحديث' : 'إنشاء'}
         </Button>
-      </motion.div>
+      </div>
     </form>
   )
 }

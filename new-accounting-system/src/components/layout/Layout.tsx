@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 
@@ -27,15 +26,4 @@ export function Layout({ children }: LayoutProps) {
         <Header onMenuToggle={toggleSidebar} />
         
         {/* Page content */}
-        <motion.main
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="p-6"
-        >
-          {children}
-        </motion.main>
-      </div>
-    </div>
-  )
-}
+        <main

@@ -1,7 +1,6 @@
 'use client'
 
 import { forwardRef } from 'react'
-import { motion, HTMLMotionProps } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 interface InputProps extends Omit<HTMLMotionProps<'input'>, 'onDrag'> {
@@ -25,7 +24,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               {icon}
             </div>
           )}
-          <motion.input
+          <div input
             ref={ref}
             className={cn(
               'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200',
@@ -38,13 +37,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           />
         </div>
         {error && (
-          <motion.p
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+          <p
             className="text-sm text-red-600"
           >
             {error}
-          </motion.p>
+          </p>
         )}
       </div>
     )

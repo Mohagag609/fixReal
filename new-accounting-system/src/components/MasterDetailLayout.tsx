@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { XIcon, ChevronLeftIcon, Maximize2Icon, Minimize2Icon, X, ChevronLeft, Minimize2, Maximize2 } from './icons'
 import { Button } from './ui/Button'
 
@@ -49,14 +48,10 @@ export const MasterDetailLayout: React.FC<MasterDetailLayoutProps> = ({
   if (isMobile) {
     return (
       <div className={`relative ${className}`}>
-        <AnimatePresence mode="wait">
+        <div>
           {isDetailOpen ? (
-            <motion.div
+            <div
               key="detail"
-              initial={{ opacity: 0, x: 300 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 300 }}
-              transition={{ duration: 0.3 }}
               className="fixed inset-0 z-50 bg-white"
             >
               <div className="flex flex-col h-full">
@@ -79,20 +74,16 @@ export const MasterDetailLayout: React.FC<MasterDetailLayoutProps> = ({
                   {detail}
                 </div>
               </div>
-            </motion.div>
+            </div>
           ) : (
-            <motion.div
+            <div
               key="master"
-              initial={{ opacity: 0, x: -300 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -300 }}
-              transition={{ duration: 0.3 }}
               className="h-full"
             >
               {master}
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
       </div>
     )
   }
@@ -100,35 +91,7 @@ export const MasterDetailLayout: React.FC<MasterDetailLayoutProps> = ({
   return (
     <div className={`flex h-full ${className}`}>
       {/* Master Panel */}
-      <motion.div
-        initial={false}
-        animate={{
-          width: isDetailOpen ? (isFullscreen ? '0%' : masterWidth) : '100%',
-        }}
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="relative overflow-hidden"
-      >
-        <div className="h-full overflow-auto">
-          {master}
-        </div>
-        
-        {/* Master Panel Overlay when detail is open */}
-        {isDetailOpen && !isFullscreen && (
-          <div className="absolute inset-0 bg-black bg-opacity-10 pointer-events-none" />
-        )}
-      </motion.div>
-
-      {/* Detail Panel */}
-      <AnimatePresence>
-        {isDetailOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: 300 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 300 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="relative border-l border-gray-200 bg-white"
-            style={{ width: isFullscreen ? '100%' : detailWidth }}
-          >
+      <div>
             <div className="flex flex-col h-full">
               {/* Detail Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
@@ -167,9 +130,9 @@ export const MasterDetailLayout: React.FC<MasterDetailLayoutProps> = ({
                 {detail}
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   )
 }

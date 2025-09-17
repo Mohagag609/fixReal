@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDownIcon, ChevronRightIcon, BarChart3Icon, FilterIcon, SortAscIcon, SortDescIcon, ChevronDown, ChevronRight, BarChart3, Filter, SortAsc, SortDesc } from './icons'
 import { Button } from './ui/Button'
 
@@ -212,13 +211,9 @@ export const DataGrouping = <T,>({
               )}
             </div>
             
-            <AnimatePresence>
+            <div>
               {expandedGroups.has(groupKey) && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
+                <div
                   className="border-t border-gray-200"
                 >
                   <div className="p-3">
@@ -227,9 +222,9 @@ export const DataGrouping = <T,>({
                       {items.length} عنصر في هذه المجموعة
                     </div>
                   </div>
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
+            </div>
           </div>
         ))}
       </div>

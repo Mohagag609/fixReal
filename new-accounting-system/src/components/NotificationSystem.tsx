@@ -1,7 +1,6 @@
 'use client'
 
 import React, { createContext, useContext, useState, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { X, CheckCircle, AlertIcon, Info, AlertTriangle } from './icons'
 
 export interface Notification {
@@ -122,14 +121,10 @@ const NotificationSystem: React.FC = () => {
 
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2">
-      <AnimatePresence>
+      <div>
         {notifications.map((notification) => (
-          <motion.div
+          <div
             key={notification.id}
-            initial={{ opacity: 0, x: 300, scale: 0.8 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 300, scale: 0.8 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
             className={`
               max-w-sm w-full p-4 rounded-lg border shadow-lg backdrop-blur-sm
               ${getBackgroundColor(notification.type)}
@@ -157,9 +152,9 @@ const NotificationSystem: React.FC = () => {
                 <X className="w-4 h-4 text-gray-500" />
               </button>
             </div>
-          </motion.div>
+          </div>
         ))}
-      </AnimatePresence>
+      </div>
     </div>
   )
 }
