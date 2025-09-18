@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if contract %}تعديل العقد{% else %}عقد جديد{% endif %} - مكة العقارية{% endblock %}
+{% block page_title %}{% if contract %}تعديل العقد{% else %}عقد جديد{% endif %}{% endblock %}
+{% block page_subtitle %}{% if contract %}تعديل بيانات العقد: {{ contract.contract_number }}{% else %}إنشاء عقد بيع جديد{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="bg-white rounded-2xl shadow-lg p-8">
+        <form method="post" class="space-y-8">
+            {% csrf_token %}
+            
+            <!-- Contract Basic Information -->
+            <div class="space-y-6">
+                <h3 class="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-3">المعلومات الأساسية</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.contract_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            رقم العقد <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.contract_number }}
+                        {% if form.contract_number.errors %}
+                            <div class="mt-1 text-sm text-red-600">{{ form.contract_number.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            حالة العقد <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            <div class="mt-1 text-sm text-red-600">{{ form.status.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.customer.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            العميل <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.customer }}
+                        {% if form.customer.errors %}
+                            <div class="mt-1 text-sm text-red-600">{{ form.customer.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.unit.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            الوحدة <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.unit }}
+                        {% if form.unit.errors %}
+                            <div class="mt-1 text-sm text-red-600">{{ form.unit.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Financial Information -->
+            <div class="space-y-6">
+                <h3 class="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-3">المعلومات المالية</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label for="{{ form.total_price.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            إجمالي السعر (ريال) <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.total_price }}
+                        {% if form.total_price.errors %}
+                            <div class="mt-1 text-sm text-red-600">{{ form.total_price.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.discount.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            الخصم (ريال)
+                        </label>
+                        {{ form.discount }}
+                        {% if form.discount.errors %}
+                            <div class="mt-1 text-sm text-red-600">{{ form.discount.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.final_price.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            السعر النهائي (ريال)
+                        </label>
+                        <input type="text" id="final_price_display" readonly 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-900 font-medium">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.down_payment.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            المقدم (ريال) <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.down_payment }}
+                        {% if form.down_payment.errors %}
+                            <div class="mt-1 text-sm text-red-600">{{ form.down_payment.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.down_payment_percentage.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            نسبة المقدم (%)
+                        </label>
+                        <input type="text" id="down_payment_percentage_display" readonly 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-900 font-medium">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Installment Information -->
+            <div class="space-y-6">
+                <h3 class="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-3">معلومات التقسيط</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.installment_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            نوع التقسيط <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.installment_type }}
+                        {% if form.installment_type.errors %}
+                            <div class="mt-1 text-sm text-red-600">{{ form.installment_type.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.installment_count.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            عدد الأقساط <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.installment_count }}
+                        {% if form.installment_count.errors %}
+                            <div class="mt-1 text-sm text-red-600">{{ form.installment_count.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.installment_amount.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            مبلغ القسط (ريال)
+                        </label>
+                        <input type="text" id="installment_amount_display" readonly 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-900 font-medium">
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.installment_start_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            تاريخ بداية التقسيط
+                        </label>
+                        {{ form.installment_start_date }}
+                        {% if form.installment_start_date.errors %}
+                            <div class="mt-1 text-sm text-red-600">{{ form.installment_start_date.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Broker Information -->
+            <div class="space-y-6">
+                <h3 class="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-3">معلومات الوسيط</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.broker.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            الوسيط
+                        </label>
+                        {{ form.broker }}
+                        {% if form.broker.errors %}
+                            <div class="mt-1 text-sm text-red-600">{{ form.broker.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.broker_commission.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            عمولة الوسيط (ريال)
+                        </label>
+                        {{ form.broker_commission }}
+                        {% if form.broker_commission.errors %}
+                            <div class="mt-1 text-sm text-red-600">{{ form.broker_commission.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Additional Information -->
+            <div class="space-y-6">
+                <h3 class="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-3">معلومات إضافية</h3>
+                
+                <div>
+                    <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        ملاحظات
+                    </label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                        <div class="mt-1 text-sm text-red-600">{{ form.notes.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="flex items-center justify-end space-x-4 space-x-reverse pt-6 border-t border-gray-200">
+                <a href="{% url 'realpp:contracts_list' %}" 
+                   class="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors">
+                    إلغاء
+                </a>
+                <button type="submit" 
+                        class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors flex items-center space-x-2 space-x-reverse">
+                    <i class="fas fa-save"></i>
+                    <span>{% if contract %}حفظ التعديلات{% else %}إنشاء العقد{% endif %}</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+/* Form styling */
+input[type="text"], input[type="number"], input[type="email"], input[type="tel"], input[type="date"], 
+select, textarea {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors;
+}
+
+input[type="text"]:focus, input[type="number"]:focus, input[type="email"]:focus, input[type="tel"]:focus, 
+input[type="date"]:focus, select:focus, textarea:focus {
+    @apply outline-none;
+}
+
+textarea {
+    @apply resize-none;
+    min-height: 100px;
+}
+
+/* Error styling */
+input.error, select.error, textarea.error {
+    @apply border-red-300 focus:ring-red-500 focus:border-red-500;
+}
+
+/* Required field indicator */
+.required::after {
+    content: " *";
+    color: #ef4444;
+}
+</style>
+
+<script>
+// Form validation and calculations
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const requiredFields = form.querySelectorAll('[required]');
+    
+    // Get form fields
+    const totalPriceField = document.getElementById('id_total_price');
+    const discountField = document.getElementById('id_discount');
+    const finalPriceDisplay = document.getElementById('final_price_display');
+    const downPaymentField = document.getElementById('id_down_payment');
+    const downPaymentPercentageDisplay = document.getElementById('down_payment_percentage_display');
+    const installmentCountField = document.getElementById('id_installment_count');
+    const installmentAmountDisplay = document.getElementById('installment_amount_display');
+    
+    // Calculate final price
+    function calculateFinalPrice() {
+        const totalPrice = parseFloat(totalPriceField.value) || 0;
+        const discount = parseFloat(discountField.value) || 0;
+        const finalPrice = totalPrice - discount;
+        finalPriceDisplay.value = finalPrice.toLocaleString();
+        
+        // Update hidden field if exists
+        const finalPriceHidden = document.getElementById('id_final_price');
+        if (finalPriceHidden) {
+            finalPriceHidden.value = finalPrice;
+        }
+    }
+    
+    // Calculate down payment percentage
+    function calculateDownPaymentPercentage() {
+        const totalPrice = parseFloat(totalPriceField.value) || 0;
+        const discount = parseFloat(discountField.value) || 0;
+        const finalPrice = totalPrice - discount;
+        const downPayment = parseFloat(downPaymentField.value) || 0;
+        
+        if (finalPrice > 0) {
+            const percentage = (downPayment / finalPrice) * 100;
+            downPaymentPercentageDisplay.value = percentage.toFixed(2) + '%';
+        } else {
+            downPaymentPercentageDisplay.value = '0%';
+        }
+    }
+    
+    // Calculate installment amount
+    function calculateInstallmentAmount() {
+        const totalPrice = parseFloat(totalPriceField.value) || 0;
+        const discount = parseFloat(discountField.value) || 0;
+        const finalPrice = totalPrice - discount;
+        const downPayment = parseFloat(downPaymentField.value) || 0;
+        const installmentCount = parseFloat(installmentCountField.value) || 0;
+        
+        if (installmentCount > 0) {
+            const remainingAmount = finalPrice - downPayment;
+            const installmentAmount = remainingAmount / installmentCount;
+            installmentAmountDisplay.value = installmentAmount.toLocaleString();
+        } else {
+            installmentAmountDisplay.value = '0';
+        }
+    }
+    
+    // Add event listeners
+    if (totalPriceField) {
+        totalPriceField.addEventListener('input', function() {
+            calculateFinalPrice();
+            calculateDownPaymentPercentage();
+            calculateInstallmentAmount();
+        });
+    }
+    
+    if (discountField) {
+        discountField.addEventListener('input', function() {
+            calculateFinalPrice();
+            calculateDownPaymentPercentage();
+            calculateInstallmentAmount();
+        });
+    }
+    
+    if (downPaymentField) {
+        downPaymentField.addEventListener('input', function() {
+            calculateDownPaymentPercentage();
+            calculateInstallmentAmount();
+        });
+    }
+    
+    if (installmentCountField) {
+        installmentCountField.addEventListener('input', function() {
+            calculateInstallmentAmount();
+        });
+    }
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('error');
+                isValid = false;
+            } else {
+                field.classList.remove('error');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('يرجى ملء جميع الحقول المطلوبة');
+        }
+    });
+    
+    // Real-time validation
+    requiredFields.forEach(field => {
+        field.addEventListener('blur', function() {
+            if (!this.value.trim()) {
+                this.classList.add('error');
+            } else {
+                this.classList.remove('error');
+            }
+        });
+    });
+    
+    // Number formatting
+    const numberFields = [totalPriceField, discountField, downPaymentField];
+    numberFields.forEach(field => {
+        if (field) {
+            field.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                e.target.value = value;
+            });
+        }
+    });
+    
+    // Initialize calculations
+    calculateFinalPrice();
+    calculateDownPaymentPercentage();
+    calculateInstallmentAmount();
+});
+</script>
+{% endblock %}

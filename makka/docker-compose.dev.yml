@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: makka_db
+      POSTGRES_USER: makka_user
+      POSTGRES_PASSWORD: makka_password
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_DB=makka_db
+      - POSTGRES_USER=makka_user
+      - POSTGRES_PASSWORD=makka_password
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - DJANGO_SECRET_KEY=dev-secret-key
+      - DJANGO_DEBUG=True
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+    depends_on:
+      - db
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  celery:
+    build: .
+    command: celery -A makka worker -l info
+    volumes:
+      - .:/app
+    environment:
+      - POSTGRES_DB=makka_db
+      - POSTGRES_USER=makka_user
+      - POSTGRES_PASSWORD=makka_password
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SECRET_KEY=dev-secret-key
+      - DJANGO_DEBUG=True
+    depends_on:
+      - db
+      - redis
+
+  celery-beat:
+    build: .
+    command: celery -A makka beat -l info
+    volumes:
+      - .:/app
+    environment:
+      - POSTGRES_DB=makka_db
+      - POSTGRES_USER=makka_user
+      - POSTGRES_PASSWORD=makka_password
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SECRET_KEY=dev-secret-key
+      - DJANGO_DEBUG=True
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:

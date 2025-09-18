@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+
+{% block title %}الوحدات - مكة العقارية{% endblock %}
+{% block page_title %}إدارة الوحدات{% endblock %}
+{% block page_subtitle %}عرض وإدارة الوحدات العقارية{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <!-- Header Actions -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 sm:space-x-reverse">
+        <div class="flex items-center space-x-4 space-x-reverse">
+            <button onclick="window.location.href='{% url 'realpp:units_create' %}'" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center space-x-2 space-x-reverse">
+                <i class="fas fa-plus"></i>
+                <span>إضافة وحدة جديدة</span>
+            </button>
+            <button onclick="openImportModal()" 
+                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center space-x-2 space-x-reverse">
+                <i class="fas fa-upload"></i>
+                <span>استيراد وحدات</span>
+            </button>
+        </div>
+        
+        <div class="flex items-center space-x-4 space-x-reverse">
+            <div class="relative">
+                <input type="text" id="search-input" placeholder="البحث في الوحدات..." 
+                       class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+            <button onclick="exportUnits()" 
+                    class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-xl font-medium transition-colors flex items-center space-x-2 space-x-reverse">
+                <i class="fas fa-download"></i>
+                <span>تصدير</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">نوع الوحدة</label>
+                <select class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">جميع الأنواع</option>
+                    <option value="apartment">شقة</option>
+                    <option value="villa">فيلا</option>
+                    <option value="office">مكتب</option>
+                    <option value="shop">محل</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">الطابق</label>
+                <select class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">جميع الطوابق</option>
+                    <option value="0">الأرضي</option>
+                    <option value="1">الأول</option>
+                    <option value="2">الثاني</option>
+                    <option value="3">الثالث</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">المبنى</label>
+                <select class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">جميع المباني</option>
+                    <option value="A">المبنى أ</option>
+                    <option value="B">المبنى ب</option>
+                    <option value="C">المبنى ج</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">الحالة</label>
+                <select class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">جميع الحالات</option>
+                    <option value="available">متاحة</option>
+                    <option value="sold">مباعة</option>
+                    <option value="reserved">محجوزة</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-colors">
+                    تطبيق الفلاتر
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Units Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {% for unit in units %}
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+            <!-- Unit Image Placeholder -->
+            <div class="h-48 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+                <i class="fas fa-home text-4xl text-gray-400"></i>
+            </div>
+            
+            <!-- Unit Info -->
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xl font-bold text-gray-900">{{ unit.unit_number }}</h3>
+                    <span class="px-3 py-1 text-xs font-medium rounded-full 
+                        {% if unit.status == 'available' %}bg-green-100 text-green-800
+                        {% elif unit.status == 'sold' %}bg-red-100 text-red-800
+                        {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                        {{ unit.get_status_display }}
+                    </span>
+                </div>
+                
+                <div class="space-y-2 mb-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">الطابق</span>
+                        <span class="font-medium text-gray-900">{{ unit.floor }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">المبنى</span>
+                        <span class="font-medium text-gray-900">{{ unit.building }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">المساحة</span>
+                        <span class="font-medium text-gray-900">{{ unit.area }} م²</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">السعر</span>
+                        <span class="font-bold text-blue-600">{{ unit.price|floatformat:0 }} ريال</span>
+                    </div>
+                </div>
+                
+                <!-- Unit Partners -->
+                {% if unit.unitpartners.all %}
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">الشركاء</h4>
+                    <div class="flex flex-wrap gap-1">
+                        {% for partner in unit.unitpartners.all %}
+                        <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                            {{ partner.partner.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Actions -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <a href="{% url 'realpp:units_detail' unit.id %}" 
+                           class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'realpp:units_edit' unit.id %}" 
+                           class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button onclick="deleteUnit({{ unit.id }})" 
+                                class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    
+                    {% if unit.status == 'available' %}
+                    <a href="{% url 'realpp:contracts_create' %}?unit={{ unit.id }}" 
+                       class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded-lg font-medium transition-colors">
+                        بيع
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12 text-gray-500">
+            <i class="fas fa-home text-6xl mb-4"></i>
+            <p class="text-xl">لا توجد وحدات</p>
+            <p class="text-sm">ابدأ بإضافة وحدة جديدة</p>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if units.has_other_pages %}
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <div class="flex items-center justify-between">
+            <div class="text-sm text-gray-700">
+                عرض {{ units.start_index }} إلى {{ units.end_index }} من {{ units.paginator.count }} وحدة
+            </div>
+            <div class="flex items-center space-x-2 space-x-reverse">
+                {% if units.has_previous %}
+                    <a href="?page={{ units.previous_page_number }}" 
+                       class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                        السابق
+                    </a>
+                {% endif %}
+                
+                {% for num in units.paginator.page_range %}
+                    {% if units.number == num %}
+                        <span class="px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-lg">
+                            {{ num }}
+                        </span>
+                    {% elif num > units.number|add:'-3' and num < units.number|add:'3' %}
+                        <a href="?page={{ num }}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                            {{ num }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if units.has_next %}
+                    <a href="?page={{ units.next_page_number }}" 
+                       class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                        التالي
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Import Modal -->
+<div id="importModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-900">استيراد الوحدات</h3>
+                <button onclick="closeImportModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data" action="{% url 'realpp:units_import' %}">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">اختر ملف النص</label>
+                    <input type="file" name="file" accept=".txt" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">يدعم ملفات .txt فقط (UnitNumber, Floor, Building)</p>
+                </div>
+                
+                <div class="flex items-center justify-end space-x-3 space-x-reverse">
+                    <button type="button" onclick="closeImportModal()" 
+                            class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium">
+                        إلغاء
+                    </button>
+                    <button type="submit" 
+                            class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors">
+                        استيراد
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openImportModal() {
+    document.getElementById('importModal').classList.remove('hidden');
+}
+
+function closeImportModal() {
+    document.getElementById('importModal').classList.add('hidden');
+}
+
+function deleteUnit(unitId) {
+    if (confirm('هل أنت متأكد من حذف هذه الوحدة؟')) {
+        fetch(`/units/${unitId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('حدث خطأ أثناء حذف الوحدة: ' + (data.error || 'خطأ غير معروف'));
+            }
+        });
+    }
+}
+
+function exportUnits() {
+    window.location.href = '{% url "realpp:units_export" %}';
+}
+
+// Search functionality
+document.getElementById('search-input').addEventListener('input', function(e) {
+    const searchTerm = e.target.value;
+    // Implement search logic here
+    console.log('Searching for:', searchTerm);
+});
+</script>
+{% endblock %}

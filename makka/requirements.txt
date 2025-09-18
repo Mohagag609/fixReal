@@ -1,0 +1,85 @@
+# Django and core dependencies
+Django==4.2.7
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+django-extensions==3.2.3
+
+# Database
+psycopg2-binary==2.9.7
+django-environ==0.11.2
+
+# Authentication and security
+django-allauth==0.57.0
+django-crispy-forms==2.1
+crispy-bootstrap5==0.7
+
+# File handling and media
+Pillow==10.0.1
+django-storages==1.14.2
+
+# Reports and exports
+reportlab==4.0.4
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+
+# Background tasks
+celery==5.3.4
+redis==5.0.1
+django-celery-beat==2.5.0
+
+# Monitoring and logging
+sentry-sdk==1.38.0
+django-debug-toolbar==4.2.0
+
+# Testing
+pytest==7.4.3
+pytest-django==4.7.0
+pytest-cov==4.1.0
+factory-boy==3.3.0
+
+# Development tools
+black==23.9.1
+flake8==6.1.0
+isort==5.12.0
+pre-commit==3.5.0
+
+# Production server
+gunicorn==21.2.0
+whitenoise==6.6.0
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+requests==2.31.0
+python-decouple==3.8
+
+# Backup and maintenance
+django-dbbackup==3.3.1
+django-cleanup==8.2.0
+
+# API documentation
+drf-yasg==1.21.7
+
+# Caching
+django-redis==5.4.0
+
+# Email
+django-anymail==10.1
+
+# Internationalization
+django-modeltranslation==0.18.11
+
+# Admin interface
+django-admin-interface==0.25.0
+django-admin-honeypot==1.1.0
+
+# Security
+django-ratelimit==4.1.0
+django-axes==6.1.1
+
+# Performance
+django-silk==5.0.4
+django-querycount==0.1.0
+
+# System monitoring
+psutil==5.9.6
