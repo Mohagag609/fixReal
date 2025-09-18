@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}إدارة قاعدة البيانات{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- العنوان الرئيسي -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">إدارة قاعدة البيانات</h1>
+        <p class="text-gray-600">إدارة النسخ الاحتياطية والتحسين والاستيراد/التصدير</p>
+    </div>
+
+    <!-- إحصائيات سريعة -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-2 bg-blue-100 rounded-lg">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">إجمالي الجداول</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ total_tables }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-2 bg-green-100 rounded-lg">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">إجمالي السجلات</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ total_records|floatformat:0 }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-2 bg-yellow-100 rounded-lg">
+                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">حجم قاعدة البيانات</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ db_size.database_size }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-2 bg-purple-100 rounded-lg">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">النسخ الاحتياطية</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ backups|length }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الأقسام الرئيسية -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- النسخ الاحتياطية -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900">النسخ الاحتياطية</h2>
+            </div>
+            <div class="p-6">
+                <!-- إنشاء نسخة احتياطية -->
+                <form method="post" action="{% url 'create_backup' %}" class="mb-6">
+                    {% csrf_token %}
+                    <div class="flex gap-4">
+                        <input type="text" name="backup_name" placeholder="اسم النسخة الاحتياطية" 
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            إنشاء نسخة احتياطية
+                        </button>
+                    </div>
+                </form>
+
+                <!-- قائمة النسخ الاحتياطية -->
+                <div class="space-y-3">
+                    {% for backup in backups %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="font-medium text-gray-900">{{ backup.filename }}</p>
+                            <p class="text-sm text-gray-600">{{ backup.file_size }} - {{ backup.created_at|date:"Y-m-d H:i" }}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <a href="{% url 'download_backup' backup.filename %}" 
+                               class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">
+                                تحميل
+                            </a>
+                            <form method="post" action="{% url 'restore_backup' %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="backup_file" value="{{ backup.filename }}">
+                                <button type="submit" class="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700">
+                                    استعادة
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'delete_backup' %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="backup_file" value="{{ backup.filename }}">
+                                <button type="submit" class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                                        onclick="return confirm('هل أنت متأكد من حذف هذه النسخة الاحتياطية؟')">
+                                    حذف
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500 text-center py-4">لا توجد نسخ احتياطية</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- التحسين والصيانة -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900">التحسين والصيانة</h2>
+            </div>
+            <div class="p-6">
+                <!-- تحسين قاعدة البيانات -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">تحسين قاعدة البيانات</h3>
+                    <p class="text-sm text-gray-600 mb-4">تحليل وتحسين أداء قاعدة البيانات</p>
+                    <form method="post" action="{% url 'optimize_database' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            تحسين الآن
+                        </button>
+                    </form>
+                </div>
+
+                <!-- معلومات النظام -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">معلومات النظام</h3>
+                    <div class="space-y-2 text-sm">
+                        <p><span class="font-medium">قاعدة البيانات:</span> {{ database_name }}</p>
+                        <p><span class="font-medium">الحجم:</span> {{ db_size.database_size }}</p>
+                        <p><span class="font-medium">الجداول:</span> {{ total_tables }}</p>
+                        <p><span class="font-medium">السجلات:</span> {{ total_records|floatformat:0 }}</p>
+                    </div>
+                </div>
+
+                <!-- استعلام SQL مخصص -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">استعلام SQL مخصص</h3>
+                    <form method="post" action="{% url 'execute_sql' %}" id="sql-form">
+                        {% csrf_token %}
+                        <textarea name="sql_query" rows="4" 
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="أدخل استعلام SQL هنا..."></textarea>
+                        <button type="submit" class="mt-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                            تنفيذ
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الاستيراد والتصدير -->
+    <div class="mt-8 bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">الاستيراد والتصدير</h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- التصدير -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">تصدير البيانات</h3>
+                    <form method="get" action="{% url 'export_data' %}" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">اختر الجدول</label>
+                            <select name="table" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">اختر جدول...</option>
+                                <!-- سيتم ملء هذا من JavaScript -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">نوع الملف</label>
+                            <select name="format" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="json">JSON</option>
+                                <option value="csv">CSV</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                            تصدير
+                        </button>
+                    </form>
+                </div>
+
+                <!-- الاستيراد -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">استيراد البيانات</h3>
+                    <form method="post" action="{% url 'import_data' %}" enctype="multipart/form-data" class="space-y-4">
+                        {% csrf_token %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">اختر الجدول</label>
+                            <select name="table_name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">اختر جدول...</option>
+                                <!-- سيتم ملء هذا من JavaScript -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">نوع الملف</label>
+                            <select name="format_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="json">JSON</option>
+                                <option value="csv">CSV</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">اختر الملف</label>
+                            <input type="file" name="import_file" accept=".json,.csv" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            استيراد
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// تحميل قائمة الجداول
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('{% url "get_table_list" %}')
+        .then(response => response.json())
+        .then(data => {
+            const selects = document.querySelectorAll('select[name="table"], select[name="table_name"]');
+            selects.forEach(select => {
+                data.tables.forEach(table => {
+                    const option = document.createElement('option');
+                    option.value = table.name;
+                    option.textContent = table.name;
+                    select.appendChild(option);
+                });
+            });
+        })
+        .catch(error => console.error('Error loading tables:', error));
+});
+
+// معالجة استعلام SQL
+document.getElementById('sql-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('{% url "execute_sql" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('تم تنفيذ الاستعلام بنجاح');
+        } else {
+            alert('خطأ: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('خطأ في تنفيذ الاستعلام: ' + error);
+    });
+});
+</script>
+{% endblock %}

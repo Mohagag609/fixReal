@@ -1,660 +1,448 @@
-# Deployment Guide - مكة العقارية
+# دليل النشر - نظام إدارة العقارات
 
-## Overview
-This guide provides step-by-step instructions for deploying the Makka real estate management system to production.
+## متطلبات النظام
 
-## Prerequisites
+### الحد الأدنى
+- **OS**: Ubuntu 20.04+ / CentOS 8+ / RHEL 8+
+- **RAM**: 4GB
+- **CPU**: 2 cores
+- **Storage**: 50GB SSD
+- **Network**: 100 Mbps
 
-### System Requirements
-- **Operating System**: Ubuntu 20.04 LTS or CentOS 8+
-- **Python**: 3.8 or higher
-- **PostgreSQL**: 13 or higher
-- **Nginx**: 1.18 or higher
-- **Memory**: Minimum 4GB RAM
-- **Storage**: Minimum 20GB free space
-- **CPU**: 2 cores or more
+### الموصى به
+- **OS**: Ubuntu 22.04 LTS
+- **RAM**: 8GB+
+- **CPU**: 4+ cores
+- **Storage**: 100GB+ SSD
+- **Network**: 1 Gbps
 
-### Software Dependencies
+## التثبيت على Ubuntu 22.04
+
+### 1. تحديث النظام
 ```bash
-# Update system packages
 sudo apt update && sudo apt upgrade -y
-
-# Install Python and pip
-sudo apt install python3 python3-pip python3-venv python3-dev -y
-
-# Install PostgreSQL
-sudo apt install postgresql postgresql-contrib -y
-
-# Install Nginx
-sudo apt install nginx -y
-
-# Install additional dependencies
-sudo apt install build-essential libpq-dev -y
 ```
 
-## Database Setup
-
-### 1. Create PostgreSQL Database
+### 2. تثبيت Python 3.9+
 ```bash
-# Switch to postgres user
-sudo -u postgres psql
+sudo apt install python3.9 python3.9-venv python3.9-dev python3-pip -y
+```
 
-# Create database and user
+### 3. تثبيت PostgreSQL
+```bash
+sudo apt install postgresql postgresql-contrib -y
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+```
+
+### 4. إعداد قاعدة البيانات
+```bash
+sudo -u postgres psql
+```
+
+```sql
 CREATE DATABASE makka_db;
-CREATE USER makka_user WITH PASSWORD 'your_secure_password';
+CREATE USER makka_user WITH PASSWORD 'makka_password';
 GRANT ALL PRIVILEGES ON DATABASE makka_db TO makka_user;
 ALTER USER makka_user CREATEDB;
 \q
 ```
 
-### 2. Configure PostgreSQL
+### 5. تثبيت Nginx
 ```bash
-# Edit PostgreSQL configuration
-sudo nano /etc/postgresql/13/main/postgresql.conf
-
-# Update the following settings:
-listen_addresses = '*'
-port = 5432
-max_connections = 100
-shared_buffers = 256MB
-effective_cache_size = 1GB
-
-# Edit authentication configuration
-sudo nano /etc/postgresql/13/main/pg_hba.conf
-
-# Add the following line:
-host    makka_db    makka_user    0.0.0.0/0    md5
-
-# Restart PostgreSQL
-sudo systemctl restart postgresql
-sudo systemctl enable postgresql
+sudo apt install nginx -y
+sudo systemctl start nginx
+sudo systemctl enable nginx
 ```
 
-## Application Setup
-
-### 1. Clone Repository
+### 6. تثبيت Gunicorn
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/makka.git
-cd makka
+pip3 install gunicorn
+```
 
-# Create virtual environment
-python3 -m venv venv
+## إعداد المشروع
+
+### 1. إنشاء مجلد المشروع
+```bash
+sudo mkdir -p /var/www/makka
+sudo chown $USER:$USER /var/www/makka
+cd /var/www/makka
+```
+
+### 2. نسخ الملفات
+```bash
+# نسخ ملفات المشروع إلى /var/www/makka
+cp -r /path/to/makka/* /var/www/makka/
+```
+
+### 3. إنشاء البيئة الافتراضية
+```bash
+python3.9 -m venv venv
 source venv/bin/activate
+```
 
-# Install dependencies
+### 4. تثبيت المتطلبات
+```bash
 pip install -r requirements.txt
 ```
 
-### 2. Environment Configuration
+### 5. إعداد متغيرات البيئة
 ```bash
-# Create environment file
-cp .env.example .env
-
-# Edit environment variables
 nano .env
 ```
 
-**Environment Variables:**
 ```env
-# Database Configuration
-DB_NAME=makka_db
-DB_USER=makka_user
-DB_PASSWORD=your_secure_password
-DB_HOST=localhost
-DB_PORT=5432
+# قاعدة البيانات
+POSTGRES_DB=makka_db
+POSTGRES_USER=makka_user
+POSTGRES_PASSWORD=makka_password
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
 
-# Django Configuration
-SECRET_KEY=your-secret-key-here
-DEBUG=False
-ALLOWED_HOSTS=your-domain.com,www.your-domain.com
+# Django
+DJANGO_SECRET_KEY=your-very-secret-key-here
+DJANGO_DEBUG=False
+DJANGO_ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
 
-# Email Configuration
+# البريد الإلكتروني
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USE_TLS=True
 EMAIL_HOST_USER=your-email@gmail.com
 EMAIL_HOST_PASSWORD=your-app-password
 
-# Backup Configuration
-BACKUP_DIR=/opt/makka/backups
-
-# Security
-SECURE_SSL_REDIRECT=True
-SESSION_COOKIE_SECURE=True
-CSRF_COOKIE_SECURE=True
+# النسخ الاحتياطية
+BACKUP_DIR=/var/backups/makka
 ```
 
-### 3. Database Migration
+### 6. إعداد قاعدة البيانات
 ```bash
-# Run migrations
+python manage.py makemigrations
 python manage.py migrate
-
-# Create superuser
-python manage.py createsuperuser
-
-# Collect static files
 python manage.py collectstatic --noinput
-
-# Create logs directory
-mkdir -p logs
-chmod 755 logs
+python manage.py createsuperuser
 ```
 
-## Web Server Configuration
+## إعداد Gunicorn
 
-### 1. Nginx Configuration
+### 1. إنشاء ملف Gunicorn
 ```bash
-# Create Nginx configuration
-sudo nano /etc/nginx/sites-available/makka
+nano /var/www/makka/gunicorn.conf.py
 ```
 
-**Nginx Configuration:**
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com www.your-domain.com;
-    
-    # Redirect HTTP to HTTPS
-    return 301 https://$server_name$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    server_name your-domain.com www.your-domain.com;
-    
-    # SSL Configuration
-    ssl_certificate /etc/ssl/certs/your-domain.crt;
-    ssl_certificate_key /etc/ssl/private/your-domain.key;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
-    ssl_prefer_server_ciphers off;
-    
-    # Security headers
-    add_header X-Frame-Options DENY;
-    add_header X-Content-Type-Options nosniff;
-    add_header X-XSS-Protection "1; mode=block";
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    
-    # Static files
-    location /static/ {
-        alias /opt/makka/staticfiles/;
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-    
-    # Media files
-    location /media/ {
-        alias /opt/makka/media/;
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-    
-    # Application
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_redirect off;
-    }
-    
-    # Gzip compression
-    gzip on;
-    gzip_vary on;
-    gzip_min_length 1024;
-    gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
-}
-```
-
-### 2. Enable Site
-```bash
-# Enable the site
-sudo ln -s /etc/nginx/sites-available/makka /etc/nginx/sites-enabled/
-
-# Remove default site
-sudo rm /etc/nginx/sites-enabled/default
-
-# Test configuration
-sudo nginx -t
-
-# Restart Nginx
-sudo systemctl restart nginx
-sudo systemctl enable nginx
-```
-
-## Application Server Configuration
-
-### 1. Gunicorn Configuration
-```bash
-# Create Gunicorn configuration
-nano gunicorn.conf.py
-```
-
-**Gunicorn Configuration:**
 ```python
 bind = "127.0.0.1:8000"
 workers = 3
 worker_class = "sync"
 worker_connections = 1000
-max_requests = 1000
-max_requests_jitter = 100
 timeout = 30
 keepalive = 2
+max_requests = 1000
+max_requests_jitter = 100
 preload_app = True
-user = "www-data"
-group = "www-data"
-daemon = False
-pidfile = "/opt/makka/gunicorn.pid"
-accesslog = "/opt/makka/logs/gunicorn_access.log"
-errorlog = "/opt/makka/logs/gunicorn_error.log"
-loglevel = "info"
 ```
 
-### 2. Systemd Service
+### 2. إنشاء خدمة Systemd
 ```bash
-# Create systemd service
 sudo nano /etc/systemd/system/makka.service
 ```
 
-**Systemd Service:**
 ```ini
 [Unit]
 Description=Makka Real Estate Management System
-After=network.target postgresql.service
+After=network.target
 
 [Service]
 Type=notify
 User=www-data
 Group=www-data
-WorkingDirectory=/opt/makka
-Environment=PATH=/opt/makka/venv/bin
-ExecStart=/opt/makka/venv/bin/gunicorn --config gunicorn.conf.py makka.wsgi:application
+WorkingDirectory=/var/www/makka
+Environment="PATH=/var/www/makka/venv/bin"
+ExecStart=/var/www/makka/venv/bin/gunicorn --config gunicorn.conf.py makka.wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=always
-RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-### 3. Start Services
+### 3. تشغيل الخدمة
 ```bash
-# Reload systemd
 sudo systemctl daemon-reload
-
-# Start and enable services
 sudo systemctl start makka
 sudo systemctl enable makka
-
-# Check status
-sudo systemctl status makka
 ```
 
-## SSL Certificate Setup
+## إعداد Nginx
 
-### 1. Let's Encrypt (Recommended)
+### 1. إنشاء ملف التكوين
 ```bash
-# Install Certbot
+sudo nano /etc/nginx/sites-available/makka
+```
+
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com www.yourdomain.com;
+    
+    location = /favicon.ico { access_log off; log_not_found off; }
+    
+    location /static/ {
+        root /var/www/makka;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    location /media/ {
+        root /var/www/makka;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    location / {
+        include proxy_params;
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+### 2. تفعيل الموقع
+```bash
+sudo ln -s /etc/nginx/sites-available/makka /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+## إعداد SSL (Let's Encrypt)
+
+### 1. تثبيت Certbot
+```bash
 sudo apt install certbot python3-certbot-nginx -y
-
-# Obtain certificate
-sudo certbot --nginx -d your-domain.com -d www.your-domain.com
-
-# Test renewal
-sudo certbot renew --dry-run
 ```
 
-### 2. Manual SSL Certificate
+### 2. الحصول على شهادة SSL
 ```bash
-# Generate private key
-sudo openssl genrsa -out /etc/ssl/private/your-domain.key 2048
-
-# Generate certificate signing request
-sudo openssl req -new -key /etc/ssl/private/your-domain.key -out /etc/ssl/certs/your-domain.csr
-
-# Generate self-signed certificate (for testing)
-sudo openssl x509 -req -days 365 -in /etc/ssl/certs/your-domain.csr -signkey /etc/ssl/private/your-domain.key -out /etc/ssl/certs/your-domain.crt
+sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
 ```
 
-## Backup Configuration
-
-### 1. Database Backup
+### 3. تجديد تلقائي
 ```bash
-# Create backup script
-sudo nano /opt/makka/backup_db.sh
+sudo crontab -e
 ```
 
-**Backup Script:**
+```cron
+0 12 * * * /usr/bin/certbot renew --quiet
+```
+
+## النسخ الاحتياطية
+
+### 1. إنشاء مجلد النسخ الاحتياطية
+```bash
+sudo mkdir -p /var/backups/makka
+sudo chown www-data:www-data /var/backups/makka
+```
+
+### 2. إنشاء سكريبت النسخ الاحتياطي
+```bash
+nano /var/www/makka/backup.sh
+```
+
 ```bash
 #!/bin/bash
-BACKUP_DIR="/opt/makka/backups"
+BACKUP_DIR="/var/backups/makka"
 DATE=$(date +%Y%m%d_%H%M%S)
 DB_NAME="makka_db"
 DB_USER="makka_user"
 
-# Create backup directory
-mkdir -p $BACKUP_DIR
+# نسخ احتياطي لقاعدة البيانات
+pg_dump -h localhost -U $DB_USER $DB_NAME > $BACKUP_DIR/db_backup_$DATE.sql
 
-# Create database backup
-pg_dump -h localhost -U $DB_USER -d $DB_NAME > $BACKUP_DIR/db_backup_$DATE.sql
+# نسخ احتياطي للملفات
+tar -czf $BACKUP_DIR/files_backup_$DATE.tar.gz /var/www/makka
 
-# Compress backup
-gzip $BACKUP_DIR/db_backup_$DATE.sql
+# حذف النسخ القديمة (أكثر من 30 يوم)
+find $BACKUP_DIR -name "*.sql" -mtime +30 -delete
+find $BACKUP_DIR -name "*.tar.gz" -mtime +30 -delete
 
-# Remove old backups (keep last 7 days)
-find $BACKUP_DIR -name "db_backup_*.sql.gz" -mtime +7 -delete
-
-echo "Database backup completed: db_backup_$DATE.sql.gz"
+echo "Backup completed: $DATE"
 ```
 
-### 2. Media Files Backup
+### 3. جعل السكريبت قابل للتنفيذ
 ```bash
-# Create media backup script
-sudo nano /opt/makka/backup_media.sh
+chmod +x /var/www/makka/backup.sh
 ```
 
-**Media Backup Script:**
+### 4. جدولة النسخ الاحتياطية
 ```bash
-#!/bin/bash
-BACKUP_DIR="/opt/makka/backups"
-DATE=$(date +%Y%m%d_%H%M%S)
-MEDIA_DIR="/opt/makka/media"
-
-# Create backup directory
-mkdir -p $BACKUP_DIR
-
-# Create media backup
-tar -czf $BACKUP_DIR/media_backup_$DATE.tar.gz -C $MEDIA_DIR .
-
-# Remove old backups (keep last 7 days)
-find $BACKUP_DIR -name "media_backup_*.tar.gz" -mtime +7 -delete
-
-echo "Media backup completed: media_backup_$DATE.tar.gz"
-```
-
-### 3. Automated Backups
-```bash
-# Make scripts executable
-sudo chmod +x /opt/makka/backup_db.sh
-sudo chmod +x /opt/makka/backup_media.sh
-
-# Add to crontab
 sudo crontab -e
-
-# Add the following lines:
-0 2 * * * /opt/makka/backup_db.sh
-0 3 * * * /opt/makka/backup_media.sh
 ```
 
-## Monitoring Setup
+```cron
+# نسخ احتياطي يومي في الساعة 2 صباحاً
+0 2 * * * /var/www/makka/backup.sh
+```
 
-### 1. Log Monitoring
+## المراقبة والصيانة
+
+### 1. مراقبة الخدمات
 ```bash
-# Install log monitoring tools
-sudo apt install logrotate -y
+# حالة الخدمات
+sudo systemctl status makka
+sudo systemctl status nginx
+sudo systemctl status postgresql
 
-# Configure log rotation
-sudo nano /etc/logrotate.d/makka
+# سجلات التطبيق
+sudo journalctl -u makka -f
+
+# سجلات Nginx
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
 ```
 
-**Log Rotation Configuration:**
-```
-/opt/makka/logs/*.log {
-    daily
-    missingok
-    rotate 30
-    compress
-    delaycompress
-    notifempty
-    create 644 www-data www-data
-    postrotate
-        systemctl reload makka
-    endscript
-}
-```
-
-### 2. System Monitoring
+### 2. مراقبة الأداء
 ```bash
-# Install monitoring tools
-sudo apt install htop iotop nethogs -y
+# استخدام الذاكرة
+free -h
 
-# Create monitoring script
-sudo nano /opt/makka/monitor.sh
+# استخدام القرص
+df -h
+
+# استخدام المعالج
+top
+
+# اتصالات الشبكة
+netstat -tulpn
 ```
 
-**Monitoring Script:**
+### 3. تحديث النظام
 ```bash
-#!/bin/bash
-LOG_FILE="/opt/makka/logs/system_monitor.log"
-DATE=$(date '+%Y-%m-%d %H:%M:%S')
+# تحديث النظام
+sudo apt update && sudo apt upgrade -y
 
-# Check disk space
-DISK_USAGE=$(df -h / | awk 'NR==2 {print $5}' | sed 's/%//')
-if [ $DISK_USAGE -gt 80 ]; then
-    echo "$DATE WARNING: Disk usage is $DISK_USAGE%" >> $LOG_FILE
-fi
-
-# Check memory usage
-MEMORY_USAGE=$(free | awk 'NR==2{printf "%.2f", $3*100/$2}')
-if (( $(echo "$MEMORY_USAGE > 80" | bc -l) )); then
-    echo "$DATE WARNING: Memory usage is $MEMORY_USAGE%" >> $LOG_FILE
-fi
-
-# Check application status
-if ! systemctl is-active --quiet makka; then
-    echo "$DATE ERROR: Makka service is not running" >> $LOG_FILE
-    systemctl start makka
-fi
+# إعادة تشغيل الخدمات
+sudo systemctl restart makka
+sudo systemctl restart nginx
 ```
 
-## Security Hardening
+## استكشاف الأخطاء
 
-### 1. Firewall Configuration
+### 1. مشاكل قاعدة البيانات
 ```bash
-# Install UFW
+# فحص حالة PostgreSQL
+sudo systemctl status postgresql
+
+# فحص الاتصال
+psql -h localhost -U makka_user -d makka_db
+
+# فحص السجلات
+sudo tail -f /var/log/postgresql/postgresql-*.log
+```
+
+### 2. مشاكل Django
+```bash
+# فحص السجلات
+sudo journalctl -u makka -f
+
+# تشغيل في وضع التطوير
+cd /var/www/makka
+source venv/bin/activate
+python manage.py runserver 0.0.0.0:8000
+```
+
+### 3. مشاكل Nginx
+```bash
+# فحص التكوين
+sudo nginx -t
+
+# إعادة تحميل التكوين
+sudo systemctl reload nginx
+
+# فحص السجلات
+sudo tail -f /var/log/nginx/error.log
+```
+
+## الأمان
+
+### 1. جدار الحماية
+```bash
+# تثبيت UFW
 sudo apt install ufw -y
 
-# Configure firewall
+# إعداد القواعد
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
 sudo ufw allow ssh
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
+sudo ufw allow 'Nginx Full'
 sudo ufw enable
 ```
 
-### 2. Fail2Ban Configuration
+### 2. تحديثات الأمان
 ```bash
-# Install Fail2Ban
-sudo apt install fail2ban -y
-
-# Configure Fail2Ban
-sudo nano /etc/fail2ban/jail.local
+# تفعيل التحديثات التلقائية
+sudo apt install unattended-upgrades -y
+sudo dpkg-reconfigure -plow unattended-upgrades
 ```
 
-**Fail2Ban Configuration:**
-```ini
-[DEFAULT]
-bantime = 3600
-findtime = 600
-maxretry = 3
-
-[sshd]
-enabled = true
-port = ssh
-logpath = /var/log/auth.log
-
-[nginx-http-auth]
-enabled = true
-port = http,https
-logpath = /var/log/nginx/error.log
-
-[nginx-limit-req]
-enabled = true
-port = http,https
-logpath = /var/log/nginx/error.log
-maxretry = 10
-```
-
-## Performance Optimization
-
-### 1. Database Optimization
-```sql
--- Connect to PostgreSQL
-psql -U makka_user -d makka_db
-
--- Create indexes for better performance
-CREATE INDEX idx_customer_name ON realpp_customer(name);
-CREATE INDEX idx_customer_phone ON realpp_customer(phone);
-CREATE INDEX idx_unit_number ON realpp_unit(unit_number);
-CREATE INDEX idx_contract_number ON realpp_contract(contract_number);
-CREATE INDEX idx_installment_due_date ON realpp_installment(due_date);
-CREATE INDEX idx_installment_status ON realpp_installment(status);
-
--- Analyze tables
-ANALYZE;
-```
-
-### 2. Nginx Optimization
+### 3. نسخ احتياطية خارجية
 ```bash
-# Edit Nginx configuration
-sudo nano /etc/nginx/nginx.conf
+# رفع النسخ الاحتياطية إلى S3
+pip install awscli
+aws s3 sync /var/backups/makka s3://your-backup-bucket/makka/
 ```
 
-**Nginx Optimization:**
+## التوسع
+
+### 1. Load Balancer
 ```nginx
-worker_processes auto;
-worker_rlimit_nofile 65535;
-
-events {
-    worker_connections 1024;
-    use epoll;
-    multi_accept on;
+upstream makka_backend {
+    server 127.0.0.1:8000;
+    server 127.0.0.1:8001;
+    server 127.0.0.1:8002;
 }
 
-http {
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
-    keepalive_timeout 65;
-    types_hash_max_size 2048;
-    
-    # Gzip compression
-    gzip on;
-    gzip_vary on;
-    gzip_min_length 1024;
-    gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
-    
-    # Client settings
-    client_max_body_size 10M;
-    client_body_timeout 60s;
-    client_header_timeout 60s;
+server {
+    location / {
+        proxy_pass http://makka_backend;
+    }
 }
 ```
 
-## Troubleshooting
+### 2. Redis Cache
+```bash
+# تثبيت Redis
+sudo apt install redis-server -y
 
-### Common Issues
+# إعداد Django
+pip install django-redis
+```
 
-1. **Database Connection Error**
-   ```bash
-   # Check PostgreSQL status
-   sudo systemctl status postgresql
-   
-   # Check database connection
-   psql -U makka_user -d makka_db -h localhost
-   ```
+### 3. CDN
+```bash
+# استخدام CloudFlare أو AWS CloudFront
+# تحديث إعدادات STATIC_URL و MEDIA_URL
+```
 
-2. **Static Files Not Loading**
-   ```bash
-   # Collect static files
-   python manage.py collectstatic --noinput
-   
-   # Check Nginx configuration
-   sudo nginx -t
-   ```
+## الدعم والصيانة
 
-3. **Permission Issues**
-   ```bash
-   # Fix ownership
-   sudo chown -R www-data:www-data /opt/makka
-   sudo chmod -R 755 /opt/makka
-   ```
+### 1. مراقبة مستمرة
+- استخدام أدوات المراقبة مثل Nagios أو Zabbix
+- إعداد تنبيهات للخدمات الحرجة
+- مراقبة استخدام الموارد
 
-4. **Service Not Starting**
-   ```bash
-   # Check logs
-   sudo journalctl -u makka -f
-   
-   # Check Gunicorn logs
-   tail -f /opt/makka/logs/gunicorn_error.log
-   ```
+### 2. نسخ احتياطية منتظمة
+- اختبار استعادة النسخ الاحتياطية
+- تخزين النسخ في مواقع متعددة
+- توثيق عملية الاستعادة
 
-### Log Files
-- Application logs: `/opt/makka/logs/`
-- Nginx logs: `/var/log/nginx/`
-- System logs: `/var/log/syslog`
-- PostgreSQL logs: `/var/log/postgresql/`
+### 3. تحديثات الأمان
+- مراقبة تحديثات Django
+- تحديث المكتبات بانتظام
+- فحص الثغرات الأمنية
 
-## Maintenance
+---
 
-### Regular Tasks
-
-1. **Daily**
-   - Check system logs
-   - Monitor disk space
-   - Verify backups
-
-2. **Weekly**
-   - Update system packages
-   - Check security updates
-   - Review error logs
-
-3. **Monthly**
-   - Database maintenance
-   - Log rotation
-   - Performance review
-
-### Update Procedure
-
-1. **Backup Current System**
-   ```bash
-   /opt/makka/backup_db.sh
-   /opt/makka/backup_media.sh
-   ```
-
-2. **Update Code**
-   ```bash
-   cd /opt/makka
-   git pull origin main
-   source venv/bin/activate
-   pip install -r requirements.txt
-   python manage.py migrate
-   python manage.py collectstatic --noinput
-   ```
-
-3. **Restart Services**
-   ```bash
-   sudo systemctl restart makka
-   sudo systemctl restart nginx
-   ```
-
-## Support
-
-For technical support or questions:
-- Email: support@makka.com
-- Documentation: https://docs.makka.com
-- Issue Tracker: https://github.com/your-username/makka/issues
-
-## Conclusion
-
-This deployment guide provides a comprehensive setup for the Makka real estate management system. Follow the steps carefully and ensure all security measures are in place before going live.
-
-Remember to:
-- Keep the system updated
-- Monitor performance regularly
-- Maintain regular backups
-- Follow security best practices
-- Test changes in a staging environment first
+**ملاحظة**: هذا الدليل مخصص للاستخدام في بيئة الإنتاج. تأكد من اختبار جميع الإعدادات في بيئة التطوير أولاً.

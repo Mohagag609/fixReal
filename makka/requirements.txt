@@ -80,3 +80,6 @@ django-axes==6.1.1
 # Performance
 django-silk==5.0.4
 django-querycount==0.1.0
+
+# System monitoring
+psutil==5.9.6
