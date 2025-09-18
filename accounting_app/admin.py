@@ -2,7 +2,8 @@ from django.contrib import admin
 from .models import (
     Customer, Unit, Partner, Contract, Installment, Safe, Voucher, Broker,
     PartnerDebt, BrokerDue, PartnerGroup, UnitPartner, PartnerGroupPartner,
-    UnitPartnerGroup, AuditLog, Settings, KeyVal, Transfer, Notification
+    UnitPartnerGroup, AuditLog, Settings, KeyVal, Transfer, Notification,
+    PartnerDailyTransaction, PartnerLedger
 )
 
 
@@ -152,3 +153,27 @@ class NotificationAdmin(admin.ModelAdmin):
     search_fields = ['title', 'message']
     ordering = ['-created_at']
     readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(PartnerDailyTransaction)
+class PartnerDailyTransactionAdmin(admin.ModelAdmin):
+    list_display = ['partner', 'transaction_type', 'amount', 'transaction_date', 'partner_share', 'running_balance']
+    list_filter = ['transaction_type', 'transaction_date', 'created_at']
+    search_fields = ['partner__name', 'description']
+    ordering = ['-transaction_date', '-created_at']
+    readonly_fields = ['created_at', 'updated_at', 'running_balance']
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('partner', 'unit', 'contract')
+
+
+@admin.register(PartnerLedger)
+class PartnerLedgerAdmin(admin.ModelAdmin):
+    list_display = ['partner', 'date', 'total_income', 'total_expense', 'net_balance', 'transaction_count']
+    list_filter = ['date', 'created_at']
+    search_fields = ['partner__name']
+    ordering = ['-date']
+    readonly_fields = ['created_at', 'updated_at', 'net_balance']
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('partner')

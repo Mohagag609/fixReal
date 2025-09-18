@@ -1,0 +1,393 @@
+{% extends 'accounting_app/base.html' %}
+{% load static %}
+
+{% block title %}تفاصيل الشريك: {{ partner.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .transaction-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .transaction-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .income-amount {
+        color: #10b981;
+        font-weight: bold;
+    }
+    .expense-amount {
+        color: #ef4444;
+        font-weight: bold;
+    }
+    .balance-amount {
+        color: #3b82f6;
+        font-weight: bold;
+    }
+    .day-summary {
+        border-right: 4px solid #3b82f6;
+    }
+    .closing-entry {
+        background-color: #f8fafc;
+        border-left: 4px solid #6b7280;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">تفاصيل الشريك: {{ partner.name }}</h1>
+            <p class="text-muted">بيانات شاملة وحسابات مفصلة</p>
+        </div>
+        <div>
+            <a href="{% url 'accounting_app:partner_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-right"></i> العودة للشركاء
+            </a>
+        </div>
+    </div>
+
+    <!-- Partner Info Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">بيانات الشريك</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الاسم:</label>
+                        <p class="mb-0">{{ partner.name }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الهاتف:</label>
+                        <p class="mb-0">{{ partner.phone|default:"-" }}</p>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">ملاحظات:</label>
+                        <p class="mb-0">{{ partner.notes|default:"-" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">إجمالي الدخل</h6>
+                            <h3 class="mb-0">{{ total_income|floatformat:2 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-arrow-up fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">إجمالي المصروفات</h6>
+                            <h3 class="mb-0">{{ total_expense|floatformat:2 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-arrow-down fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">صافي الموقف</h6>
+                            <h3 class="mb-0">{{ net_balance|floatformat:2 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">فلترة التاريخ</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="start_date" class="form-label">من تاريخ:</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" 
+                           value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="end_date" class="form-label">إلى تاريخ:</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" 
+                           value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> تطبيق الفلتر
+                        </button>
+                        <a href="{% url 'accounting_app:details:partner_detail' partner.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-refresh"></i> إعادة تعيين
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Units and Transactions -->
+    <div class="row">
+        <!-- Units Card -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">الوحدات المملوكة</h5>
+                </div>
+                <div class="card-body">
+                    {% if unit_partners %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>الوحدة</th>
+                                        <th>نسبة الملكية</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for up in unit_partners %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'accounting_app:details:unit_detail' up.unit.pk %}" 
+                                               class="text-decoration-none">
+                                                {{ up.unit.code|default:"غير محدد" }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ up.percentage }}%</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-home fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">لا توجد وحدات مملوكة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Transactions Card -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">كشف الحساب التفصيلي</h5>
+                </div>
+                <div class="card-body">
+                    {% if transactions_by_day %}
+                        <div class="accordion" id="transactionsAccordion">
+                            {% for date_key, day_transactions in transactions_by_day.items %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                    <button class="accordion-button collapsed" type="button" 
+                                            data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" 
+                                            aria-expanded="false" aria-controls="collapse{{ forloop.counter }}">
+                                        <div class="d-flex justify-content-between w-100 me-3">
+                                            <div>
+                                                <strong>{{ date_key|date:"l، d F Y" }}</strong>
+                                                <small class="text-muted ms-2">{{ day_transactions|length }} معاملة</small>
+                                            </div>
+                                            <div>
+                                                {% for transaction in day_transactions %}
+                                                    {% if forloop.last %}
+                                                        <span class="balance-amount">{{ transaction.running_balance|floatformat:2 }}</span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" 
+                                     aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#transactionsAccordion">
+                                    <div class="accordion-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>الوقت</th>
+                                                        <th>البيان</th>
+                                                        <th>دخل</th>
+                                                        <th>صرف</th>
+                                                        <th>الرصيد</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for transaction in day_transactions %}
+                                                    <tr class="{% if transaction.is_closing_entry %}closing-entry{% endif %}">
+                                                        <td>
+                                                            {% if transaction.is_closing_entry %}
+                                                                <span class="text-muted">إقفال</span>
+                                                            {% else %}
+                                                                {{ transaction.created_at|time:"H:i" }}
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if transaction.is_closing_entry %}
+                                                                <i class="fas fa-chart-bar me-1"></i>
+                                                            {% endif %}
+                                                            {{ transaction.description }}
+                                                        </td>
+                                                        <td>
+                                                            {% if transaction.income > 0 %}
+                                                                <span class="income-amount">+{{ transaction.income|floatformat:2 }}</span>
+                                                            {% else %}
+                                                                <span class="text-muted">—</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if transaction.expense > 0 %}
+                                                                <span class="expense-amount">-{{ transaction.expense|floatformat:2 }}</span>
+                                                            {% else %}
+                                                                <span class="text-muted">—</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            <strong class="balance-amount">{{ transaction.running_balance|floatformat:2 }}</strong>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">لا توجد معاملات في الفترة المحددة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Transaction Button -->
+    <div class="fixed-bottom p-3">
+        <div class="d-flex justify-content-end">
+            <button class="btn btn-primary btn-lg rounded-pill shadow" 
+                    data-bs-toggle="modal" data-bs-target="#addTransactionModal">
+                <i class="fas fa-plus"></i> إضافة معاملة
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Transaction Modal -->
+<div class="modal fade" id="addTransactionModal" tabindex="-1" aria-labelledby="addTransactionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTransactionModalLabel">إضافة معاملة يومية</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addTransactionForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="transaction_type" class="form-label">نوع المعاملة *</label>
+                        <select class="form-select" id="transaction_type" name="transaction_type" required>
+                            <option value="">اختر نوع المعاملة</option>
+                            <option value="income">دخل</option>
+                            <option value="expense">مصروف</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">المبلغ *</label>
+                        <input type="number" class="form-control" id="amount" name="amount" 
+                               step="0.01" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">البيان *</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transaction_date" class="form-label">تاريخ المعاملة *</label>
+                        <input type="date" class="form-control" id="transaction_date" name="transaction_date" 
+                               value="{{ end_date|date:'Y-m-d' }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">إضافة المعاملة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add transaction form
+    const addTransactionForm = document.getElementById('addTransactionForm');
+    if (addTransactionForm) {
+        addTransactionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            formData.append('partner_id', '{{ partner.pk }}');
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            
+            fetch('{% url "accounting_app:details:create_partner_daily_transaction" %}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('خطأ: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ في إضافة المعاملة');
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

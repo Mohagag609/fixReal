@@ -1,0 +1,302 @@
+{% extends 'accounting_app/base.html' %}
+{% load static %}
+
+{% block title %}تفاصيل السمسار: {{ broker.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">تفاصيل السمسار: {{ broker.name }}</h1>
+            <p class="text-muted">{{ broker.phone|default:"بدون هاتف" }}</p>
+        </div>
+        <div>
+            <a href="{% url 'accounting_app:broker_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-right"></i> العودة للسماسرة
+            </a>
+        </div>
+    </div>
+
+    <!-- Broker Info Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">بيانات السمسار</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الاسم:</label>
+                        <p class="mb-0">{{ broker.name }}</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الهاتف:</label>
+                        <p class="mb-0">{{ broker.phone|default:"-" }}</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">نسبة العمولة:</label>
+                        <p class="mb-0">{{ broker.commission_rate|floatformat:2 }}%</p>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">ملاحظات:</label>
+                        <p class="mb-0">{{ broker.notes|default:"-" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">عدد العقود</h6>
+                            <h3 class="mb-0">{{ total_contracts }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-file-contract fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">إجمالي العمولة</h6>
+                            <h3 class="mb-0">{{ total_commission|floatformat:2 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">إجمالي المستحقات</h6>
+                            <h3 class="mb-0">{{ total_due|floatformat:2 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-hand-holding-usd fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">المدفوع</h6>
+                            <h3 class="mb-0">{{ paid_due|floatformat:2 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Summary -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">ملخص المستحقات</h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="mb-1"><strong>المدفوع:</strong></p>
+                            <h4 class="text-success">{{ paid_due|floatformat:2 }} ريال</h4>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-1"><strong>المتبقي:</strong></p>
+                            <h4 class="text-warning">{{ pending_due|floatformat:2 }} ريال</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">متوسط العمولة</h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="mb-1"><strong>متوسط العمولة:</strong></p>
+                            <h4 class="text-primary">
+                                {% if total_contracts > 0 %}
+                                    {{ total_commission|floatformat:2|div:total_contracts|floatformat:2 }} ريال
+                                {% else %}
+                                    0 ريال
+                                {% endif %}
+                            </h4>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-1"><strong>نسبة الدفع:</strong></p>
+                            <h4 class="text-info">
+                                {% if total_due > 0 %}
+                                    {{ paid_due|floatformat:2|div:total_due|mul:100|floatformat:1 }}%
+                                {% else %}
+                                    100%
+                                {% endif %}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" id="brokerTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="contracts-tab" data-bs-toggle="tab" 
+                    data-bs-target="#contracts" type="button" role="tab">
+                <i class="fas fa-file-contract me-2"></i>العقود
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="dues-tab" data-bs-toggle="tab" 
+                    data-bs-target="#dues" type="button" role="tab">
+                <i class="fas fa-hand-holding-usd me-2"></i>المستحقات
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="brokerTabsContent">
+        <!-- Contracts Tab -->
+        <div class="tab-pane fade show active" id="contracts" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">عقود السمسار</h5>
+                </div>
+                <div class="card-body">
+                    {% if contracts %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>الوحدة</th>
+                                        <th>العميل</th>
+                                        <th>تاريخ العقد</th>
+                                        <th>السعر الإجمالي</th>
+                                        <th>مبلغ العمولة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for contract in contracts %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'accounting_app:details:unit_detail' contract.unit.pk %}" 
+                                               class="text-decoration-none">
+                                                {{ contract.unit.code }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'accounting_app:details:customer_detail' contract.customer.pk %}" 
+                                               class="text-decoration-none">
+                                                {{ contract.customer.name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ contract.start|date:"Y-m-d" }}</td>
+                                        <td>{{ contract.total_price|floatformat:2 }} ريال</td>
+                                        <td>
+                                            <span class="badge bg-primary">
+                                                {{ contract.broker_amount|floatformat:2 }} ريال
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'accounting_app:details:contract_detail' contract.pk %}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> عرض
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-file-contract fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">لا توجد عقود لهذا السمسار</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Dues Tab -->
+        <div class="tab-pane fade" id="dues" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">مستحقات السمسار</h5>
+                </div>
+                <div class="card-body">
+                    {% if broker_dues %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>المبلغ</th>
+                                        <th>تاريخ الاستحقاق</th>
+                                        <th>الحالة</th>
+                                        <th>الملاحظات</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for due in broker_dues %}
+                                    <tr>
+                                        <td>{{ due.amount|floatformat:2 }} ريال</td>
+                                        <td>{{ due.due_date|date:"Y-m-d" }}</td>
+                                        <td>
+                                            <span class="badge {% if due.status == 'مدفوع' %}bg-success{% else %}bg-warning{% endif %}">
+                                                {{ due.status }}
+                                            </span>
+                                        </td>
+                                        <td>{{ due.notes|default:"-" }}</td>
+                                        <td>
+                                            <a href="{% url 'accounting_app:broker_due_update' due.pk %}" 
+                                               class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-edit"></i> تعديل
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-hand-holding-usd fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">لا توجد مستحقات لهذا السمسار</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

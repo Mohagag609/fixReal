@@ -1,0 +1,260 @@
+{% extends 'accounting_app/base.html' %}
+{% load static %}
+
+{% block title %}تفاصيل مجموعة الشركاء: {{ partner_group.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">تفاصيل مجموعة الشركاء: {{ partner_group.name }}</h1>
+            <p class="text-muted">{{ partner_group.description|default:"بدون وصف" }}</p>
+        </div>
+        <div>
+            <a href="{% url 'accounting_app:partner_group_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-right"></i> العودة لمجموعات الشركاء
+            </a>
+        </div>
+    </div>
+
+    <!-- Group Info Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">بيانات المجموعة</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">اسم المجموعة:</label>
+                        <p class="mb-0">{{ partner_group.name }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">إجمالي النسب:</label>
+                        <p class="mb-0">
+                            <span class="badge {% if is_valid_percentages %}bg-success{% else %}bg-warning{% endif %}">
+                                {{ total_percentage|floatformat:2 }}%
+                            </span>
+                            {% if not is_valid_percentages %}
+                                <small class="text-muted">يحتاج مراجعة</small>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الوصف:</label>
+                        <p class="mb-0">{{ partner_group.description|default:"-" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">عدد الشركاء</h6>
+                            <h3 class="mb-0">{{ total_partners }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">عدد الوحدات</h6>
+                            <h3 class="mb-0">{{ total_units }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-home fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">حالة النسب</h6>
+                            <h3 class="mb-0">
+                                {% if is_valid_percentages %}
+                                    <i class="fas fa-check-circle"></i>
+                                {% else %}
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-pie fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" id="groupTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="partners-tab" data-bs-toggle="tab" 
+                    data-bs-target="#partners" type="button" role="tab">
+                <i class="fas fa-users me-2"></i>الشركاء
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="units-tab" data-bs-toggle="tab" 
+                    data-bs-target="#units" type="button" role="tab">
+                <i class="fas fa-home me-2"></i>الوحدات
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="groupTabsContent">
+        <!-- Partners Tab -->
+        <div class="tab-pane fade show active" id="partners" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">شركاء المجموعة</h5>
+                </div>
+                <div class="card-body">
+                    {% if partner_details %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>اسم الشريك</th>
+                                        <th>الهاتف</th>
+                                        <th>نسبة الملكية</th>
+                                        <th>تاريخ الإضافة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for detail in partner_details %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'accounting_app:details:partner_detail' detail.partner.pk %}" 
+                                               class="text-decoration-none">
+                                                {{ detail.partner.name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ detail.partner.phone|default:"-" }}</td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ detail.percentage|floatformat:2 }}%</span>
+                                        </td>
+                                        <td>{{ detail.partner.created_at|date:"Y-m-d" }}</td>
+                                        <td>
+                                            <a href="{% url 'accounting_app:partner_group_edit_partner' partner_group.pk detail.partner.pk %}" 
+                                               class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-edit"></i> تعديل
+                                            </a>
+                                            <a href="{% url 'accounting_app:partner_group_remove_partner' partner_group.pk detail.partner.pk %}" 
+                                               class="btn btn-sm btn-outline-danger"
+                                               onclick="return confirm('هل أنت متأكد من إزالة هذا الشريك من المجموعة؟')">
+                                                <i class="fas fa-trash"></i> إزالة
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Percentage Validation -->
+                        <div class="mt-3">
+                            <div class="alert {% if is_valid_percentages %}alert-success{% else %}alert-warning{% endif %}">
+                                <h6 class="alert-heading">
+                                    {% if is_valid_percentages %}
+                                        <i class="fas fa-check-circle"></i> النسب صحيحة
+                                    {% else %}
+                                        <i class="fas fa-exclamation-triangle"></i> النسب تحتاج مراجعة
+                                    {% endif %}
+                                </h6>
+                                <p class="mb-0">
+                                    <strong>إجمالي النسب:</strong> {{ total_percentage|floatformat:2 }}%
+                                    {% if not is_valid_percentages %}
+                                        <br><small>يجب أن يكون إجمالي النسب 100%</small>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">لا توجد شركاء في هذه المجموعة</p>
+                            <a href="{% url 'accounting_app:partner_group_add_partner' partner_group.pk %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> إضافة شريك
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Units Tab -->
+        <div class="tab-pane fade" id="units" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">وحدات المجموعة</h5>
+                </div>
+                <div class="card-body">
+                    {% if units %}
+                        <div class="row">
+                            {% for unit in units %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <a href="{% url 'accounting_app:details:unit_detail' unit.pk %}" 
+                                               class="text-decoration-none">
+                                                {{ unit.code }}
+                                            </a>
+                                        </h6>
+                                        <p class="card-text">
+                                            <strong>الاسم:</strong> {{ unit.name|default:"بدون اسم" }}<br>
+                                            <strong>النوع:</strong> {{ unit.unit_type }}<br>
+                                            <strong>السعر:</strong> {{ unit.total_price|floatformat:2 }} ريال<br>
+                                            <strong>الحالة:</strong> 
+                                            <span class="badge {% if unit.status == 'متاحة' %}bg-success{% else %}bg-warning{% endif %}">
+                                                {{ unit.status }}
+                                            </span>
+                                        </p>
+                                        <div class="mt-2">
+                                            <small class="text-muted">
+                                                <strong>نسبة المجموعة:</strong> 
+                                                {{ unit.unit_partner_groups.first.percentage|floatformat:2 }}%
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-home fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">لا توجد وحدات لهذه المجموعة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

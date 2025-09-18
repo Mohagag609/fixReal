@@ -1,0 +1,321 @@
+{% extends 'accounting_app/base.html' %}
+{% load static %}
+
+{% block title %}تفاصيل العقد: {{ contract.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">تفاصيل العقد</h1>
+            <p class="text-muted">عقد الوحدة {{ contract.unit.code }}</p>
+        </div>
+        <div>
+            <a href="{% url 'accounting_app:contract_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-right"></i> العودة للعقود
+            </a>
+        </div>
+    </div>
+
+    <!-- Contract Info Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">بيانات العقد</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الوحدة:</label>
+                        <p class="mb-0">
+                            <a href="{% url 'accounting_app:details:unit_detail' contract.unit.pk %}" 
+                               class="text-decoration-none">
+                                {{ contract.unit.code }} - {{ contract.unit.name|default:"بدون اسم" }}
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">العميل:</label>
+                        <p class="mb-0">
+                            <a href="{% url 'accounting_app:details:customer_detail' contract.customer.pk %}" 
+                               class="text-decoration-none">
+                                {{ contract.customer.name }}
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">تاريخ العقد:</label>
+                        <p class="mb-0">{{ contract.start|date:"Y-m-d" }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">السعر الإجمالي:</label>
+                        <p class="mb-0">{{ contract.total_price|floatformat:2 }} ريال</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">نوع الدفع:</label>
+                        <span class="badge {% if contract.payment_type == 'نقدي' %}bg-success{% else %}bg-warning{% endif %}">
+                            {{ contract.payment_type }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">نوع الأقساط:</label>
+                        <p class="mb-0">{{ contract.installment_type }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">إجمالي الأقساط</h6>
+                            <h3 class="mb-0">{{ total_installments }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calendar-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">المدفوع</h6>
+                            <h3 class="mb-0">{{ total_paid|floatformat:2 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">المتبقي</h6>
+                            <h3 class="mb-0">{{ total_pending|floatformat:2 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">نسبة الدفع</h6>
+                            <h3 class="mb-0">{{ payment_progress|floatformat:1 }}%</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-pie fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contract Details -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">تفاصيل مالية</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <label class="form-label fw-bold">مبلغ الخصم:</label>
+                            <p class="mb-2">{{ contract.discount_amount|floatformat:2 }} ريال</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">المقدم:</label>
+                            <p class="mb-2">{{ contract.down_payment|floatformat:2 }} ريال</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">عمولة السمسار:</label>
+                            <p class="mb-2">{{ contract.broker_amount|floatformat:2 }} ريال</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">نسبة السمسار:</label>
+                            <p class="mb-2">{{ contract.broker_percent|floatformat:2 }}%</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">ضمان الصيانة:</label>
+                            <p class="mb-2">{{ contract.maintenance_deposit|floatformat:2 }} ريال</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">عدد الأقساط الإضافية:</label>
+                            <p class="mb-2">{{ contract.extra_annual }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">حسابات الأقساط</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <label class="form-label fw-bold">قاعدة الأقساط:</label>
+                            <p class="mb-2">{{ installment_base_amount|floatformat:2 }} ريال</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">المتبقي بعد السنوي:</label>
+                            <p class="mb-2">{{ remaining_after_annual|floatformat:2 }} ريال</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">مبلغ القسط العادي:</label>
+                            <p class="mb-2">{{ regular_installment_amount|floatformat:2 }} ريال</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">قيمة الدفع السنوي:</label>
+                            <p class="mb-2">{{ contract.annual_payment_value|floatformat:2 }} ريال</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Installments Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">جدول الأقساط</h5>
+        </div>
+        <div class="card-body">
+            {% if installments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>رقم القسط</th>
+                                <th>المبلغ</th>
+                                <th>تاريخ الاستحقاق</th>
+                                <th>الحالة</th>
+                                <th>الملاحظات</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for installment in installments %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ installment.amount|floatformat:2 }} ريال</td>
+                                <td>{{ installment.due_date|date:"Y-m-d" }}</td>
+                                <td>
+                                    <span class="badge {% if installment.status == 'مدفوع' %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ installment.status }}
+                                    </span>
+                                </td>
+                                <td>{{ installment.notes|default:"-" }}</td>
+                                <td>
+                                    <a href="{% url 'accounting_app:details:installment_detail' installment.pk %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> عرض
+                                    </a>
+                                    <a href="{% url 'accounting_app:installment_update' installment.pk %}" 
+                                       class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-edit"></i> تعديل
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">لا توجد أقساط لهذا العقد</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Vouchers Table -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">السندات المرتبطة</h5>
+        </div>
+        <div class="card-body">
+            {% if vouchers %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>النوع</th>
+                                <th>المبلغ</th>
+                                <th>التاريخ</th>
+                                <th>البيان</th>
+                                <th>الخزنة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for voucher in vouchers %}
+                            <tr>
+                                <td>
+                                    <span class="badge {% if voucher.type == 'receipt' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ voucher.get_type_display }}
+                                    </span>
+                                </td>
+                                <td>{{ voucher.amount|floatformat:2 }} ريال</td>
+                                <td>{{ voucher.date|date:"Y-m-d" }}</td>
+                                <td>{{ voucher.description|truncatechars:50 }}</td>
+                                <td>
+                                    <a href="{% url 'accounting_app:details:safe_detail' voucher.safe.pk %}" 
+                                       class="text-decoration-none">
+                                        {{ voucher.safe.name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'accounting_app:details:voucher_detail' voucher.pk %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> عرض
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">لا توجد سندات مرتبطة بهذا العقد</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

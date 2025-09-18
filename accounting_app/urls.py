@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 app_name = 'accounting_app'
@@ -83,4 +83,7 @@ urlpatterns = [
     path('api/customers/', views.get_customers_api, name='api_customers'),
     path('api/units/', views.get_units_api, name='api_units'),
     path('api/safes/', views.get_safes_api, name='api_safes'),
+    
+    # Detail pages
+    path('', include('accounting_app.detail_urls')),
 ]

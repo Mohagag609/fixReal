@@ -1,0 +1,410 @@
+{% extends 'accounting_app/base.html' %}
+{% load static %}
+
+{% block title %}تفاصيل الخزنة: {{ safe.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">تفاصيل الخزنة: {{ safe.name }}</h1>
+            <p class="text-muted">{{ safe.description|default:"بدون وصف" }}</p>
+        </div>
+        <div>
+            <a href="{% url 'accounting_app:safe_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-right"></i> العودة للخزنات
+            </a>
+        </div>
+    </div>
+
+    <!-- Safe Info Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">بيانات الخزنة</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">اسم الخزنة:</label>
+                        <p class="mb-0">{{ safe.name }}</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الرصيد الحالي:</label>
+                        <p class="mb-0 h4 text-primary">{{ safe.balance|floatformat:2 }} ريال</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الوصف:</label>
+                        <p class="mb-0">{{ safe.description|default:"-" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">إجمالي الإيرادات</h6>
+                            <h3 class="mb-0">{{ total_receipts|floatformat:2 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-arrow-up fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">إجمالي المدفوعات</h6>
+                            <h3 class="mb-0">{{ total_payments|floatformat:2 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-arrow-down fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">التحويلات الواردة</h6>
+                            <h3 class="mb-0">{{ transfers_in|floatformat:2 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-arrow-right fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">التحويلات الصادرة</h6>
+                            <h3 class="mb-0">{{ transfers_out|floatformat:2 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-arrow-left fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Balance Verification -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">التحقق من الرصيد</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">الرصيد المحسوب:</h6>
+                        <p class="mb-0">{{ calculated_balance|floatformat:2 }} ريال</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert {% if safe.balance == calculated_balance %}alert-success{% else %}alert-warning{% endif %}">
+                        <h6 class="alert-heading">الرصيد المسجل:</h6>
+                        <p class="mb-0">{{ safe.balance|floatformat:2 }} ريال</p>
+                        {% if safe.balance != calculated_balance %}
+                            <small class="text-muted">يحتاج مراجعة</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" id="safeTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="vouchers-tab" data-bs-toggle="tab" 
+                    data-bs-target="#vouchers" type="button" role="tab">
+                <i class="fas fa-receipt me-2"></i>السندات
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="transfers-tab" data-bs-toggle="tab" 
+                    data-bs-target="#transfers" type="button" role="tab">
+                <i class="fas fa-exchange-alt me-2"></i>التحويلات
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="recent-tab" data-bs-toggle="tab" 
+                    data-bs-target="#recent" type="button" role="tab">
+                <i class="fas fa-history me-2"></i>المعاملات الأخيرة
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="safeTabsContent">
+        <!-- Vouchers Tab -->
+        <div class="tab-pane fade show active" id="vouchers" role="tabpanel">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">سندات الخزنة</h5>
+                    <a href="{% url 'accounting_app:voucher_create' %}?safe={{ safe.pk }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> إضافة سند
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if vouchers %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>النوع</th>
+                                        <th>المبلغ</th>
+                                        <th>التاريخ</th>
+                                        <th>البيان</th>
+                                        <th>المدفوع له/منه</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for voucher in vouchers %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge {% if voucher.type == 'receipt' %}bg-success{% else %}bg-danger{% endif %}">
+                                                {{ voucher.get_type_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ voucher.amount|floatformat:2 }} ريال</td>
+                                        <td>{{ voucher.date|date:"Y-m-d" }}</td>
+                                        <td>{{ voucher.description|truncatechars:50 }}</td>
+                                        <td>
+                                            {% if voucher.type == 'receipt' %}
+                                                {{ voucher.payer|default:"-" }}
+                                            {% else %}
+                                                {{ voucher.beneficiary|default:"-" }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'accounting_app:details:voucher_detail' voucher.pk %}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> عرض
+                                            </a>
+                                            <a href="{% url 'accounting_app:voucher_update' voucher.pk %}" 
+                                               class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-edit"></i> تعديل
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">لا توجد سندات لهذه الخزنة</p>
+                            <a href="{% url 'accounting_app:voucher_create' %}?safe={{ safe.pk }}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> إضافة سند
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Transfers Tab -->
+        <div class="tab-pane fade" id="transfers" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">تحويلات الخزنة</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Transfers From -->
+                        <div class="col-md-6">
+                            <h6 class="text-danger">التحويلات الصادرة</h6>
+                            {% if transfers_from %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>إلى خزنة</th>
+                                                <th>المبلغ</th>
+                                                <th>التاريخ</th>
+                                                <th>البيان</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for transfer in transfers_from %}
+                                            <tr>
+                                                <td>
+                                                    <a href="{% url 'accounting_app:details:safe_detail' transfer.to_safe.pk %}" 
+                                                       class="text-decoration-none">
+                                                        {{ transfer.to_safe.name }}
+                                                    </a>
+                                                </td>
+                                                <td>{{ transfer.amount|floatformat:2 }} ريال</td>
+                                                <td>{{ transfer.created_at|date:"Y-m-d" }}</td>
+                                                <td>{{ transfer.description|truncatechars:30 }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">لا توجد تحويلات صادرة</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Transfers To -->
+                        <div class="col-md-6">
+                            <h6 class="text-success">التحويلات الواردة</h6>
+                            {% if transfers_to %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>من خزنة</th>
+                                                <th>المبلغ</th>
+                                                <th>التاريخ</th>
+                                                <th>البيان</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for transfer in transfers_to %}
+                                            <tr>
+                                                <td>
+                                                    <a href="{% url 'accounting_app:details:safe_detail' transfer.from_safe.pk %}" 
+                                                       class="text-decoration-none">
+                                                        {{ transfer.from_safe.name }}
+                                                    </a>
+                                                </td>
+                                                <td>{{ transfer.amount|floatformat:2 }} ريال</td>
+                                                <td>{{ transfer.created_at|date:"Y-m-d" }}</td>
+                                                <td>{{ transfer.description|truncatechars:30 }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">لا توجد تحويلات واردة</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions Tab -->
+        <div class="tab-pane fade" id="recent" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">المعاملات الأخيرة</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_vouchers or recent_transfers %}
+                        <div class="timeline">
+                            {% for voucher in recent_vouchers %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-{% if voucher.type == 'receipt' %}success{% else %}danger{% endif %}"></div>
+                                <div class="timeline-content">
+                                    <h6 class="timeline-title">
+                                        سند {{ voucher.get_type_display }}
+                                        <span class="badge bg-{% if voucher.type == 'receipt' %}success{% else %}danger{% endif %}">
+                                            {{ voucher.amount|floatformat:2 }} ريال
+                                        </span>
+                                    </h6>
+                                    <p class="timeline-text">{{ voucher.description }}</p>
+                                    <small class="text-muted">{{ voucher.date|date:"Y-m-d H:i" }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                            {% for transfer in recent_transfers %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-info"></div>
+                                <div class="timeline-content">
+                                    <h6 class="timeline-title">
+                                        تحويل
+                                        <span class="badge bg-info">
+                                            {{ transfer.amount|floatformat:2 }} ريال
+                                        </span>
+                                    </h6>
+                                    <p class="timeline-text">
+                                        من {{ transfer.from_safe.name }} إلى {{ transfer.to_safe.name }}
+                                        {% if transfer.description %}: {{ transfer.description }}{% endif %}
+                                    </p>
+                                    <small class="text-muted">{{ transfer.created_at|date:"Y-m-d H:i" }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">لا توجد معاملات حديثة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -35px;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 3px solid #dee2e6;
+}
+
+.timeline-title {
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.timeline-text {
+    margin-bottom: 5px;
+    font-size: 13px;
+    color: #6c757d;
+}
+</style>
+{% endblock %}
