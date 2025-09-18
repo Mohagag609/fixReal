@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}غير مصرح - مكة العقارية{% endblock %}
+{% block page_title %}غير مصرح{% endblock %}
+{% block page_subtitle %}عذراً، ليس لديك صلاحية للوصول لهذه الصفحة{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center">
+    <div class="text-center">
+        <div class="mb-8">
+            <i class="fas fa-lock text-8xl text-red-500 mb-4"></i>
+            <h1 class="text-6xl font-bold text-gray-900 mb-4">403</h1>
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">غير مصرح</h2>
+            <p class="text-gray-600 mb-8">عذراً، ليس لديك صلاحية للوصول لهذه الصفحة.</p>
+        </div>
+        
+        <div class="space-y-4">
+            <a href="{% url 'realpp:dashboard' %}" 
+               class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-medium transition-colors">
+                العودة للوحة التحكم
+            </a>
+            <div class="text-sm text-gray-500">
+                أو <a href="javascript:history.back()" class="text-blue-600 hover:text-blue-800">العودة للصفحة السابقة</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

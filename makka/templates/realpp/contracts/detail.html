@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+
+{% block title %}تفاصيل العقد - {{ contract.contract_number }} - مكة العقارية{% endblock %}
+{% block page_title %}تفاصيل العقد{% endblock %}
+{% block page_subtitle %}{{ contract.contract_number }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <!-- Contract Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            <div class="flex items-center space-x-6 space-x-reverse">
+                <div class="w-20 h-20 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl flex items-center justify-center">
+                    <i class="fas fa-file-contract text-white text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ contract.contract_number }}</h1>
+                    <p class="text-lg text-gray-600">{{ contract.get_installment_type_display }}</p>
+                    <p class="text-sm text-gray-500">تاريخ العقد: {{ contract.created_at|date:"Y-m-d" }}</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <a href="{% url 'realpp:contracts_edit' contract.id %}" 
+                   class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center space-x-2 space-x-reverse">
+                    <i class="fas fa-edit"></i>
+                    <span>تعديل</span>
+                </a>
+                <button onclick="printContract()" 
+                        class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center space-x-2 space-x-reverse">
+                    <i class="fas fa-print"></i>
+                    <span>طباعة</span>
+                </button>
+                <button onclick="deleteContract({{ contract.id }})" 
+                        class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center space-x-2 space-x-reverse">
+                    <i class="fas fa-trash"></i>
+                    <span>حذف</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Contract Information -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Customer Information -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                <i class="fas fa-user text-blue-600 ml-3"></i>
+                معلومات العميل
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">الاسم</span>
+                    <span class="font-medium text-gray-900">{{ contract.customer.name }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">رقم الهاتف</span>
+                    <span class="font-medium text-gray-900">{{ contract.customer.phone }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">البريد الإلكتروني</span>
+                    <span class="font-medium text-gray-900">{{ contract.customer.email|default:"غير محدد" }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">نوع العميل</span>
+                    <span class="font-medium text-gray-900">{{ contract.customer.get_customer_type_display }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3">
+                    <span class="text-gray-600">رقم الهوية</span>
+                    <span class="font-medium text-gray-900">{{ contract.customer.national_id|default:"غير محدد" }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Unit Information -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                <i class="fas fa-home text-purple-600 ml-3"></i>
+                معلومات الوحدة
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">رقم الوحدة</span>
+                    <span class="font-medium text-gray-900">{{ contract.unit.unit_number }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">نوع الوحدة</span>
+                    <span class="font-medium text-gray-900">{{ contract.unit.get_unit_type_display }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">الطابق</span>
+                    <span class="font-medium text-gray-900">{{ contract.unit.floor }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">المبنى</span>
+                    <span class="font-medium text-gray-900">{{ contract.unit.building }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3">
+                    <span class="text-gray-600">المساحة</span>
+                    <span class="font-medium text-gray-900">{{ contract.unit.area }} م²</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Financial Information -->
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+            <i class="fas fa-calculator text-green-600 ml-3"></i>
+            المعلومات المالية
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="text-center p-4 bg-blue-50 rounded-xl">
+                <div class="text-2xl font-bold text-blue-600">{{ contract.total_price|floatformat:0 }}</div>
+                <div class="text-sm text-gray-600">إجمالي السعر (ريال)</div>
+            </div>
+            
+            <div class="text-center p-4 bg-red-50 rounded-xl">
+                <div class="text-2xl font-bold text-red-600">{{ contract.discount|floatformat:0 }}</div>
+                <div class="text-sm text-gray-600">الخصم (ريال)</div>
+            </div>
+            
+            <div class="text-center p-4 bg-green-50 rounded-xl">
+                <div class="text-2xl font-bold text-green-600">{{ contract.final_price|floatformat:0 }}</div>
+                <div class="text-sm text-gray-600">السعر النهائي (ريال)</div>
+            </div>
+            
+            <div class="text-center p-4 bg-orange-50 rounded-xl">
+                <div class="text-2xl font-bold text-orange-600">{{ contract.down_payment|floatformat:0 }}</div>
+                <div class="text-sm text-gray-600">المقدم (ريال)</div>
+            </div>
+        </div>
+        
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="p-4 bg-gray-50 rounded-xl">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-600">نسبة المقدم</span>
+                    <span class="font-medium text-gray-900">{{ contract.down_payment_percentage }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: {{ contract.down_payment_percentage }}%"></div>
+                </div>
+            </div>
+            
+            <div class="p-4 bg-gray-50 rounded-xl">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-600">المبلغ المتبقي</span>
+                    <span class="font-medium text-gray-900">{{ contract.remaining_amount|floatformat:0 }} ريال</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-green-600 h-2 rounded-full" style="width: {{ contract.remaining_percentage }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Installment Information -->
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+            <i class="fas fa-calendar-alt text-purple-600 ml-3"></i>
+            معلومات التقسيط
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center p-4 bg-purple-50 rounded-xl">
+                <div class="text-2xl font-bold text-purple-600">{{ contract.installment_count }}</div>
+                <div class="text-sm text-gray-600">عدد الأقساط</div>
+            </div>
+            
+            <div class="text-center p-4 bg-blue-50 rounded-xl">
+                <div class="text-2xl font-bold text-blue-600">{{ contract.installment_amount|floatformat:0 }}</div>
+                <div class="text-sm text-gray-600">مبلغ القسط (ريال)</div>
+            </div>
+            
+            <div class="text-center p-4 bg-green-50 rounded-xl">
+                <div class="text-2xl font-bold text-green-600">{{ contract.installment_type|title }}</div>
+                <div class="text-sm text-gray-600">نوع التقسيط</div>
+            </div>
+        </div>
+        
+        {% if contract.installment_start_date %}
+        <div class="mt-6 text-center">
+            <div class="inline-block p-4 bg-gray-50 rounded-xl">
+                <div class="text-sm text-gray-600">تاريخ بداية التقسيط</div>
+                <div class="text-lg font-medium text-gray-900">{{ contract.installment_start_date|date:"Y-m-d" }}</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Broker Information -->
+    {% if contract.broker %}
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+            <i class="fas fa-handshake text-yellow-600 ml-3"></i>
+            معلومات الوسيط
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                <span class="text-gray-600">اسم الوسيط</span>
+                <span class="font-medium text-gray-900">{{ contract.broker.name }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                <span class="text-gray-600">رقم الهاتف</span>
+                <span class="font-medium text-gray-900">{{ contract.broker.phone }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                <span class="text-gray-600">عمولة الوسيط</span>
+                <span class="font-medium text-gray-900">{{ contract.broker_commission|floatformat:0 }} ريال</span>
+            </div>
+            
+            <div class="flex justify-between items-center py-3">
+                <span class="text-gray-600">نسبة العمولة</span>
+                <span class="font-medium text-gray-900">{{ contract.broker_commission_percentage }}%</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Contract Notes -->
+    {% if contract.notes %}
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+            <i class="fas fa-sticky-note text-gray-600 ml-3"></i>
+            ملاحظات العقد
+        </h2>
+        
+        <div class="p-4 bg-gray-50 rounded-xl">
+            <p class="text-gray-700 leading-relaxed">{{ contract.notes }}</p>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Installments Schedule -->
+    {% if contract.installments.all %}
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+            <i class="fas fa-list-alt text-indigo-600 ml-3"></i>
+            جدول الأقساط
+        </h2>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-right text-sm font-medium text-gray-700">رقم القسط</th>
+                        <th class="px-6 py-3 text-right text-sm font-medium text-gray-700">المبلغ</th>
+                        <th class="px-6 py-3 text-right text-sm font-medium text-gray-700">تاريخ الاستحقاق</th>
+                        <th class="px-6 py-3 text-right text-sm font-medium text-gray-700">تاريخ السداد</th>
+                        <th class="px-6 py-3 text-right text-sm font-medium text-gray-700">الحالة</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for installment in contract.installments.all %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 font-medium text-gray-900">{{ installment.installment_number }}</td>
+                        <td class="px-6 py-4 text-gray-900">{{ installment.amount|floatformat:0 }} ريال</td>
+                        <td class="px-6 py-4 text-gray-900">{{ installment.due_date|date:"Y-m-d" }}</td>
+                        <td class="px-6 py-4 text-gray-900">{{ installment.paid_date|date:"Y-m-d"|default:"-" }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 text-xs font-medium rounded-full 
+                                {% if installment.status == 'paid' %}bg-green-100 text-green-800
+                                {% elif installment.status == 'overdue' %}bg-red-100 text-red-800
+                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {{ installment.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    
+</div>
+
+<script>
+function deleteContract(contractId) {
+    if (confirm('هل أنت متأكد من حذف هذا العقد؟ سيتم حذف جميع البيانات المرتبطة به.')) {
+        fetch(`/contracts/${contractId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '{% url "realpp:contracts_list" %}';
+            } else {
+                alert('حدث خطأ أثناء حذف العقد: ' + (data.error || 'خطأ غير معروف'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء حذف العقد');
+        });
+    }
+}
+
+function printContract() {
+    window.print();
+}
+</script>
+{% endblock %}

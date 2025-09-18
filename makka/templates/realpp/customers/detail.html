@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block title %}تفاصيل العميل - {{ customer.name }} - مكة العقارية{% endblock %}
+{% block page_title %}تفاصيل العميل{% endblock %}
+{% block page_subtitle %}{{ customer.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <!-- Customer Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            <div class="flex items-center space-x-6 space-x-reverse">
+                <div class="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                    <i class="fas fa-user text-white text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ customer.name }}</h1>
+                    <p class="text-lg text-gray-600">{{ customer.customer_type|title }}</p>
+                    <p class="text-sm text-gray-500">مسجل منذ {{ customer.created_at|date:"Y-m-d" }}</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <a href="{% url 'realpp:customers_edit' customer.id %}" 
+                   class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center space-x-2 space-x-reverse">
+                    <i class="fas fa-edit"></i>
+                    <span>تعديل</span>
+                </a>
+                <button onclick="deleteCustomer({{ customer.id }})" 
+                        class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center space-x-2 space-x-reverse">
+                    <i class="fas fa-trash"></i>
+                    <span>حذف</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Customer Information -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Personal Information -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                <i class="fas fa-user text-blue-600 ml-3"></i>
+                المعلومات الشخصية
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">الاسم الكامل</span>
+                    <span class="font-medium text-gray-900">{{ customer.name }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">نوع العميل</span>
+                    <span class="font-medium text-gray-900">{{ customer.customer_type|title }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">رقم الهاتف</span>
+                    <span class="font-medium text-gray-900">{{ customer.phone }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">البريد الإلكتروني</span>
+                    <span class="font-medium text-gray-900">{{ customer.email|default:"غير محدد" }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">رقم الهوية الوطنية</span>
+                    <span class="font-medium text-gray-900">{{ customer.national_id|default:"غير محدد" }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">تاريخ الميلاد</span>
+                    <span class="font-medium text-gray-900">{{ customer.date_of_birth|date:"Y-m-d"|default:"غير محدد" }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3">
+                    <span class="text-gray-600">المهنة</span>
+                    <span class="font-medium text-gray-900">{{ customer.occupation|default:"غير محدد" }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Address Information -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                <i class="fas fa-map-marker-alt text-green-600 ml-3"></i>
+                معلومات العنوان
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">المدينة</span>
+                    <span class="font-medium text-gray-900">{{ customer.city|default:"غير محدد" }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">الحي</span>
+                    <span class="font-medium text-gray-900">{{ customer.district|default:"غير محدد" }}</span>
+                </div>
+                
+                <div class="py-3">
+                    <span class="text-gray-600 block mb-2">العنوان التفصيلي</span>
+                    <span class="font-medium text-gray-900">{{ customer.address|default:"غير محدد" }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span class="text-gray-600">مكان العمل</span>
+                    <span class="font-medium text-gray-900">{{ customer.workplace|default:"غير محدد" }}</span>
+                </div>
+                
+                <div class="py-3">
+                    <span class="text-gray-600 block mb-2">ملاحظات</span>
+                    <span class="font-medium text-gray-900">{{ customer.notes|default:"لا توجد ملاحظات" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Customer Statistics -->
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+            <i class="fas fa-chart-bar text-purple-600 ml-3"></i>
+            إحصائيات العميل
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="text-center p-4 bg-blue-50 rounded-xl">
+                <div class="text-3xl font-bold text-blue-600">{{ customer.contracts.count }}</div>
+                <div class="text-sm text-gray-600">إجمالي العقود</div>
+            </div>
+            
+            <div class="text-center p-4 bg-green-50 rounded-xl">
+                <div class="text-3xl font-bold text-green-600">{{ customer.total_purchases|floatformat:0 }}</div>
+                <div class="text-sm text-gray-600">إجمالي المشتريات (ريال)</div>
+            </div>
+            
+            <div class="text-center p-4 bg-orange-50 rounded-xl">
+                <div class="text-3xl font-bold text-orange-600">{{ customer.pending_amount|floatformat:0 }}</div>
+                <div class="text-sm text-gray-600">المبلغ المتبقي (ريال)</div>
+            </div>
+            
+            <div class="text-center p-4 bg-purple-50 rounded-xl">
+                <div class="text-3xl font-bold text-purple-600">{{ customer.payment_percentage|floatformat:1 }}%</div>
+                <div class="text-sm text-gray-600">نسبة السداد</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Customer Contracts -->
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-file-contract text-orange-600 ml-3"></i>
+                عقود العميل
+            </h2>
+            <a href="{% url 'realpp:contracts_create' %}?customer={{ customer.id }}" 
+               class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-xl font-medium transition-colors flex items-center space-x-2 space-x-reverse">
+                <i class="fas fa-plus"></i>
+                <span>عقد جديد</span>
+            </a>
+        </div>
+        
+        {% if customer.contracts.all %}
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-right text-sm font-medium text-gray-700">رقم العقد</th>
+                        <th class="px-6 py-3 text-right text-sm font-medium text-gray-700">الوحدة</th>
+                        <th class="px-6 py-3 text-right text-sm font-medium text-gray-700">إجمالي السعر</th>
+                        <th class="px-6 py-3 text-right text-sm font-medium text-gray-700">تاريخ العقد</th>
+                        <th class="px-6 py-3 text-right text-sm font-medium text-gray-700">الحالة</th>
+                        <th class="px-6 py-3 text-right text-sm font-medium text-gray-700">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for contract in customer.contracts.all %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 font-medium text-gray-900">{{ contract.contract_number }}</td>
+                        <td class="px-6 py-4 text-gray-900">{{ contract.unit.unit_number }}</td>
+                        <td class="px-6 py-4 text-gray-900">{{ contract.total_price|floatformat:0 }} ريال</td>
+                        <td class="px-6 py-4 text-gray-900">{{ contract.created_at|date:"Y-m-d" }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 text-xs font-medium rounded-full 
+                                {% if contract.status == 'active' %}bg-green-100 text-green-800
+                                {% elif contract.status == 'completed' %}bg-blue-100 text-blue-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ contract.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <a href="{% url 'realpp:contracts_detail' contract.id %}" 
+                               class="text-blue-600 hover:text-blue-800 font-medium">عرض</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-file-contract text-4xl mb-4"></i>
+            <p class="text-lg">لا توجد عقود</p>
+            <p class="text-sm">ابدأ بإنشاء عقد جديد لهذا العميل</p>
+        </div>
+        {% endif %}
+    </div>
+    
+</div>
+
+<script>
+function deleteCustomer(customerId) {
+    if (confirm('هل أنت متأكد من حذف هذا العميل؟ سيتم حذف جميع البيانات المرتبطة به.')) {
+        fetch(`/customers/${customerId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '{% url "realpp:customers_list" %}';
+            } else {
+                alert('حدث خطأ أثناء حذف العميل: ' + (data.error || 'خطأ غير معروف'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء حذف العميل');
+        });
+    }
+}
+</script>
+{% endblock %}
