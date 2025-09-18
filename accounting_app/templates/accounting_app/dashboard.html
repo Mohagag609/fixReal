@@ -1,186 +1,243 @@
-{% extends 'base.html' %}
+{% extends 'accounting_app/base.html' %}
 
 {% block page_title %}الرئيسية{% endblock %}
+{% block page_description %}إدارة شاملة للعقارات والعقود والأقساط{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
+<div class="container-fluid">
     <!-- Welcome Section -->
-    <div class="bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl p-8 text-white">
-        <h2 class="text-3xl font-bold mb-2">مرحباً بك في نظام المحاسبة العقارية</h2>
-        <p class="text-slate-200">إدارة شاملة للعقارات والعقود والأقساط</p>
+    <div class="kpi-card mb-4">
+        <h2 class="mb-2">مرحباً بك في نظام المحاسبة العقارية</h2>
+        <p class="mb-0">إدارة شاملة للعقارات والعقود والأقساط</p>
     </div>
     
     <!-- KPI Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="row">
         <!-- Total Contracts -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 card-hover">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">إجمالي العقود</p>
-                    <p class="text-3xl font-bold text-slate-800">{{ kpis.total_contracts }}</p>
-                </div>
-                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="kpi-value text-primary">{{ kpis.total_contracts }}</div>
+                    <div class="kpi-label">إجمالي العقود</div>
+                    <i class="fas fa-file-contract fa-2x text-primary mt-2"></i>
                 </div>
             </div>
         </div>
         
         <!-- Total Customers -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 card-hover">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">إجمالي العملاء</p>
-                    <p class="text-3xl font-bold text-slate-800">{{ kpis.total_customers }}</p>
-                </div>
-                <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                    </svg>
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="kpi-value text-success">{{ kpis.total_customers }}</div>
+                    <div class="kpi-label">إجمالي العملاء</div>
+                    <i class="fas fa-users fa-2x text-success mt-2"></i>
                 </div>
             </div>
         </div>
         
         <!-- Total Units -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 card-hover">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">إجمالي الوحدات</p>
-                    <p class="text-3xl font-bold text-slate-800">{{ kpis.total_units }}</p>
-                </div>
-                <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="kpi-value text-info">{{ kpis.total_units }}</div>
+                    <div class="kpi-label">إجمالي الوحدات</div>
+                    <i class="fas fa-home fa-2x text-info mt-2"></i>
                 </div>
             </div>
         </div>
         
-        <!-- Pending Installments -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 card-hover">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">الأقساط المعلقة</p>
-                    <p class="text-3xl font-bold text-slate-800">{{ kpis.pending_installments }}</p>
-                </div>
-                <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                    </svg>
+        <!-- Total Installments -->
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="kpi-value text-warning">{{ kpis.total_installments }}</div>
+                    <div class="kpi-label">إجمالي الأقساط</div>
+                    <i class="fas fa-calendar-check fa-2x text-warning mt-2"></i>
                 </div>
             </div>
         </div>
     </div>
     
     <!-- Financial Summary -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="row">
         <!-- Total Contracts Value -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">قيمة العقود الإجمالية</h3>
-            <div class="flex items-center justify-between">
-                <span class="text-3xl font-bold text-green-600">{{ kpis.total_contracts_value|floatformat:2 }} ريال</span>
-                <div class="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center">
-                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                    </svg>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">قيمة العقود الإجمالية</h3>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="h3 text-success mb-0">{{ kpis.total_contracts_value|floatformat:2 }} ريال</span>
+                        <i class="fas fa-money-bill-wave fa-3x text-success"></i>
+                    </div>
                 </div>
             </div>
         </div>
         
         <!-- Total Installments Value -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">قيمة الأقساط المدفوعة</h3>
-            <div class="flex items-center justify-between">
-                <span class="text-3xl font-bold text-blue-600">{{ kpis.total_installments_value|floatformat:2 }} ريال</span>
-                <div class="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">قيمة الأقساط المدفوعة</h3>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="h3 text-primary mb-0">{{ kpis.total_installments_value|floatformat:2 }} ريال</span>
+                        <i class="fas fa-check-circle fa-3x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pending Installments -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">الأقساط المعلقة</h3>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="h3 text-warning mb-0">{{ kpis.pending_installments }}</span>
+                        <i class="fas fa-clock fa-3x text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pending Value -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">قيمة الأقساط المعلقة</h3>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="h3 text-danger mb-0">{{ kpis.pending_installments_value|floatformat:2 }} ريال</span>
+                        <i class="fas fa-exclamation-triangle fa-3x text-danger"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
     <!-- Quick Actions -->
-    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900 mb-6">الإجراءات السريعة</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <a href="/customers/create/" class="group bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl p-4 hover:from-blue-600 hover:to-blue-700 transition-all duration-200 hover-scale">
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    <span class="font-medium">إضافة عميل</span>
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-title mb-0">الإجراءات السريعة</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <a href="{% url 'accounting_app:customer_create' %}" class="btn btn-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center">
+                        <i class="fas fa-user-plus fa-2x mb-2"></i>
+                        <span>إضافة عميل</span>
+                    </a>
                 </div>
-            </a>
-            
-            <a href="/units/create/" class="group bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-xl p-4 hover:from-cyan-600 hover:to-cyan-700 transition-all duration-200 hover-scale">
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    <span class="font-medium">إضافة وحدة</span>
+                
+                <div class="col-md-3 mb-3">
+                    <a href="{% url 'accounting_app:unit_create' %}" class="btn btn-info w-100 h-100 d-flex flex-column justify-content-center align-items-center">
+                        <i class="fas fa-home fa-2x mb-2"></i>
+                        <span>إضافة وحدة</span>
+                    </a>
                 </div>
-            </a>
-            
-            <a href="/contracts/create/" class="group bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-xl p-4 hover:from-teal-600 hover:to-teal-700 transition-all duration-200 hover-scale">
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    <span class="font-medium">إضافة عقد</span>
+                
+                <div class="col-md-3 mb-3">
+                    <a href="{% url 'accounting_app:contract_create' %}" class="btn btn-success w-100 h-100 d-flex flex-column justify-content-center align-items-center">
+                        <i class="fas fa-file-contract fa-2x mb-2"></i>
+                        <span>إضافة عقد</span>
+                    </a>
                 </div>
-            </a>
-            
-            <a href="/vouchers/create/" class="group bg-gradient-to-r from-slate-500 to-slate-600 text-white rounded-xl p-4 hover:from-slate-600 hover:to-slate-700 transition-all duration-200 hover-scale">
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    <span class="font-medium">إضافة سند</span>
+                
+                <div class="col-md-3 mb-3">
+                    <a href="{% url 'accounting_app:voucher_create' %}" class="btn btn-warning w-100 h-100 d-flex flex-column justify-content-center align-items-center">
+                        <i class="fas fa-receipt fa-2x mb-2"></i>
+                        <span>إضافة سند</span>
+                    </a>
                 </div>
-            </a>
+            </div>
         </div>
     </div>
     
     <!-- Navigation Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <a href="/customers/" class="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 card-hover">
-            <div class="flex items-center mb-4">
-                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center ml-4">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                    </svg>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <a href="{% url 'accounting_app:customer_list' %}" class="card text-decoration-none">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary text-white rounded-circle p-3 me-3">
+                            <i class="fas fa-users fa-lg"></i>
+                        </div>
+                        <h5 class="card-title mb-0">إدارة العملاء</h5>
+                    </div>
+                    <p class="card-text text-muted">عرض وإدارة بيانات العملاء</p>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-900">إدارة العملاء</h3>
-            </div>
-            <p class="text-gray-600 text-sm">عرض وإدارة بيانات العملاء</p>
-        </a>
+            </a>
+        </div>
         
-        <a href="/units/" class="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 card-hover">
-            <div class="flex items-center mb-4">
-                <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center ml-4">
-                    <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
+        <div class="col-md-4 mb-4">
+            <a href="{% url 'accounting_app:unit_list' %}" class="card text-decoration-none">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-info text-white rounded-circle p-3 me-3">
+                            <i class="fas fa-home fa-lg"></i>
+                        </div>
+                        <h5 class="card-title mb-0">إدارة الوحدات</h5>
+                    </div>
+                    <p class="card-text text-muted">عرض وإدارة الوحدات العقارية</p>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-900">إدارة الوحدات</h3>
-            </div>
-            <p class="text-gray-600 text-sm">عرض وإدارة الوحدات العقارية</p>
-        </a>
+            </a>
+        </div>
         
-        <a href="/contracts/" class="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 card-hover">
-            <div class="flex items-center mb-4">
-                <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center ml-4">
-                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
+        <div class="col-md-4 mb-4">
+            <a href="{% url 'accounting_app:contract_list' %}" class="card text-decoration-none">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success text-white rounded-circle p-3 me-3">
+                            <i class="fas fa-file-contract fa-lg"></i>
+                        </div>
+                        <h5 class="card-title mb-0">إدارة العقود</h5>
+                    </div>
+                    <p class="card-text text-muted">عرض وإدارة العقود والأقساط</p>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-900">إدارة العقود</h3>
-            </div>
-            <p class="text-gray-600 text-sm">عرض وإدارة العقود والأقساط</p>
-        </a>
+            </a>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <a href="{% url 'accounting_app:partner_list' %}" class="card text-decoration-none">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-warning text-white rounded-circle p-3 me-3">
+                            <i class="fas fa-handshake fa-lg"></i>
+                        </div>
+                        <h5 class="card-title mb-0">إدارة الشركاء</h5>
+                    </div>
+                    <p class="card-text text-muted">عرض وإدارة الشركاء والاستثمارات</p>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <a href="{% url 'accounting_app:safe_list' %}" class="card text-decoration-none">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-secondary text-white rounded-circle p-3 me-3">
+                            <i class="fas fa-vault fa-lg"></i>
+                        </div>
+                        <h5 class="card-title mb-0">إدارة الخزنات</h5>
+                    </div>
+                    <p class="card-text text-muted">عرض وإدارة الخزنات والأرصدة</p>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <a href="{% url 'accounting_app:advanced:notification_dashboard' %}" class="card text-decoration-none">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-danger text-white rounded-circle p-3 me-3">
+                            <i class="fas fa-bell fa-lg"></i>
+                        </div>
+                        <h5 class="card-title mb-0">الإشعارات</h5>
+                    </div>
+                    <p class="card-text text-muted">إدارة الإشعارات والتنبيهات</p>
+                </div>
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %}
