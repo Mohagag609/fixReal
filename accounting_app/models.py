@@ -32,6 +32,43 @@ class Customer(BaseModel):
             models.Index(fields=['created_at']),
         ]
     
+    def get_contracts(self):
+        """الحصول على العقود المرتبطة بالعميل"""
+        return self.contracts.filter(deleted_at__isnull=True)
+    
+    def get_total_contracts(self):
+        """حساب إجمالي عدد العقود"""
+        return self.get_contracts().count()
+    
+    def get_total_investment(self):
+        """حساب إجمالي الاستثمار"""
+        return self.get_contracts().aggregate(
+            total=models.Sum('total_price')
+        )['total'] or 0
+    
+    def get_total_down_payment(self):
+        """حساب إجمالي المقدم"""
+        return self.get_contracts().aggregate(
+            total=models.Sum('down_payment')
+        )['total'] or 0
+    
+    def get_total_discount(self):
+        """حساب إجمالي الخصم"""
+        return self.get_contracts().aggregate(
+            total=models.Sum('discount_amount')
+        )['total'] or 0
+    
+    def get_units(self):
+        """الحصول على الوحدات المرتبطة بالعميل"""
+        return Unit.objects.filter(
+            contracts__customer=self,
+            contracts__deleted_at__isnull=True
+        ).distinct()
+    
+    def get_total_units(self):
+        """حساب إجمالي عدد الوحدات"""
+        return self.get_units().count()
+    
     def __str__(self):
         return self.name
 
@@ -72,6 +109,52 @@ class Unit(BaseModel):
             models.Index(fields=['code']),
         ]
     
+    def save(self, *args, **kwargs):
+        # توليد كود الوحدة تلقائياً إذا لم يكن موجوداً
+        if not self.code:
+            self.code = self.generate_unit_code()
+        super().save(*args, **kwargs)
+    
+    def generate_unit_code(self):
+        """توليد كود الوحدة تلقائياً"""
+        from django.db.models import Max
+        # البحث عن آخر كود
+        last_unit = Unit.objects.filter(
+            code__startswith=f"{self.unit_type}-"
+        ).aggregate(max_code=Max('code'))
+        
+        if last_unit['max_code']:
+            # استخراج الرقم من آخر كود
+            try:
+                last_number = int(last_unit['max_code'].split('-')[-1])
+                new_number = last_number + 1
+            except (ValueError, IndexError):
+                new_number = 1
+        else:
+            new_number = 1
+        
+        return f"{self.unit_type}-{new_number:04d}"
+    
+    def get_total_partner_percentage(self):
+        """حساب إجمالي نسبة الشركاء"""
+        total = self.unit_partners.filter(deleted_at__isnull=True).aggregate(
+            total=models.Sum('percentage')
+        )['total'] or 0
+        return total
+    
+    def validate_partner_percentages(self):
+        """التحقق من صحة نسب الشركاء"""
+        total = self.get_total_partner_percentage()
+        return abs(total - 100) < 0.01  # السماح بفروق صغيرة
+    
+    def get_contract(self):
+        """الحصول على العقد المرتبط بالوحدة"""
+        return self.contracts.filter(deleted_at__isnull=True).first()
+    
+    def is_available(self):
+        """التحقق من توفر الوحدة"""
+        return self.status == 'متاحة' and not self.get_contract()
+    
     def __str__(self):
         return f"{self.code} - {self.name or 'بدون اسم'}"
 
@@ -90,6 +173,49 @@ class Partner(BaseModel):
             models.Index(fields=['phone']),
             models.Index(fields=['deleted_at']),
         ]
+    
+    def get_total_debt(self):
+        """حساب إجمالي ديون الشريك"""
+        return self.partner_debts.filter(
+            deleted_at__isnull=True
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    def get_paid_debt(self):
+        """حساب إجمالي الديون المدفوعة"""
+        return self.partner_debts.filter(
+            status='مدفوع',
+            deleted_at__isnull=True
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    def get_pending_debt(self):
+        """حساب إجمالي الديون المعلقة"""
+        return self.partner_debts.filter(
+            status='معلق',
+            deleted_at__isnull=True
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    def get_units(self):
+        """الحصول على الوحدات المرتبطة بالشريك"""
+        return Unit.objects.filter(
+            unit_partners__partner=self,
+            unit_partners__deleted_at__isnull=True
+        ).distinct()
+    
+    def get_total_units(self):
+        """حساب إجمالي عدد الوحدات"""
+        return self.get_units().count()
+    
+    def get_total_investment(self):
+        """حساب إجمالي الاستثمار"""
+        total = 0
+        for unit in self.get_units():
+            unit_partner = unit.unit_partners.filter(
+                partner=self,
+                deleted_at__isnull=True
+            ).first()
+            if unit_partner:
+                total += (unit.total_price * unit_partner.percentage) / 100
+        return total
     
     def __str__(self):
         return self.name
@@ -159,6 +285,42 @@ class Contract(BaseModel):
             models.Index(fields=['created_at']),
         ]
     
+    def save(self, *args, **kwargs):
+        # حساب مبلغ السمسار تلقائياً
+        if self.broker_percent and self.total_price:
+            self.broker_amount = (self.total_price * self.broker_percent) / 100
+        super().save(*args, **kwargs)
+    
+    def get_total_installments(self):
+        """حساب إجمالي عدد الأقساط"""
+        return self.installment_count + self.extra_annual
+    
+    def get_installment_base_amount(self):
+        """حساب المبلغ الأساسي للأقساط"""
+        return self.total_price - self.maintenance_deposit
+    
+    def get_total_after_discount_and_down_payment(self):
+        """حساب المبلغ المتبقي بعد الخصم والمقدم"""
+        base = self.get_installment_base_amount()
+        return base - self.discount_amount - self.down_payment
+    
+    def get_annual_payments_total(self):
+        """حساب إجمالي الدفعات السنوية"""
+        return self.extra_annual * self.annual_payment_value
+    
+    def get_remaining_after_annual_payments(self):
+        """حساب المبلغ المتبقي بعد الدفعات السنوية"""
+        total_after_discount = self.get_total_after_discount_and_down_payment()
+        annual_total = self.get_annual_payments_total()
+        return total_after_discount - annual_total
+    
+    def get_regular_installment_amount(self):
+        """حساب مبلغ القسط العادي"""
+        remaining = self.get_remaining_after_annual_payments()
+        if self.installment_count > 0:
+            return remaining / self.installment_count
+        return Decimal('0.00')
+    
     def __str__(self):
         return f"عقد {self.unit.code} - {self.customer.name}"
 
@@ -189,6 +351,38 @@ class Installment(BaseModel):
             models.Index(fields=['amount']),
         ]
     
+    def save(self, *args, **kwargs):
+        # التحقق من صحة البيانات
+        if self.amount <= 0:
+            raise ValueError("مبلغ القسط يجب أن يكون أكبر من صفر")
+        super().save(*args, **kwargs)
+    
+    def mark_as_paid(self):
+        """تحديد القسط كمُدفوع"""
+        self.status = 'مدفوع'
+        self.save(update_fields=['status'])
+    
+    def mark_as_unpaid(self):
+        """تحديد القسط كغير مدفوع"""
+        self.status = 'غير مدفوع'
+        self.save(update_fields=['status'])
+    
+    def is_overdue(self):
+        """التحقق من تأخر القسط"""
+        from django.utils import timezone
+        return self.due_date < timezone.now().date() and self.status != 'مدفوع'
+    
+    def get_days_overdue(self):
+        """حساب عدد أيام التأخير"""
+        if self.is_overdue():
+            from django.utils import timezone
+            return (timezone.now().date() - self.due_date).days
+        return 0
+    
+    def get_contract(self):
+        """الحصول على العقد المرتبط بالوحدة"""
+        return self.unit.get_contract()
+    
     def __str__(self):
         return f"قسط {self.unit.code} - {self.amount} ({self.due_date.strftime('%Y-%m-%d')})"
 
@@ -218,6 +412,34 @@ class PartnerDebt(BaseModel):
             models.Index(fields=['due_date']),
         ]
     
+    def save(self, *args, **kwargs):
+        # التحقق من صحة البيانات
+        if self.amount <= 0:
+            raise ValueError("مبلغ الدين يجب أن يكون أكبر من صفر")
+        super().save(*args, **kwargs)
+    
+    def mark_as_paid(self):
+        """تحديد الدين كمُدفوع"""
+        self.status = 'مدفوع'
+        self.save(update_fields=['status'])
+    
+    def mark_as_unpaid(self):
+        """تحديد الدين كغير مدفوع"""
+        self.status = 'معلق'
+        self.save(update_fields=['status'])
+    
+    def is_overdue(self):
+        """التحقق من تأخر الدين"""
+        from django.utils import timezone
+        return self.due_date < timezone.now().date() and self.status != 'مدفوع'
+    
+    def get_days_overdue(self):
+        """حساب عدد أيام التأخير"""
+        if self.is_overdue():
+            from django.utils import timezone
+            return (timezone.now().date() - self.due_date).days
+        return 0
+    
     def __str__(self):
         return f"دين {self.partner.name} - {self.amount}"
 
@@ -230,6 +452,56 @@ class Safe(BaseModel):
     class Meta:
         verbose_name = "خزنة"
         verbose_name_plural = "الخزائن"
+    
+    def save(self, *args, **kwargs):
+        # التحقق من صحة البيانات
+        if self.balance < 0:
+            raise ValueError("رصيد الخزنة لا يمكن أن يكون سالباً")
+        super().save(*args, **kwargs)
+    
+    def get_total_receipts(self):
+        """حساب إجمالي الإيصالات"""
+        return self.vouchers.filter(
+            type='receipt',
+            deleted_at__isnull=True
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    def get_total_payments(self):
+        """حساب إجمالي المدفوعات"""
+        return self.vouchers.filter(
+            type='payment',
+            deleted_at__isnull=True
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    def get_transfers_in(self):
+        """حساب إجمالي التحويلات الواردة"""
+        return self.transfers_to.filter(
+            deleted_at__isnull=True
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    def get_transfers_out(self):
+        """حساب إجمالي التحويلات الصادرة"""
+        return self.transfers_from.filter(
+            deleted_at__isnull=True
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    def calculate_balance(self):
+        """حساب الرصيد بناءً على المعاملات"""
+        receipts = self.get_total_receipts()
+        payments = self.get_total_payments()
+        transfers_in = self.get_transfers_in()
+        transfers_out = self.get_transfers_out()
+        
+        return receipts - payments + transfers_in - transfers_out
+    
+    def update_balance(self):
+        """تحديث الرصيد بناءً على المعاملات"""
+        self.balance = self.calculate_balance()
+        self.save(update_fields=['balance'])
+    
+    def can_transfer(self, amount):
+        """التحقق من إمكانية التحويل"""
+        return self.balance >= amount
     
     def __str__(self):
         return f"{self.name} - {self.balance}"
@@ -252,6 +524,33 @@ class Transfer(BaseModel):
             models.Index(fields=['contract', 'deleted_at']),
             models.Index(fields=['created_at']),
         ]
+    
+    def save(self, *args, **kwargs):
+        # تحديث رصيدي الخزنين عند حفظ التحويل
+        super().save(*args, **kwargs)
+        self.update_safe_balances()
+    
+    def update_safe_balances(self):
+        """تحديث رصيدي الخزنين"""
+        if self.from_safe and self.to_safe:
+            # تقليل رصيد الخزنة المصدر
+            self.from_safe.balance -= self.amount
+            self.from_safe.save(update_fields=['balance'])
+            
+            # زيادة رصيد الخزنة الهدف
+            self.to_safe.balance += self.amount
+            self.to_safe.save(update_fields=['balance'])
+    
+    def delete(self, *args, **kwargs):
+        # إعادة حساب رصيدي الخزنين عند الحذف
+        if self.from_safe and self.to_safe:
+            # عكس العملية
+            self.from_safe.balance += self.amount
+            self.from_safe.save(update_fields=['balance'])
+            
+            self.to_safe.balance -= self.amount
+            self.to_safe.save(update_fields=['balance'])
+        super().delete(*args, **kwargs)
     
     def __str__(self):
         return f"تحويل من {self.from_safe.name} إلى {self.to_safe.name} - {self.amount}"
@@ -285,6 +584,29 @@ class Voucher(BaseModel):
             models.Index(fields=['contract', 'deleted_at']),
         ]
     
+    def save(self, *args, **kwargs):
+        # تحديث رصيد الخزنة عند حفظ السند
+        super().save(*args, **kwargs)
+        self.update_safe_balance()
+    
+    def update_safe_balance(self):
+        """تحديث رصيد الخزنة"""
+        if self.safe:
+            # حساب التغيير في الرصيد
+            balance_change = self.amount if self.type == 'receipt' else -self.amount
+            # تحديث الرصيد
+            self.safe.balance += balance_change
+            self.safe.save(update_fields=['balance'])
+    
+    def delete(self, *args, **kwargs):
+        # إعادة حساب رصيد الخزنة عند الحذف
+        if self.safe:
+            # عكس التغيير في الرصيد
+            balance_change = -self.amount if self.type == 'receipt' else self.amount
+            self.safe.balance += balance_change
+            self.safe.save(update_fields=['balance'])
+        super().delete(*args, **kwargs)
+    
     def __str__(self):
         return f"{self.get_type_display()} - {self.amount} ({self.date.strftime('%Y-%m-%d')})"
 
@@ -298,6 +620,43 @@ class Broker(BaseModel):
     class Meta:
         verbose_name = "سمسار"
         verbose_name_plural = "السماسرة"
+    
+    def get_total_due(self):
+        """حساب إجمالي ديون السمسار"""
+        return self.broker_dues.filter(
+            deleted_at__isnull=True
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    def get_paid_due(self):
+        """حساب إجمالي الديون المدفوعة"""
+        return self.broker_dues.filter(
+            status='مدفوع',
+            deleted_at__isnull=True
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    def get_pending_due(self):
+        """حساب إجمالي الديون المعلقة"""
+        return self.broker_dues.filter(
+            status='معلق',
+            deleted_at__isnull=True
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    def get_contracts(self):
+        """الحصول على العقود المرتبطة بالسمسار"""
+        return Contract.objects.filter(
+            broker_name=self.name,
+            deleted_at__isnull=True
+        )
+    
+    def get_total_contracts(self):
+        """حساب إجمالي عدد العقود"""
+        return self.get_contracts().count()
+    
+    def get_total_commission(self):
+        """حساب إجمالي العمولة"""
+        return self.get_contracts().aggregate(
+            total=models.Sum('broker_amount')
+        )['total'] or 0
     
     def __str__(self):
         return self.name
@@ -328,6 +687,34 @@ class BrokerDue(BaseModel):
             models.Index(fields=['due_date']),
         ]
     
+    def save(self, *args, **kwargs):
+        # التحقق من صحة البيانات
+        if self.amount <= 0:
+            raise ValueError("مبلغ الدين يجب أن يكون أكبر من صفر")
+        super().save(*args, **kwargs)
+    
+    def mark_as_paid(self):
+        """تحديد الدين كمُدفوع"""
+        self.status = 'مدفوع'
+        self.save(update_fields=['status'])
+    
+    def mark_as_unpaid(self):
+        """تحديد الدين كغير مدفوع"""
+        self.status = 'معلق'
+        self.save(update_fields=['status'])
+    
+    def is_overdue(self):
+        """التحقق من تأخر الدين"""
+        from django.utils import timezone
+        return self.due_date < timezone.now().date() and self.status != 'مدفوع'
+    
+    def get_days_overdue(self):
+        """حساب عدد أيام التأخير"""
+        if self.is_overdue():
+            from django.utils import timezone
+            return (timezone.now().date() - self.due_date).days
+        return 0
+    
     def __str__(self):
         return f"دين {self.broker.name} - {self.amount}"
 
@@ -340,6 +727,39 @@ class PartnerGroup(BaseModel):
     class Meta:
         verbose_name = "مجموعة شركاء"
         verbose_name_plural = "مجموعات الشركاء"
+    
+    def get_partners(self):
+        """الحصول على الشركاء في المجموعة"""
+        return Partner.objects.filter(
+            partner_group_partners__partner_group=self,
+            partner_group_partners__deleted_at__isnull=True
+        ).distinct()
+    
+    def get_total_partners(self):
+        """حساب إجمالي عدد الشركاء"""
+        return self.get_partners().count()
+    
+    def get_total_percentage(self):
+        """حساب إجمالي النسب في المجموعة"""
+        return self.partner_group_partners.filter(
+            deleted_at__isnull=True
+        ).aggregate(total=models.Sum('percentage'))['total'] or 0
+    
+    def validate_percentages(self):
+        """التحقق من صحة النسب"""
+        total = self.get_total_percentage()
+        return abs(total - 100) < 0.01  # السماح بفروق صغيرة
+    
+    def get_units(self):
+        """الحصول على الوحدات المرتبطة بالمجموعة"""
+        return Unit.objects.filter(
+            unit_partner_groups__partner_group=self,
+            unit_partner_groups__deleted_at__isnull=True
+        ).distinct()
+    
+    def get_total_units(self):
+        """حساب إجمالي عدد الوحدات"""
+        return self.get_units().count()
     
     def __str__(self):
         return self.name
@@ -462,6 +882,41 @@ class Notification(BaseModel):
             models.Index(fields=['expires_at']),
             models.Index(fields=['created_at']),
         ]
+    
+    def save(self, *args, **kwargs):
+        # التحقق من صحة البيانات
+        if not self.title or not self.message:
+            raise ValueError("العنوان والرسالة مطلوبان")
+        super().save(*args, **kwargs)
+    
+    def acknowledge(self, acknowledged_by=None):
+        """إقرار الإشعار"""
+        self.acknowledged = True
+        self.acknowledged_at = timezone.now()
+        if acknowledged_by:
+            self.acknowledged_by = acknowledged_by
+        self.save(update_fields=['acknowledged', 'acknowledged_at', 'acknowledged_by'])
+    
+    def is_expired(self):
+        """التحقق من انتهاء صلاحية الإشعار"""
+        if self.expires_at:
+            return timezone.now() > self.expires_at
+        return False
+    
+    def is_acknowledged(self):
+        """التحقق من إقرار الإشعار"""
+        return self.acknowledged
+    
+    def get_priority(self):
+        """حساب أولوية الإشعار"""
+        if self.type == 'error':
+            return 1  # أعلى أولوية
+        elif self.type == 'warning':
+            return 2
+        elif self.type == 'info':
+            return 3
+        else:
+            return 4  # أقل أولوية
     
     def __str__(self):
         return f"{self.title} - {self.get_type_display()}"
