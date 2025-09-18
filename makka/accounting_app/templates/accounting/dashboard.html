@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Accounting System{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Monthly Revenue -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 card-hover">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Monthly Revenue</p>
+                    <p class="text-2xl font-bold text-green-600">${{ monthly_revenue|floatformat:2 }}</p>
+                </div>
+                <div class="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-dollar-sign text-green-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <span class="text-sm text-green-600">
+                    <i class="fas fa-arrow-up"></i> 12.5%
+                </span>
+                <span class="text-sm text-gray-500 ml-2">vs last month</span>
+            </div>
+        </div>
+        
+        <!-- Outstanding Receivables -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 card-hover">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Outstanding Receivables</p>
+                    <p class="text-2xl font-bold text-blue-600">${{ outstanding_receivables|floatformat:2 }}</p>
+                </div>
+                <div class="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-file-invoice text-blue-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <span class="text-sm text-blue-600">
+                    <i class="fas fa-clock"></i> 15 invoices
+                </span>
+                <span class="text-sm text-gray-500 ml-2">pending payment</span>
+            </div>
+        </div>
+        
+        <!-- Outstanding Payables -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 card-hover">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Outstanding Payables</p>
+                    <p class="text-2xl font-bold text-orange-600">${{ outstanding_payables|floatformat:2 }}</p>
+                </div>
+                <div class="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-receipt text-orange-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <span class="text-sm text-orange-600">
+                    <i class="fas fa-exclamation-triangle"></i> 8 bills
+                </span>
+                <span class="text-sm text-gray-500 ml-2">due soon</span>
+            </div>
+        </div>
+        
+        <!-- Net Cash Flow -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 card-hover">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Net Cash Flow</p>
+                    <p class="text-2xl font-bold text-purple-600">${{ monthly_revenue|sub:outstanding_payables|floatformat:2 }}</p>
+                </div>
+                <div class="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <span class="text-sm text-purple-600">
+                    <i class="fas fa-arrow-up"></i> 8.2%
+                </span>
+                <span class="text-sm text-gray-500 ml-2">vs last month</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Revenue Chart -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Revenue Trend</h3>
+            <div class="h-64">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Expense Chart -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Expense Trend</h3>
+            <div class="h-64">
+                <canvas id="expenseChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Transactions -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Invoices -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Recent Invoices</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {% for invoice in recent_invoices %}
+                    <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                        <div class="flex items-center">
+                            <div class="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-file-invoice text-blue-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">{{ invoice.invoice_number }}</p>
+                                <p class="text-sm text-gray-500">{{ invoice.customer.name }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold text-gray-800">${{ invoice.total_amount|floatformat:2 }}</p>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if invoice.status == 'PAID' %}bg-green-100 text-green-800
+                                {% elif invoice.status == 'SENT' %}bg-blue-100 text-blue-800
+                                {% elif invoice.status == 'OVERDUE' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ invoice.status }}
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500 text-center py-8">No recent invoices</p>
+                    {% endfor %}
+                </div>
+                <div class="mt-4">
+                    <a href="{% url 'accounting:invoice_list' %}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        View all invoices →
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Bills -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Recent Bills</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {% for bill in recent_bills %}
+                    <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                        <div class="flex items-center">
+                            <div class="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-receipt text-orange-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">{{ bill.bill_number }}</p>
+                                <p class="text-sm text-gray-500">{{ bill.vendor.name }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold text-gray-800">${{ bill.total_amount|floatformat:2 }}</p>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if bill.status == 'PAID' %}bg-green-100 text-green-800
+                                {% elif bill.status == 'RECEIVED' %}bg-blue-100 text-blue-800
+                                {% elif bill.status == 'OVERDUE' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ bill.status }}
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500 text-center py-8">No recent bills</p>
+                    {% endfor %}
+                </div>
+                <div class="mt-4">
+                    <a href="{% url 'accounting:bill_list' %}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        View all bills →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <a href="{% url 'accounting:invoice_create' %}" 
+               class="flex flex-col items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+                <i class="fas fa-plus-circle text-blue-600 text-2xl mb-2"></i>
+                <span class="text-sm font-medium text-blue-800">New Invoice</span>
+            </a>
+            <a href="{% url 'accounting:bill_create' %}" 
+               class="flex flex-col items-center p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors">
+                <i class="fas fa-plus-circle text-orange-600 text-2xl mb-2"></i>
+                <span class="text-sm font-medium text-orange-800">New Bill</span>
+            </a>
+            <a href="{% url 'accounting:payment_create' %}" 
+               class="flex flex-col items-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+                <i class="fas fa-plus-circle text-green-600 text-2xl mb-2"></i>
+                <span class="text-sm font-medium text-green-800">Record Payment</span>
+            </a>
+            <a href="{% url 'reports:dashboard' %}" 
+               class="flex flex-col items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
+                <i class="fas fa-chart-bar text-purple-600 text-2xl mb-2"></i>
+                <span class="text-sm font-medium text-purple-800">Generate Report</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Revenue Chart
+const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+            label: 'Revenue',
+            data: [12000, 15000, 18000, 16000, 20000, 22000],
+            borderColor: 'rgb(59, 130, 246)',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '$' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Expense Chart
+const expenseCtx = document.getElementById('expenseChart').getContext('2d');
+new Chart(expenseCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Office Supplies', 'Utilities', 'Marketing', 'Travel', 'Other'],
+        datasets: [{
+            data: [30, 25, 20, 15, 10],
+            backgroundColor: [
+                'rgb(239, 68, 68)',
+                'rgb(245, 158, 11)',
+                'rgb(59, 130, 246)',
+                'rgb(16, 185, 129)',
+                'rgb(139, 92, 246)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

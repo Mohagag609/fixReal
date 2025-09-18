@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Accounting System{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Custom styles */
+        .sidebar-transition {
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .card-hover {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.3s ease-in-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen" x-data="{ sidebarOpen: false, theme: 'light' }">
+    <!-- Sidebar -->
+    <div class="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-blue-900 to-blue-800 text-white sidebar-transition"
+         :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen }"
+         x-show="sidebarOpen"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="-translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition ease-in duration-300"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="-translate-x-full">
+        
+        <div class="flex items-center justify-between h-16 px-6 border-b border-blue-700">
+            <h1 class="text-xl font-bold">Accounting System</h1>
+            <button @click="sidebarOpen = false" class="text-blue-200 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <nav class="mt-6 px-3">
+            <div class="space-y-2">
+                <!-- Dashboard -->
+                <a href="{% url 'accounting:dashboard' %}" 
+                   class="flex items-center px-4 py-3 text-blue-100 hover:bg-blue-700 rounded-lg transition-colors">
+                    <i class="fas fa-tachometer-alt mr-3"></i>
+                    Dashboard
+                </a>
+                
+                <!-- Accounting -->
+                <div class="text-blue-200 text-xs font-semibold uppercase tracking-wider mb-2">Accounting</div>
+                <a href="{% url 'accounting:customer_list' %}" 
+                   class="flex items-center px-4 py-2 text-blue-100 hover:bg-blue-700 rounded-lg transition-colors">
+                    <i class="fas fa-users mr-3"></i>
+                    Customers
+                </a>
+                <a href="{% url 'accounting:vendor_list' %}" 
+                   class="flex items-center px-4 py-2 text-blue-100 hover:bg-blue-700 rounded-lg transition-colors">
+                    <i class="fas fa-truck mr-3"></i>
+                    Vendors
+                </a>
+                <a href="{% url 'accounting:invoice_list' %}" 
+                   class="flex items-center px-4 py-2 text-blue-100 hover:bg-blue-700 rounded-lg transition-colors">
+                    <i class="fas fa-file-invoice mr-3"></i>
+                    Invoices
+                </a>
+                <a href="{% url 'accounting:bill_list' %}" 
+                   class="flex items-center px-4 py-2 text-blue-100 hover:bg-blue-700 rounded-lg transition-colors">
+                    <i class="fas fa-receipt mr-3"></i>
+                    Bills
+                </a>
+                <a href="{% url 'accounting:payment_list' %}" 
+                   class="flex items-center px-4 py-2 text-blue-100 hover:bg-blue-700 rounded-lg transition-colors">
+                    <i class="fas fa-credit-card mr-3"></i>
+                    Payments
+                </a>
+                <a href="{% url 'accounting:product_list' %}" 
+                   class="flex items-center px-4 py-2 text-blue-100 hover:bg-blue-700 rounded-lg transition-colors">
+                    <i class="fas fa-box mr-3"></i>
+                    Products
+                </a>
+                
+                <!-- Reports -->
+                <div class="text-blue-200 text-xs font-semibold uppercase tracking-wider mb-2 mt-6">Reports</div>
+                <a href="{% url 'reports:dashboard' %}" 
+                   class="flex items-center px-4 py-2 text-blue-100 hover:bg-blue-700 rounded-lg transition-colors">
+                    <i class="fas fa-chart-bar mr-3"></i>
+                    Reports
+                </a>
+                <a href="{% url 'analytics:dashboard' %}" 
+                   class="flex items-center px-4 py-2 text-blue-100 hover:bg-blue-700 rounded-lg transition-colors">
+                    <i class="fas fa-chart-line mr-3"></i>
+                    Analytics
+                </a>
+                
+                <!-- System -->
+                <div class="text-blue-200 text-xs font-semibold uppercase tracking-wider mb-2 mt-6">System</div>
+                <a href="{% url 'dbms:dashboard' %}" 
+                   class="flex items-center px-4 py-2 text-blue-100 hover:bg-blue-700 rounded-lg transition-colors">
+                    <i class="fas fa-database mr-3"></i>
+                    Database
+                </a>
+                <a href="{% url 'notifications:list' %}" 
+                   class="flex items-center px-4 py-2 text-blue-100 hover:bg-blue-700 rounded-lg transition-colors">
+                    <i class="fas fa-bell mr-3"></i>
+                    Notifications
+                </a>
+                <a href="{% url 'settings:dashboard' %}" 
+                   class="flex items-center px-4 py-2 text-blue-100 hover:bg-blue-700 rounded-lg transition-colors">
+                    <i class="fas fa-cog mr-3"></i>
+                    Settings
+                </a>
+            </div>
+        </nav>
+    </div>
+    
+    <!-- Overlay -->
+    <div x-show="sidebarOpen" 
+         @click="sidebarOpen = false"
+         class="fixed inset-0 z-40 bg-black bg-opacity-50"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"></div>
+    
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="flex items-center justify-between h-16 px-6">
+                <div class="flex items-center">
+                    <button @click="sidebarOpen = true" class="text-gray-600 hover:text-gray-900 mr-4">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h2 class="text-xl font-semibold text-gray-800">{% block page_title %}Dashboard{% endblock %}</h2>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Notifications -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="text-gray-600 hover:text-gray-900 relative">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+                        </button>
+                        
+                        <div x-show="open" 
+                             @click.away="open = false"
+                             class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                            <div class="p-4 border-b border-gray-200">
+                                <h3 class="text-lg font-semibold">Notifications</h3>
+                            </div>
+                            <div class="max-h-64 overflow-y-auto">
+                                <div class="p-4 border-b border-gray-100 hover:bg-gray-50">
+                                    <p class="text-sm font-medium">New invoice created</p>
+                                    <p class="text-xs text-gray-500">2 minutes ago</p>
+                                </div>
+                                <div class="p-4 border-b border-gray-100 hover:bg-gray-50">
+                                    <p class="text-sm font-medium">Payment received</p>
+                                    <p class="text-xs text-gray-500">1 hour ago</p>
+                                </div>
+                                <div class="p-4 hover:bg-gray-50">
+                                    <p class="text-sm font-medium">Bill overdue</p>
+                                    <p class="text-xs text-gray-500">3 hours ago</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- User Menu -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center text-gray-600 hover:text-gray-900">
+                            <img src="https://via.placeholder.com/32x32" alt="User" class="h-8 w-8 rounded-full">
+                            <span class="ml-2">{{ user.username }}</span>
+                            <i class="fas fa-chevron-down ml-1"></i>
+                        </button>
+                        
+                        <div x-show="open" 
+                             @click.away="open = false"
+                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                            <a href="{% url 'settings:user_settings' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                            <a href="/admin/" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Admin</a>
+                            <a href="/admin/logout/" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content Area -->
+        <main class="flex-1 p-6">
+            <!-- Messages -->
+            {% if messages %}
+                <div class="mb-6">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} bg-{{ message.tags == 'error' and 'red' or 'green' }}-100 border border-{{ message.tags == 'error' and 'red' or 'green' }}-400 text-{{ message.tags == 'error' and 'red' or 'green' }}-700 px-4 py-3 rounded mb-2">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <!-- Page Content -->
+            <div class="fade-in">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    
+    <!-- Scripts -->
+    <script>
+        // Theme toggle
+        function toggleTheme() {
+            const theme = document.documentElement.getAttribute('data-theme');
+            const newTheme = theme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+        
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        // Auto-hide alerts
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.transition = 'opacity 0.5s ease-out';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
