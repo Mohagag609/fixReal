@@ -1,0 +1,24 @@
+<tr class="installment-row" data-installment-id="{{ installment.id }}">
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {{ installment.unit.code }}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {{ installment.amount|floatformat:2 }} ريال
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {{ installment.due_date|date:"Y-m-d" }}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        <select class="status-select form-input text-sm" 
+                hx-post="{% url 'htmx_installment_status' installment.id %}"
+                hx-target="closest tr"
+                hx-trigger="change">
+            <option value="معلق" {% if installment.status == 'معلق' %}selected{% endif %}>معلق</option>
+            <option value="مدفوع" {% if installment.status == 'مدفوع' %}selected{% endif %}>مدفوع</option>
+            <option value="متأخر" {% if installment.status == 'متأخر' %}selected{% endif %}>متأخر</option>
+        </select>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {{ installment.created_at|date:"Y-m-d" }}
+    </td>
+</tr>

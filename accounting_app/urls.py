@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import htmx_views
 
 app_name = 'accounting_app'
 
@@ -83,4 +84,13 @@ urlpatterns = [
     path('api/customers/', views.get_customers_api, name='api_customers'),
     path('api/units/', views.get_units_api, name='api_units'),
     path('api/safes/', views.get_safes_api, name='api_safes'),
+    
+    # HTMX endpoints
+    path('htmx/customers/', htmx_views.get_customers_htmx, name='htmx_customers'),
+    path('htmx/units/', htmx_views.get_units_htmx, name='htmx_units'),
+    path('htmx/safes/', htmx_views.get_safes_htmx, name='htmx_safes'),
+    path('htmx/installments/<int:installment_id>/status/', htmx_views.update_installment_status_htmx, name='htmx_installment_status'),
+    path('htmx/vouchers/create/', htmx_views.create_voucher_htmx, name='htmx_voucher_create'),
+    path('htmx/dashboard/stats/', htmx_views.get_dashboard_stats_htmx, name='htmx_dashboard_stats'),
+    path('htmx/safes/<int:safe_id>/balance/', htmx_views.get_safe_balance_htmx, name='htmx_safe_balance'),
 ]

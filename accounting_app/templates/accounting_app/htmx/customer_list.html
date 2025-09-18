@@ -1,0 +1,23 @@
+{% for customer in customers %}
+<div class="customer-item p-3 border-b border-gray-200 hover:bg-gray-50 cursor-pointer" 
+     data-customer-id="{{ customer.id }}" 
+     data-customer-name="{{ customer.name }}"
+     data-customer-phone="{{ customer.phone|default:'' }}"
+     onclick="selectCustomer(this)">
+    <div class="flex justify-between items-center">
+        <div>
+            <h4 class="font-medium text-gray-900">{{ customer.name }}</h4>
+            {% if customer.phone %}
+            <p class="text-sm text-gray-500">{{ customer.phone }}</p>
+            {% endif %}
+        </div>
+        <div class="text-sm text-gray-400">
+            {{ customer.status }}
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="p-4 text-center text-gray-500">
+    <p>لا توجد عملاء</p>
+</div>
+{% endfor %}

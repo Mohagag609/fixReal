@@ -14,6 +14,13 @@ from .models import (
     PartnerDebt, BrokerDue, PartnerGroup, UnitPartner, PartnerGroupPartner,
     UnitPartnerGroup, AuditLog, Settings, KeyVal, Transfer
 )
+from .services.financial_services import (
+    SafeService, InstallmentService, ContractService, VoucherService, TransferService
+)
+from .services.validation_services import (
+    CustomerValidationService, UnitValidationService, PartnerValidationService,
+    PartnerGroupValidationService, FinancialValidationService
+)
 
 
 class DashboardView(ListView):
@@ -22,33 +29,22 @@ class DashboardView(ListView):
     context_object_name = 'kpis'
     
     def get_queryset(self):
-        # حساب المؤشرات الرئيسية
-        total_contracts = Contract.objects.filter(deleted_at__isnull=True).count()
+        # استخدام الخدمات لحساب المؤشرات
+        contract_stats = ContractService.get_contract_statistics()
+        
         total_customers = Customer.objects.filter(deleted_at__isnull=True).count()
         total_units = Unit.objects.filter(deleted_at__isnull=True).count()
         total_installments = Installment.objects.filter(deleted_at__isnull=True).count()
         
-        # حساب المبالغ المالية
-        total_contracts_value = Contract.objects.filter(deleted_at__isnull=True).aggregate(
-            total=Sum('total_price')
-        )['total'] or Decimal('0')
-        
-        total_installments_value = Installment.objects.filter(
-            deleted_at__isnull=True,
-            status='مدفوع'
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
-        
-        pending_installments = Installment.objects.filter(
-            deleted_at__isnull=True,
-            status='معلق'
-        ).count()
+        total_installments_value = InstallmentService.get_total_paid_installments()
+        pending_installments = InstallmentService.get_pending_installments_count()
         
         return {
-            'total_contracts': total_contracts,
+            'total_contracts': contract_stats['total_contracts'],
             'total_customers': total_customers,
             'total_units': total_units,
             'total_installments': total_installments,
-            'total_contracts_value': total_contracts_value,
+            'total_contracts_value': contract_stats['total_value'],
             'total_installments_value': total_installments_value,
             'pending_installments': pending_installments,
         }
@@ -99,14 +95,14 @@ class CustomerCreateView(CreateView):
     fields = ['name', 'phone', 'national_id', 'address', 'status', 'notes']
     
     def form_valid(self, form):
-        # التحقق من التكرار
+        # التحقق من التكرار باستخدام الخدمة
         if form.cleaned_data.get('phone'):
-            if Customer.objects.filter(phone=form.cleaned_data['phone'], deleted_at__isnull=True).exists():
+            if not CustomerValidationService.validate_phone_uniqueness(form.cleaned_data['phone']):
                 form.add_error('phone', 'رقم الهاتف موجود بالفعل')
                 return self.form_invalid(form)
         
         if form.cleaned_data.get('national_id'):
-            if Customer.objects.filter(national_id=form.cleaned_data['national_id'], deleted_at__isnull=True).exists():
+            if not CustomerValidationService.validate_national_id_uniqueness(form.cleaned_data['national_id']):
                 form.add_error('national_id', 'الرقم القومي موجود بالفعل')
                 return self.form_invalid(form)
         
@@ -125,14 +121,14 @@ class CustomerUpdateView(UpdateView):
     fields = ['name', 'phone', 'national_id', 'address', 'status', 'notes']
     
     def form_valid(self, form):
-        # التحقق من التكرار
+        # التحقق من التكرار باستخدام الخدمة
         if form.cleaned_data.get('phone'):
-            if Customer.objects.filter(phone=form.cleaned_data['phone'], deleted_at__isnull=True).exclude(id=self.object.id).exists():
+            if not CustomerValidationService.validate_phone_uniqueness(form.cleaned_data['phone'], self.object.id):
                 form.add_error('phone', 'رقم الهاتف موجود بالفعل')
                 return self.form_invalid(form)
         
         if form.cleaned_data.get('national_id'):
-            if Customer.objects.filter(national_id=form.cleaned_data['national_id'], deleted_at__isnull=True).exclude(id=self.object.id).exists():
+            if not CustomerValidationService.validate_national_id_uniqueness(form.cleaned_data['national_id'], self.object.id):
                 form.add_error('national_id', 'الرقم القومي موجود بالفعل')
                 return self.form_invalid(form)
         
@@ -315,22 +311,7 @@ class ContractCreateView(CreateView):
     
     def create_installments(self, contract):
         """إنشاء الأقساط للعقد"""
-        if contract.installment_count <= 0:
-            return
-        
-        # حساب قيمة القسط
-        remaining_amount = contract.total_price - contract.discount_amount - contract.down_payment
-        installment_amount = remaining_amount / contract.installment_count
-        
-        # إنشاء الأقساط
-        for i in range(contract.installment_count):
-            due_date = contract.start + timezone.timedelta(days=30 * (i + 1))
-            Installment.objects.create(
-                unit=contract.unit,
-                amount=installment_amount,
-                due_date=due_date,
-                status='معلق'
-            )
+        return InstallmentService.create_installments_for_contract(contract)
     
     def get_success_url(self):
         return '/contracts/'
@@ -364,22 +345,7 @@ class ContractUpdateView(UpdateView):
     
     def create_installments(self, contract):
         """إنشاء الأقساط للعقد"""
-        if contract.installment_count <= 0:
-            return
-        
-        # حساب قيمة القسط
-        remaining_amount = contract.total_price - contract.discount_amount - contract.down_payment
-        installment_amount = remaining_amount / contract.installment_count
-        
-        # إنشاء الأقساط
-        for i in range(contract.installment_count):
-            due_date = contract.start + timezone.timedelta(days=30 * (i + 1))
-            Installment.objects.create(
-                unit=contract.unit,
-                amount=installment_amount,
-                due_date=due_date,
-                status='معلق'
-            )
+        return InstallmentService.create_installments_for_contract(contract)
     
     def get_success_url(self):
         return '/contracts/'
@@ -549,19 +515,21 @@ class VoucherCreateView(CreateView):
     fields = ['type', 'date', 'amount', 'safe', 'description', 'payer', 'beneficiary', 'linked_ref']
     
     def form_valid(self, form):
-        with transaction.atomic():
-            response = super().form_valid(form)
-            
-            # تحديث رصيد الخزنة
-            safe = form.instance.safe
-            if form.cleaned_data['type'] == 'receipt':
-                safe.balance += form.cleaned_data['amount']
-            else:  # payment
-                safe.balance -= form.cleaned_data['amount']
-            safe.save()
-            
-            messages.success(self.request, 'تم إضافة السند بنجاح')
-            return response
+        # استخدام الخدمة لإنشاء السند
+        voucher_data = {
+            'type': form.cleaned_data['type'],
+            'date': form.cleaned_data['date'],
+            'amount': form.cleaned_data['amount'],
+            'safe': form.cleaned_data['safe'],
+            'description': form.cleaned_data['description'],
+            'payer': form.cleaned_data.get('payer'),
+            'beneficiary': form.cleaned_data.get('beneficiary'),
+            'linked_ref': form.cleaned_data.get('linked_ref'),
+        }
+        
+        VoucherService.create_voucher(voucher_data)
+        messages.success(self.request, 'تم إضافة السند بنجاح')
+        return redirect('/vouchers/')
     
     def get_success_url(self):
         return '/vouchers/'
@@ -574,28 +542,21 @@ class VoucherUpdateView(UpdateView):
     fields = ['type', 'date', 'amount', 'safe', 'description', 'payer', 'beneficiary', 'linked_ref']
     
     def form_valid(self, form):
-        with transaction.atomic():
-            # إعادة حساب رصيد الخزنة القديمة
-            old_voucher = Voucher.objects.get(id=self.object.id)
-            old_safe = old_voucher.safe
-            if old_voucher.type == 'receipt':
-                old_safe.balance -= old_voucher.amount
-            else:  # payment
-                old_safe.balance += old_voucher.amount
-            old_safe.save()
-            
-            response = super().form_valid(form)
-            
-            # تحديث رصيد الخزنة الجديدة
-            new_safe = form.instance.safe
-            if form.cleaned_data['type'] == 'receipt':
-                new_safe.balance += form.cleaned_data['amount']
-            else:  # payment
-                new_safe.balance -= form.cleaned_data['amount']
-            new_safe.save()
-            
-            messages.success(self.request, 'تم تحديث السند بنجاح')
-            return response
+        # استخدام الخدمة لتحديث السند
+        voucher_data = {
+            'type': form.cleaned_data['type'],
+            'date': form.cleaned_data['date'],
+            'amount': form.cleaned_data['amount'],
+            'safe': form.cleaned_data['safe'],
+            'description': form.cleaned_data['description'],
+            'payer': form.cleaned_data.get('payer'),
+            'beneficiary': form.cleaned_data.get('beneficiary'),
+            'linked_ref': form.cleaned_data.get('linked_ref'),
+        }
+        
+        VoucherService.update_voucher(self.object, voucher_data)
+        messages.success(self.request, 'تم تحديث السند بنجاح')
+        return redirect('/vouchers/')
     
     def get_success_url(self):
         return '/vouchers/'
@@ -607,21 +568,10 @@ class VoucherDeleteView(DeleteView):
     template_name = 'accounting_app/vouchers/confirm_delete.html'
     
     def delete(self, request, *args, **kwargs):
-        with transaction.atomic():
-            self.object = self.get_object()
-            
-            # إعادة حساب رصيد الخزنة
-            safe = self.object.safe
-            if self.object.type == 'receipt':
-                safe.balance -= self.object.amount
-            else:  # payment
-                safe.balance += self.object.amount
-            safe.save()
-            
-            self.object.deleted_at = timezone.now()
-            self.object.save()
-            messages.success(request, 'تم حذف السند بنجاح')
-            return redirect('/vouchers/')
+        self.object = self.get_object()
+        VoucherService.delete_voucher(self.object)
+        messages.success(request, 'تم حذف السند بنجاح')
+        return redirect('/vouchers/')
 
 
 # API Views للـ AJAX
@@ -919,22 +869,17 @@ class TransferCreateView(CreateView):
     fields = ['from_safe', 'to_safe', 'amount', 'description']
     
     def form_valid(self, form):
-        with transaction.atomic():
-            response = super().form_valid(form)
-            
-            # تحديث أرصدة الخزائن
-            from_safe = form.instance.from_safe
-            to_safe = form.instance.to_safe
-            amount = form.instance.amount
-            
-            from_safe.balance -= amount
-            to_safe.balance += amount
-            
-            from_safe.save()
-            to_safe.save()
-            
-            messages.success(self.request, 'تم إضافة التحويل بنجاح')
-            return response
+        # استخدام الخدمة لإنشاء التحويل
+        transfer_data = {
+            'from_safe': form.cleaned_data['from_safe'],
+            'to_safe': form.cleaned_data['to_safe'],
+            'amount': form.cleaned_data['amount'],
+            'description': form.cleaned_data['description'],
+        }
+        
+        TransferService.create_transfer(transfer_data)
+        messages.success(self.request, 'تم إضافة التحويل بنجاح')
+        return redirect('/transfers/')
     
     def get_success_url(self):
         return '/transfers/'
@@ -946,24 +891,10 @@ class TransferDeleteView(DeleteView):
     template_name = 'accounting_app/transfers/confirm_delete.html'
     
     def delete(self, request, *args, **kwargs):
-        with transaction.atomic():
-            self.object = self.get_object()
-            
-            # إعادة حساب أرصدة الخزائن
-            from_safe = self.object.from_safe
-            to_safe = self.object.to_safe
-            amount = self.object.amount
-            
-            from_safe.balance += amount
-            to_safe.balance -= amount
-            
-            from_safe.save()
-            to_safe.save()
-            
-            self.object.deleted_at = timezone.now()
-            self.object.save()
-            messages.success(request, 'تم حذف التحويل بنجاح')
-            return redirect('/transfers/')
+        self.object = self.get_object()
+        TransferService.delete_transfer(self.object)
+        messages.success(request, 'تم حذف التحويل بنجاح')
+        return redirect('/transfers/')
 
 
 # Debt Views
