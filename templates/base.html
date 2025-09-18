@@ -6,13 +6,18 @@
     <title>{% block title %}نظام المحاسبة العقارية{% endblock %}</title>
     
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    {% load static %}
+    <link href="{% static 'css/tailwind.css' %}" rel="stylesheet">
     
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     
     <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    {% load static %}
+    <script src="{% static 'js/main.js' %}"></script>
     
     <!-- Custom CSS -->
     <style>

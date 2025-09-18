@@ -1,0 +1,7 @@
+{% for safe in safes %}
+<option value="{{ safe.id }}" data-balance="{{ safe.balance }}">
+    {{ safe.name }} - {{ safe.balance|floatformat:2 }} ريال
+</option>
+{% empty %}
+<option value="" disabled>لا توجد خزائن</option>
+{% endfor %}

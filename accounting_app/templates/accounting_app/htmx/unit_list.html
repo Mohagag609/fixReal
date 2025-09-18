@@ -1,0 +1,24 @@
+{% for unit in units %}
+<div class="unit-item p-3 border-b border-gray-200 hover:bg-gray-50 cursor-pointer" 
+     data-unit-id="{{ unit.id }}" 
+     data-unit-code="{{ unit.code }}"
+     data-unit-name="{{ unit.name|default:'' }}"
+     data-unit-price="{{ unit.total_price }}"
+     onclick="selectUnit(this)">
+    <div class="flex justify-between items-center">
+        <div>
+            <h4 class="font-medium text-gray-900">{{ unit.code }}</h4>
+            {% if unit.name %}
+            <p class="text-sm text-gray-500">{{ unit.name }}</p>
+            {% endif %}
+        </div>
+        <div class="text-sm text-gray-400">
+            {{ unit.total_price|floatformat:2 }} ريال
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="p-4 text-center text-gray-500">
+    <p>لا توجد وحدات</p>
+</div>
+{% endfor %}

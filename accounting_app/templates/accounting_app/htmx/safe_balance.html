@@ -1,0 +1,5 @@
+<div class="safe-balance-display">
+    <div class="text-sm text-gray-500">الرصيد الحالي</div>
+    <div class="text-2xl font-bold text-gray-900">{{ safe.balance|floatformat:2 }} ريال</div>
+    <div class="text-xs text-gray-400 mt-1">آخر تحديث: {{ safe.updated_at|date:"Y-m-d H:i" }}</div>
+</div>

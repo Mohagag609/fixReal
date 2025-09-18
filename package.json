@@ -1,0 +1,12 @@
+{
+  "name": "accounting-project",
+  "version": "1.0.0",
+  "description": "Real Estate Accounting System",
+  "scripts": {
+    "build:css": "npx tailwindcss -i ./assets/input.css -o ./static/css/tailwind.css --minify",
+    "watch:css": "npx tailwindcss -i ./assets/input.css -o ./static/css/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}
