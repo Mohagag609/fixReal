@@ -217,6 +217,113 @@ class Partner(BaseModel):
                 total += (unit.total_price * unit_partner.percentage) / 100
         return total
     
+    def get_daily_income(self, date):
+        """حساب الدخل اليومي"""
+        return self.daily_transactions.filter(
+            transaction_type='income',
+            transaction_date=date,
+            deleted_at__isnull=True
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    def get_daily_expense(self, date):
+        """حساب المصروف اليومي"""
+        return self.daily_transactions.filter(
+            transaction_type='expense',
+            transaction_date=date,
+            deleted_at__isnull=True
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    def get_daily_balance(self, date):
+        """حساب الرصيد اليومي"""
+        income = self.get_daily_income(date)
+        expense = self.get_daily_expense(date)
+        return income - expense
+    
+    def get_running_balance(self, date):
+        """حساب الرصيد المتراكم حتى تاريخ معين"""
+        transactions = self.daily_transactions.filter(
+            transaction_date__lte=date,
+            deleted_at__isnull=True
+        ).order_by('transaction_date', 'created_at')
+        
+        balance = 0
+        for transaction in transactions:
+            if transaction.transaction_type == 'income':
+                balance += transaction.amount
+            elif transaction.transaction_type == 'expense':
+                balance -= transaction.amount
+        
+        return balance
+    
+    def generate_daily_ledger(self, start_date, end_date):
+        """توليد كشف الحساب اليومي"""
+        from django.db.models import Sum, Count
+        from datetime import timedelta
+        
+        current_date = start_date
+        ledgers = []
+        
+        while current_date <= end_date:
+            daily_income = self.get_daily_income(current_date)
+            daily_expense = self.get_daily_expense(current_date)
+            transaction_count = self.daily_transactions.filter(
+                transaction_date=current_date,
+                deleted_at__isnull=True
+            ).count()
+            
+            # إنشاء أو تحديث كشف الحساب اليومي
+            ledger, created = PartnerLedger.objects.get_or_create(
+                partner=self,
+                date=current_date,
+                defaults={
+                    'total_income': daily_income,
+                    'total_expense': daily_expense,
+                    'transaction_count': transaction_count
+                }
+            )
+            
+            if not created:
+                ledger.total_income = daily_income
+                ledger.total_expense = daily_expense
+                ledger.transaction_count = transaction_count
+                ledger.save()
+            
+            ledgers.append(ledger)
+            current_date += timedelta(days=1)
+        
+        return ledgers
+    
+    def get_monthly_summary(self, year, month):
+        """حساب ملخص شهري"""
+        from django.db.models import Sum
+        from datetime import date
+        
+        start_date = date(year, month, 1)
+        if month == 12:
+            end_date = date(year + 1, 1, 1) - timedelta(days=1)
+        else:
+            end_date = date(year, month + 1, 1) - timedelta(days=1)
+        
+        transactions = self.daily_transactions.filter(
+            transaction_date__range=[start_date, end_date],
+            deleted_at__isnull=True
+        )
+        
+        total_income = transactions.filter(transaction_type='income').aggregate(
+            total=Sum('amount')
+        )['total'] or 0
+        
+        total_expense = transactions.filter(transaction_type='expense').aggregate(
+            total=Sum('amount')
+        )['total'] or 0
+        
+        return {
+            'total_income': total_income,
+            'total_expense': total_expense,
+            'net_balance': total_income - total_expense,
+            'transaction_count': transactions.count()
+        }
+    
     def __str__(self):
         return self.name
 
@@ -920,3 +1027,75 @@ class Notification(BaseModel):
     
     def __str__(self):
         return f"{self.title} - {self.get_type_display()}"
+
+
+class PartnerDailyTransaction(BaseModel):
+    """المعاملات اليومية للشريك"""
+    partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='daily_transactions', verbose_name="الشريك")
+    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='partner_daily_transactions', null=True, blank=True, verbose_name="الوحدة")
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='partner_daily_transactions', null=True, blank=True, verbose_name="العقد")
+    transaction_type = models.CharField(max_length=50, choices=[
+        ('income', 'دخل'),
+        ('expense', 'مصروف'),
+        ('closing', 'إقفال يومي'),
+    ], verbose_name="نوع المعاملة")
+    amount = models.DecimalField(max_digits=15, decimal_places=2, verbose_name="المبلغ")
+    description = models.TextField(verbose_name="البيان")
+    transaction_date = models.DateField(verbose_name="تاريخ المعاملة")
+    partner_share = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="نسبة الشريك")
+    running_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="الرصيد المتراكم")
+    
+    class Meta:
+        verbose_name = "معاملة يومية للشريك"
+        verbose_name_plural = "المعاملات اليومية للشركاء"
+        indexes = [
+            models.Index(fields=['partner', 'transaction_date']),
+            models.Index(fields=['transaction_type', 'deleted_at']),
+            models.Index(fields=['transaction_date']),
+        ]
+    
+    def save(self, *args, **kwargs):
+        # حساب نسبة الشريك تلقائياً
+        if self.unit and self.partner:
+            unit_partner = UnitPartner.objects.filter(
+                unit=self.unit,
+                partner=self.partner,
+                deleted_at__isnull=True
+            ).first()
+            if unit_partner:
+                self.partner_share = unit_partner.percentage
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.partner.name} - {self.get_transaction_type_display()} - {self.amount}"
+
+
+class PartnerLedger(BaseModel):
+    """كشف حساب الشريك"""
+    partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='ledgers', verbose_name="الشريك")
+    date = models.DateField(verbose_name="التاريخ")
+    total_income = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="إجمالي الدخل")
+    total_expense = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="إجمالي المصروفات")
+    net_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="الرصيد الصافي")
+    transaction_count = models.PositiveIntegerField(default=0, verbose_name="عدد المعاملات")
+    
+    class Meta:
+        verbose_name = "كشف حساب الشريك"
+        verbose_name_plural = "كشوف حسابات الشركاء"
+        unique_together = ['partner', 'date']
+        indexes = [
+            models.Index(fields=['partner', 'date']),
+            models.Index(fields=['date']),
+        ]
+    
+    def calculate_balance(self):
+        """حساب الرصيد الصافي"""
+        self.net_balance = self.total_income - self.total_expense
+        return self.net_balance
+    
+    def save(self, *args, **kwargs):
+        self.calculate_balance()
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.partner.name} - {self.date} - {self.net_balance}"
