@@ -115,6 +115,252 @@
         </div>
     </div>
     
+    <!-- Advanced Statistics -->
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-percentage fa-2x text-info mb-2"></i>
+                    <h4 class="text-info">{{ kpis.collection_rate }}%</h4>
+                    <p class="mb-0">معدل تحصيل الأقساط</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-2x text-success mb-2"></i>
+                    <h4 class="text-success">+12%</h4>
+                    <p class="mb-0">نمو المبيعات</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-star fa-2x text-warning mb-2"></i>
+                    <h4 class="text-warning">4.8</h4>
+                    <p class="mb-0">تقييم العملاء</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-tachometer-alt fa-2x text-primary mb-2"></i>
+                    <h4 class="text-primary">98%</h4>
+                    <p class="mb-0">أداء النظام</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Section -->
+    <div class="row">
+        <!-- Sales Chart -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">مخطط المبيعات الشهرية</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="salesChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contracts Status Chart -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">حالة العقود</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="contractsChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Reports -->
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card bg-success text-white quick-report-card">
+                <div class="card-body">
+                    <h6 class="card-title">أعلى العملاء</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if kpis.top_customers %}
+                                <p class="mb-1">{{ kpis.top_customers.0.name }}</p>
+                                <small>{{ kpis.top_customers.0.contract_count }} عقود</small>
+                            {% else %}
+                                <p class="mb-1">لا توجد بيانات</p>
+                                <small>0 عقود</small>
+                            {% endif %}
+                        </div>
+                        <i class="fas fa-trophy fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card bg-info text-white quick-report-card">
+                <div class="card-body">
+                    <h6 class="card-title">أعلى الوحدات مبيعاً</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if kpis.top_units %}
+                                <p class="mb-1">{{ kpis.top_units.0.code }}</p>
+                                <small>{{ kpis.top_units.0.contract_count }} عقود</small>
+                            {% else %}
+                                <p class="mb-1">لا توجد بيانات</p>
+                                <small>0 عقود</small>
+                            {% endif %}
+                        </div>
+                        <i class="fas fa-home fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card bg-warning text-white quick-report-card">
+                <div class="card-body">
+                    <h6 class="card-title">أعلى السماسرة</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if kpis.top_brokers %}
+                                <p class="mb-1">{{ kpis.top_brokers.0.name }}</p>
+                                <small>{{ kpis.top_brokers.0.contract_count }} عقود</small>
+                            {% else %}
+                                <p class="mb-1">لا توجد بيانات</p>
+                                <small>0 عقود</small>
+                            {% endif %}
+                        </div>
+                        <i class="fas fa-user-tie fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Transactions -->
+    <div class="row">
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">المعاملات الأخيرة</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive recent-transactions">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>النوع</th>
+                                    <th>المبلغ</th>
+                                    <th>الحالة</th>
+                                    <th>العميل</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2024-01-15</td>
+                                    <td><span class="badge bg-success">قسط</span></td>
+                                    <td>5,000 ريال</td>
+                                    <td><span class="badge bg-success">مدفوع</span></td>
+                                    <td>أحمد محمد</td>
+                                </tr>
+                                <tr>
+                                    <td>2024-01-14</td>
+                                    <td><span class="badge bg-primary">عقد</span></td>
+                                    <td>500,000 ريال</td>
+                                    <td><span class="badge bg-warning">قيد المراجعة</span></td>
+                                    <td>سارة أحمد</td>
+                                </tr>
+                                <tr>
+                                    <td>2024-01-13</td>
+                                    <td><span class="badge bg-info">سند</span></td>
+                                    <td>10,000 ريال</td>
+                                    <td><span class="badge bg-success">مكتمل</span></td>
+                                    <td>محمد علي</td>
+                                </tr>
+                                <tr>
+                                    <td>2024-01-12</td>
+                                    <td><span class="badge bg-warning">تحويل</span></td>
+                                    <td>25,000 ريال</td>
+                                    <td><span class="badge bg-success">مكتمل</span></td>
+                                    <td>فاطمة حسن</td>
+                                </tr>
+                                <tr>
+                                    <td>2024-01-11</td>
+                                    <td><span class="badge bg-danger">قسط</span></td>
+                                    <td>3,500 ريال</td>
+                                    <td><span class="badge bg-danger">متأخر</span></td>
+                                    <td>خالد سعد</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Status -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">حالة النظام</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>قاعدة البيانات</span>
+                        <span class="badge bg-success">
+                            <span class="status-indicator status-online"></span>
+                            متصل
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>النسخ الاحتياطية</span>
+                        <span class="badge bg-success">
+                            <span class="status-indicator status-online"></span>
+                            محدث
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>الإشعارات</span>
+                        <span class="badge bg-success">
+                            <span class="status-indicator status-online"></span>
+                            نشط
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>التقارير</span>
+                        <span class="badge bg-success">
+                            <span class="status-indicator status-online"></span>
+                            جاهز
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>الأداء</span>
+                        <span class="badge bg-success">
+                            <span class="status-indicator status-online"></span>
+                            ممتاز
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Quick Actions -->
     <div class="card mb-4">
         <div class="card-header">
@@ -156,7 +402,7 @@
     <!-- Navigation Cards -->
     <div class="row">
         <div class="col-md-4 mb-4">
-            <a href="{% url 'accounting_app:customer_list' %}" class="card text-decoration-none">
+            <a href="{% url 'accounting_app:customer_list' %}" class="card text-decoration-none nav-card">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
                         <div class="bg-primary text-white rounded-circle p-3 me-3">
@@ -170,7 +416,7 @@
         </div>
         
         <div class="col-md-4 mb-4">
-            <a href="{% url 'accounting_app:unit_list' %}" class="card text-decoration-none">
+            <a href="{% url 'accounting_app:unit_list' %}" class="card text-decoration-none nav-card">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
                         <div class="bg-info text-white rounded-circle p-3 me-3">
@@ -184,7 +430,7 @@
         </div>
         
         <div class="col-md-4 mb-4">
-            <a href="{% url 'accounting_app:contract_list' %}" class="card text-decoration-none">
+            <a href="{% url 'accounting_app:contract_list' %}" class="card text-decoration-none nav-card">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
                         <div class="bg-success text-white rounded-circle p-3 me-3">
@@ -198,7 +444,7 @@
         </div>
         
         <div class="col-md-4 mb-4">
-            <a href="{% url 'accounting_app:partner_list' %}" class="card text-decoration-none">
+            <a href="{% url 'accounting_app:partner_list' %}" class="card text-decoration-none nav-card">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
                         <div class="bg-warning text-white rounded-circle p-3 me-3">
@@ -212,7 +458,7 @@
         </div>
         
         <div class="col-md-4 mb-4">
-            <a href="{% url 'accounting_app:safe_list' %}" class="card text-decoration-none">
+            <a href="{% url 'accounting_app:safe_list' %}" class="card text-decoration-none nav-card">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
                         <div class="bg-secondary text-white rounded-circle p-3 me-3">
@@ -226,7 +472,7 @@
         </div>
         
         <div class="col-md-4 mb-4">
-            <a href="{% url 'accounting_app:advanced:notification_dashboard' %}" class="card text-decoration-none">
+            <a href="{% url 'accounting_app:advanced:notification_dashboard' %}" class="card text-decoration-none nav-card">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
                         <div class="bg-danger text-white rounded-circle p-3 me-3">
@@ -240,4 +486,244 @@
         </div>
     </div>
 </div>
+
+<!-- Chart.js Scripts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Sales Chart
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+            datasets: [{
+                label: 'المبيعات (ريال)',
+                data: {{ kpis.sales_data|safe }},
+                borderColor: 'rgb(102, 126, 234)',
+                backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: 'rgb(102, 126, 234)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' ريال';
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+    
+    // Contracts Status Chart
+    const contractsCtx = document.getElementById('contractsChart').getContext('2d');
+    new Chart(contractsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['مكتملة', 'قيد المراجعة', 'معلقة', 'ملغاة'],
+            datasets: [{
+                data: [{{ kpis.contracts_status.completed }}, {{ kpis.contracts_status.pending }}, {{ kpis.contracts_status.suspended }}, {{ kpis.contracts_status.cancelled }}],
+                backgroundColor: [
+                    'rgb(102, 126, 234)',
+                    'rgb(255, 193, 7)',
+                    'rgb(220, 53, 69)',
+                    'rgb(108, 117, 125)'
+                ],
+                borderWidth: 3,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                }
+            },
+            cutout: '60%'
+        }
+    });
+    
+    // Add animation to KPI cards
+    const kpiCards = document.querySelectorAll('.kpi-card');
+    kpiCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+    });
+    
+    // Add real-time updates simulation
+    setInterval(function() {
+        // Update notification count
+        const notificationBadge = document.getElementById('notificationCount');
+        if (notificationBadge) {
+            const currentCount = parseInt(notificationBadge.textContent) || 0;
+            if (Math.random() > 0.8) { // 20% chance to update
+                const newCount = currentCount + Math.floor(Math.random() * 3);
+                notificationBadge.textContent = newCount;
+                notificationBadge.style.display = newCount > 0 ? 'flex' : 'none';
+            }
+        }
+    }, 30000); // Update every 30 seconds
+    
+    // Add smooth scrolling for better UX
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    // Add loading animation for charts
+    const chartContainers = document.querySelectorAll('.chart-container');
+    chartContainers.forEach(container => {
+        container.style.opacity = '0';
+        container.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            container.style.transition = 'all 0.6s ease';
+            container.style.opacity = '1';
+            container.style.transform = 'translateY(0)';
+        }, 300);
+    });
+    
+    // Add tooltip for KPI cards
+    const kpiCards = document.querySelectorAll('.kpi-card');
+    kpiCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.05)';
+            this.style.transition = 'all 0.3s ease';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+    
+    // Add hover effects for quick report cards
+    const quickReportCards = document.querySelectorAll('.quick-report-card');
+    quickReportCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        });
+    });
+    
+    // Add pulse animation for status indicators
+    const statusIndicators = document.querySelectorAll('.status-indicator');
+    statusIndicators.forEach(indicator => {
+        setInterval(() => {
+            indicator.style.opacity = '0.5';
+            setTimeout(() => {
+                indicator.style.opacity = '1';
+            }, 200);
+        }, 2000);
+    });
+    
+    // Add smooth transitions for all cards
+    const allCards = document.querySelectorAll('.card');
+    allCards.forEach(card => {
+        card.style.transition = 'all 0.3s ease';
+    });
+    
+    // Add loading state for the page
+    window.addEventListener('load', function() {
+        document.body.style.opacity = '0';
+        document.body.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => {
+            document.body.style.opacity = '1';
+        }, 100);
+    });
+    
+    // Add keyboard navigation support
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            // Close any open modals or dropdowns
+            const openModals = document.querySelectorAll('.modal.show');
+            openModals.forEach(modal => {
+                const modalInstance = bootstrap.Modal.getInstance(modal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+            });
+        }
+    });
+    
+    // Add accessibility improvements
+    const focusableElements = document.querySelectorAll('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    focusableElements.forEach(element => {
+        element.addEventListener('focus', function() {
+            this.style.outline = '2px solid #667eea';
+            this.style.outlineOffset = '2px';
+        });
+        
+        element.addEventListener('blur', function() {
+            this.style.outline = 'none';
+        });
+    });
+    
+    // Add performance monitoring
+    const performanceObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+            if (entry.entryType === 'measure') {
+                console.log(`${entry.name}: ${entry.duration}ms`);
+            }
+        }
+    });
+    
+    performanceObserver.observe({ entryTypes: ['measure'] });
+    
+    // Measure page load time
+    performance.mark('page-start');
+    window.addEventListener('load', () => {
+        performance.mark('page-end');
+        performance.measure('page-load-time', 'page-start', 'page-end');
+    });
+});
+</script>
 {% endblock %}

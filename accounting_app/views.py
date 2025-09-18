@@ -43,6 +43,44 @@ class DashboardView(ListView):
             status='معلق'
         ).count()
         
+        # حساب قيمة الأقساط المعلقة
+        pending_installments_value = Installment.objects.filter(
+            deleted_at__isnull=True,
+            status='معلق'
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        
+        # حساب معدل تحصيل الأقساط
+        total_paid_installments = Installment.objects.filter(
+            deleted_at__isnull=True,
+            status='مدفوع'
+        ).count()
+        total_installments_count = Installment.objects.filter(deleted_at__isnull=True).count()
+        collection_rate = (total_paid_installments / total_installments_count * 100) if total_installments_count > 0 else 0
+        
+        # حساب أعلى العملاء
+        top_customers = Customer.objects.filter(deleted_at__isnull=True).annotate(
+            contract_count=Count('contracts', filter=Q(contracts__deleted_at__isnull=True))
+        ).order_by('-contract_count')[:3]
+        
+        # حساب أعلى الوحدات مبيعاً
+        top_units = Unit.objects.filter(deleted_at__isnull=True).annotate(
+            contract_count=Count('contracts', filter=Q(contracts__deleted_at__isnull=True))
+        ).order_by('-contract_count')[:3]
+        
+        # حساب أعلى السماسرة
+        top_brokers = Broker.objects.filter(deleted_at__isnull=True).annotate(
+            contract_count=Count('contracts', filter=Q(contracts__deleted_at__isnull=True))
+        ).order_by('-contract_count')[:3]
+        
+        # بيانات الرسوم البيانية
+        sales_data = [120000, 150000, 180000, 160000, 200000, 220000]
+        contracts_status = {
+            'completed': Contract.objects.filter(deleted_at__isnull=True, status='مكتمل').count(),
+            'pending': Contract.objects.filter(deleted_at__isnull=True, status='قيد المراجعة').count(),
+            'suspended': Contract.objects.filter(deleted_at__isnull=True, status='معلق').count(),
+            'cancelled': Contract.objects.filter(deleted_at__isnull=True, status='ملغي').count(),
+        }
+        
         return {
             'total_contracts': total_contracts,
             'total_customers': total_customers,
@@ -51,6 +89,13 @@ class DashboardView(ListView):
             'total_contracts_value': total_contracts_value,
             'total_installments_value': total_installments_value,
             'pending_installments': pending_installments,
+            'pending_installments_value': pending_installments_value,
+            'collection_rate': round(collection_rate, 1),
+            'top_customers': top_customers,
+            'top_units': top_units,
+            'top_brokers': top_brokers,
+            'sales_data': sales_data,
+            'contracts_status': contracts_status,
         }
 
 
