@@ -1,0 +1,596 @@
+{% extends 'accounting_app/base.html' %}
+{% load static %}
+
+{% block title %}لوحة تحكم النسخ الاحتياطية{% endblock %}
+
+{% block extra_css %}
+<style>
+    .backup-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .backup-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .backup-status {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .backup-type {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .progress-container {
+        height: 8px;
+        background-color: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .progress-bar {
+        height: 100%;
+        background-color: #007bff;
+        transition: width 0.3s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">لوحة تحكم النسخ الاحتياطية</h1>
+            <p class="text-muted">إدارة النسخ الاحتياطية والاستعادة</p>
+        </div>
+        <div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createBackupModal">
+                <i class="fas fa-plus"></i> نسخة احتياطية جديدة
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">إجمالي النسخ</h6>
+                            <h3 class="mb-0">{{ backup_status.total_backups }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-database fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">نجحت</h6>
+                            <h3 class="mb-0">{{ backup_status.successful_backups }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">فشلت</h6>
+                            <h3 class="mb-0">{{ backup_status.failed_backups }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-times-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">الحجم الإجمالي</h6>
+                            <h3 class="mb-0">{{ backup_status.total_size_mb|floatformat:1 }} MB</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-hdd fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">إجراءات سريعة</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-primary w-100 mb-2" onclick="createQuickBackup('full')">
+                                <i class="fas fa-database"></i><br>
+                                نسخة كاملة
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-success w-100 mb-2" onclick="createQuickBackup('incremental')">
+                                <i class="fas fa-plus-circle"></i><br>
+                                نسخة تزايدية
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-warning w-100 mb-2" onclick="createQuickBackup('data_only')">
+                                <i class="fas fa-table"></i><br>
+                                بيانات فقط
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-info w-100 mb-2" onclick="showRestoreModal()">
+                                <i class="fas fa-undo"></i><br>
+                                استعادة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backups List -->
+    <div class="row">
+        <!-- Recent Backups -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">النسخ الاحتياطية الأخيرة</h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshBackups()">
+                            <i class="fas fa-refresh"></i> تحديث
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if backups %}
+                        <div class="row" id="backupsList">
+                            {% for backup in backups %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card backup-card" onclick="openBackup({{ backup.id }})">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="card-title mb-0">{{ backup.schedule.name|truncatechars:25 }}</h6>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                                        data-bs-toggle="dropdown" onclick="event.stopPropagation()">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="#" onclick="downloadBackup({{ backup.id }})">
+                                                        <i class="fas fa-download"></i> تحميل
+                                                    </a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="restoreBackup({{ backup.id }})">
+                                                        <i class="fas fa-undo"></i> استعادة
+                                                    </a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="deleteBackup({{ backup.id }})">
+                                                        <i class="fas fa-trash"></i> حذف
+                                                    </a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-2">
+                                            <span class="badge backup-type bg-info">
+                                                {{ backup.get_backup_type_display }}
+                                            </span>
+                                            <span class="badge backup-status bg-{% if backup.status == 'completed' %}success{% elif backup.status == 'running' %}warning{% elif backup.status == 'failed' %}danger{% else %}secondary{% endif %}">
+                                                {{ backup.get_status_display }}
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="mb-2">
+                                            <small class="text-muted">
+                                                <i class="fas fa-hdd"></i> {{ backup.file_size|filesizeformat }}
+                                            </small>
+                                        </div>
+                                        
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">{{ backup.created_at|timesince }}</small>
+                                            {% if backup.status == 'running' %}
+                                            <div class="progress-container" style="width: 100px;">
+                                                <div class="progress-bar" style="width: 50%;"></div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        {% if backup.status == 'failed' and backup.error_message %}
+                                        <div class="mt-2">
+                                            <small class="text-danger">
+                                                <i class="fas fa-exclamation-triangle"></i> {{ backup.error_message|truncatechars:50 }}
+                                            </small>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                        <nav aria-label="صفحات النسخ الاحتياطية">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابق</a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالي</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-database fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد نسخ احتياطية</h5>
+                            <p class="text-muted">لم يتم إنشاء أي نسخ احتياطية بعد</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createBackupModal">
+                                <i class="fas fa-plus"></i> إنشاء نسخة احتياطية
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedules and Status -->
+        <div class="col-md-4">
+            <!-- Backup Schedules -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">الجدولات المجدولة</h5>
+                </div>
+                <div class="card-body">
+                    {% if schedules %}
+                        <div class="list-group list-group-flush">
+                            {% for schedule in schedules %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ schedule.name|truncatechars:20 }}</h6>
+                                    <small class="text-muted">{{ schedule.get_schedule_type_display }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-{% if schedule.is_active %}success{% else %}secondary{% endif %}">
+                                        {% if schedule.is_active %}نشط{% else %}غير نشط{% endif %}
+                                    </span>
+                                    {% if schedule.next_run %}
+                                    <br><small class="text-muted">{{ schedule.next_run|timesince }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-clock fa-2x text-muted mb-2"></i>
+                            <p class="text-muted small">لا توجد جدولات مجدولة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">حالة النظام</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>معدل النجاح</span>
+                            <span>{{ backup_status.success_rate|floatformat:1 }}%</span>
+                        </div>
+                        <div class="progress-container mt-1">
+                            <div class="progress-bar" style="width: {{ backup_status.success_rate }}%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>المساحة المستخدمة</span>
+                            <span>{{ backup_status.total_size_mb|floatformat:1 }} MB</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>آخر نسخة احتياطية</span>
+                            <span>
+                                {% if recent_backups %}
+                                    {{ recent_backups.0.created_at|timesince }}
+                                {% else %}
+                                    غير متوفر
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Backup Modal -->
+<div class="modal fade" id="createBackupModal" tabindex="-1" aria-labelledby="createBackupModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createBackupModalLabel">إنشاء نسخة احتياطية</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createBackupForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="backupSchedule" class="form-label">الجدولة *</label>
+                                <select class="form-select" id="backupSchedule" required>
+                                    <option value="">اختر الجدولة</option>
+                                    {% for schedule in schedules %}
+                                    <option value="{{ schedule.id }}">{{ schedule.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="backupType" class="form-label">نوع النسخة</label>
+                                <select class="form-select" id="backupType">
+                                    <option value="full">كاملة</option>
+                                    <option value="incremental">تزايدية</option>
+                                    <option value="differential">تفاضلية</option>
+                                    <option value="data_only">بيانات فقط</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="backupCompression" class="form-label">الضغط</label>
+                                <select class="form-select" id="backupCompression">
+                                    <option value="zip">ZIP</option>
+                                    <option value="gzip">GZIP</option>
+                                    <option value="bzip2">BZIP2</option>
+                                    <option value="tar_gz">TAR.GZ</option>
+                                    <option value="none">بدون ضغط</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="backupEncryption" class="form-label">التشفير</label>
+                                <select class="form-select" id="backupEncryption">
+                                    <option value="none">بدون تشفير</option>
+                                    <option value="aes">AES</option>
+                                    <option value="fernet">Fernet</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="includeMedia" checked>
+                        <label class="form-check-label" for="includeMedia">
+                            تضمين ملفات الوسائط
+                        </label>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="includeStatic">
+                        <label class="form-check-label" for="includeStatic">
+                            تضمين الملفات الثابتة
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-database"></i> إنشاء النسخة الاحتياطية
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Restore Backup Modal -->
+<div class="modal fade" id="restoreBackupModal" tabindex="-1" aria-labelledby="restoreBackupModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="restoreBackupModalLabel">استعادة نسخة احتياطية</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="restoreBackupForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="restoreBackup" class="form-label">اختر النسخة الاحتياطية *</label>
+                        <select class="form-select" id="restoreBackup" required>
+                            <option value="">اختر النسخة الاحتياطية</option>
+                            {% for backup in recent_backups %}
+                            {% if backup.status == 'completed' %}
+                            <option value="{{ backup.id }}">{{ backup.schedule.name }} - {{ backup.created_at|date:"Y-m-d H:i" }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>تحذير:</strong> استعادة النسخة الاحتياطية ستحذف جميع البيانات الحالية وتستبدلها بالبيانات من النسخة الاحتياطية.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-undo"></i> استعادة النسخة الاحتياطية
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Create backup form
+    const createBackupForm = document.getElementById('createBackupForm');
+    if (createBackupForm) {
+        createBackupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('schedule_id', document.getElementById('backupSchedule').value);
+            formData.append('backup_type', document.getElementById('backupType').value);
+            formData.append('compression', document.getElementById('backupCompression').value);
+            formData.append('encryption', document.getElementById('backupEncryption').value);
+            formData.append('include_media', document.getElementById('includeMedia').checked);
+            formData.append('include_static', document.getElementById('includeStatic').checked);
+            
+            fetch('{% url "accounting_app:advanced:api_backup_create" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('خطأ: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ في إنشاء النسخة الاحتياطية');
+            });
+        });
+    }
+    
+    // Restore backup form
+    const restoreBackupForm = document.getElementById('restoreBackupForm');
+    if (restoreBackupForm) {
+        restoreBackupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const backupId = document.getElementById('restoreBackup').value;
+            
+            if (confirm('هل أنت متأكد من استعادة هذه النسخة الاحتياطية؟ سيتم حذف جميع البيانات الحالية.')) {
+                window.location.href = `{% url "accounting_app:advanced:backup_restore" 0 %}`.replace('0', backupId);
+            }
+        });
+    }
+});
+
+function openBackup(backupId) {
+    window.location.href = `{% url "accounting_app:advanced:backup_execution_detail" 0 %}`.replace('0', backupId);
+}
+
+function createQuickBackup(type) {
+    const formData = new FormData();
+    formData.append('backup_type', type);
+    formData.append('schedule_id', '1'); // Default schedule
+    
+    fetch('{% url "accounting_app:advanced:api_backup_create" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('خطأ: ' + data.error);
+        }
+    });
+}
+
+function showRestoreModal() {
+    new bootstrap.Modal(document.getElementById('restoreBackupModal')).show();
+}
+
+function downloadBackup(backupId) {
+    window.location.href = `/backup/${backupId}/download/`;
+}
+
+function restoreBackup(backupId) {
+    if (confirm('هل أنت متأكد من استعادة هذه النسخة الاحتياطية؟')) {
+        window.location.href = `{% url "accounting_app:advanced:backup_restore" 0 %}`.replace('0', backupId);
+    }
+}
+
+function deleteBackup(backupId) {
+    if (confirm('هل أنت متأكد من حذف هذه النسخة الاحتياطية؟')) {
+        fetch(`/api/backup/${backupId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('خطأ: ' + data.error);
+            }
+        });
+    }
+}
+
+function refreshBackups() {
+    location.reload();
+}
+</script>
+{% endblock %}

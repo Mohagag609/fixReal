@@ -1,0 +1,435 @@
+{% extends 'accounting_app/base.html' %}
+{% load static %}
+
+{% block title %}لوحة تحكم الأداء{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        transition: all 0.3s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    .metric-trend {
+        font-size: 0.875rem;
+    }
+    .chart-container {
+        height: 300px;
+    }
+    .performance-alert {
+        border-left: 4px solid #ef4444;
+    }
+    .performance-warning {
+        border-left: 4px solid #f59e0b;
+    }
+    .performance-good {
+        border-left: 4px solid #10b981;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">لوحة تحكم الأداء</h1>
+            <p class="text-muted">مراقبة وتحسين أداء النظام</p>
+        </div>
+        <div>
+            <button class="btn btn-primary" onclick="optimizeDatabase()">
+                <i class="fas fa-tools"></i> تحسين قاعدة البيانات
+            </button>
+        </div>
+    </div>
+
+    <!-- System Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card metric-card performance-{% if dashboard_data.system_info.memory_usage > 80 %}alert{% elif dashboard_data.system_info.memory_usage > 60 %}warning{% else %}good{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title text-muted">استخدام الذاكرة</h6>
+                            <div class="metric-value text-{% if dashboard_data.system_info.memory_usage > 80 %}danger{% elif dashboard_data.system_info.memory_usage > 60 %}warning{% else %}success{% endif %}">
+                                {{ dashboard_data.system_info.memory_usage|floatformat:1 }}%
+                            </div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-memory fa-2x text-{% if dashboard_data.system_info.memory_usage > 80 %}danger{% elif dashboard_data.system_info.memory_usage > 60 %}warning{% else %}success{% endif %}"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-{% if dashboard_data.system_info.memory_usage > 80 %}danger{% elif dashboard_data.system_info.memory_usage > 60 %}warning{% else %}success{% endif %}" 
+                                 style="width: {{ dashboard_data.system_info.memory_usage }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card metric-card performance-{% if dashboard_data.system_info.cpu_usage > 80 %}alert{% elif dashboard_data.system_info.cpu_usage > 60 %}warning{% else %}good{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title text-muted">استخدام المعالج</h6>
+                            <div class="metric-value text-{% if dashboard_data.system_info.cpu_usage > 80 %}danger{% elif dashboard_data.system_info.cpu_usage > 60 %}warning{% else %}success{% endif %}">
+                                {{ dashboard_data.system_info.cpu_usage|floatformat:1 }}%
+                            </div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-microchip fa-2x text-{% if dashboard_data.system_info.cpu_usage > 80 %}danger{% elif dashboard_data.system_info.cpu_usage > 60 %}warning{% else %}success{% endif %}"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-{% if dashboard_data.system_info.cpu_usage > 80 %}danger{% elif dashboard_data.system_info.cpu_usage > 60 %}warning{% else %}success{% endif %}" 
+                                 style="width: {{ dashboard_data.system_info.cpu_usage }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card metric-card performance-{% if dashboard_data.system_info.disk_usage > 80 %}alert{% elif dashboard_data.system_info.disk_usage > 60 %}warning{% else %}good{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title text-muted">استخدام القرص</h6>
+                            <div class="metric-value text-{% if dashboard_data.system_info.disk_usage > 80 %}danger{% elif dashboard_data.system_info.disk_usage > 60 %}warning{% else %}success{% endif %}">
+                                {{ dashboard_data.system_info.disk_usage|floatformat:1 }}%
+                            </div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-hdd fa-2x text-{% if dashboard_data.system_info.disk_usage > 80 %}danger{% elif dashboard_data.system_info.disk_usage > 60 %}warning{% else %}success{% endif %}"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-{% if dashboard_data.system_info.disk_usage > 80 %}danger{% elif dashboard_data.system_info.disk_usage > 60 %}warning{% else %}success{% endif %}" 
+                                 style="width: {{ dashboard_data.system_info.disk_usage }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title text-muted">الاستعلامات البطيئة</h6>
+                            <div class="metric-value text-warning">
+                                {{ dashboard_data.slow_queries_count }}
+                            </div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-turtle fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">في آخر 24 ساعة</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Overview -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">نظرة عامة على الأداء</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">إحصائيات سريعة</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>العروض المادية</span>
+                            <span class="badge bg-info">{{ dashboard_data.materialized_views_count }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>التحسينات المطبقة</span>
+                            <span class="badge bg-success">{{ dashboard_data.applied_optimizations }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>حالة النظام</span>
+                            <span class="badge bg-{% if dashboard_data.system_info.memory_usage < 60 and dashboard_data.system_info.cpu_usage < 60 %}success{% elif dashboard_data.system_info.memory_usage < 80 and dashboard_data.system_info.cpu_usage < 80 %}warning{% else %}danger{% endif %}">
+                                {% if dashboard_data.system_info.memory_usage < 60 and dashboard_data.system_info.cpu_usage < 60 %}ممتاز{% elif dashboard_data.system_info.memory_usage < 80 and dashboard_data.system_info.cpu_usage < 80 %}جيد{% else %}يحتاج تحسين{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Metrics and Slow Queries -->
+    <div class="row">
+        <!-- Recent Metrics -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">المقاييس الأخيرة</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_metrics %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>المقياس</th>
+                                        <th>القيمة</th>
+                                        <th>الوقت</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for metric in recent_metrics %}
+                                    <tr>
+                                        <td>{{ metric.get_metric_display }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if metric.metric == 'memory_usage' and metric.value > 80 %}danger{% elif metric.metric == 'cpu_usage' and metric.value > 80 %}danger{% else %}primary{% endif %}">
+                                                {{ metric.value }} {{ metric.unit }}
+                                            </span>
+                                        </td>
+                                        <td>{{ metric.timestamp|timesince }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-chart-line fa-2x text-muted mb-2"></i>
+                            <p class="text-muted small">لا توجد مقاييس حديثة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Slow Queries -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">الاستعلامات البطيئة</h5>
+                    <a href="{% url 'accounting_app:advanced:slow_queries' %}" class="btn btn-sm btn-outline-primary">
+                        عرض الكل
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if slow_queries %}
+                        <div class="list-group list-group-flush">
+                            {% for query in slow_queries %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ query.query|truncatechars:50 }}</h6>
+                                    <small class="text-muted">{{ query.database }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-warning">{{ query.execution_time|floatformat:0 }}ms</span>
+                                    <br><small class="text-muted">{{ query.timestamp|timesince }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-turtle fa-2x text-muted mb-2"></i>
+                            <p class="text-muted small">لا توجد استعلامات بطيئة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Materialized Views -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">العروض المادية</h5>
+                    <a href="{% url 'accounting_app:advanced:materialized_views' %}" class="btn btn-sm btn-outline-primary">
+                        إدارة العروض
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if materialized_views %}
+                        <div class="row">
+                            {% for view in materialized_views %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ view.name }}</h6>
+                                        <p class="card-text text-muted small">{{ view.description|truncatechars:80 }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                آخر تحديث: {{ view.last_refresh|timesince|default:"لم يتم" }}
+                                            </small>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="refreshView({{ view.id }})">
+                                                <i class="fas fa-sync"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-table fa-2x text-muted mb-2"></i>
+                            <p class="text-muted small">لا توجد عروض مادية</p>
+                            <a href="{% url 'accounting_app:advanced:materialized_view_create' %}" class="btn btn-sm btn-primary">
+                                إنشاء عرض مادي
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Performance Chart
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    const performanceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['الذاكرة', 'المعالج', 'القرص', 'الاتصالات'],
+            datasets: [{
+                label: 'استخدام النظام (%)',
+                data: [
+                    {{ dashboard_data.system_info.memory_usage }},
+                    {{ dashboard_data.system_info.cpu_usage }},
+                    {{ dashboard_data.system_info.disk_usage }},
+                    0 // Placeholder for connections
+                ],
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+});
+
+function optimizeDatabase() {
+    if (confirm('هل تريد تحسين قاعدة البيانات؟ قد يستغرق هذا بعض الوقت.')) {
+        fetch('{% url "accounting_app:advanced:api_performance_optimize" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`تم العثور على ${data.optimizations_count} تحسين محتمل`);
+                location.reload();
+            } else {
+                alert('خطأ: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ في تحسين قاعدة البيانات');
+        });
+    }
+}
+
+function refreshView(viewId) {
+    fetch(`/api/performance/materialized-views/${viewId}/refresh/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('تم تحديث العرض المادي بنجاح');
+            location.reload();
+        } else {
+            alert('خطأ: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ في تحديث العرض المادي');
+    });
+}
+
+// Auto-refresh every 30 seconds
+setInterval(function() {
+    fetch('{% url "accounting_app:advanced:api_performance_metrics" %}')
+    .then(response => response.json())
+    .then(data => {
+        // Update metrics without full page reload
+        updateMetrics(data);
+    })
+    .catch(error => {
+        console.error('Error refreshing metrics:', error);
+    });
+}, 30000);
+
+function updateMetrics(data) {
+    // Update memory usage
+    const memoryElement = document.querySelector('.metric-card .metric-value');
+    if (memoryElement) {
+        memoryElement.textContent = data.system_info.memory_usage.toFixed(1) + '%';
+    }
+    
+    // Update other metrics as needed
+    // This is a simplified example
+}
+</script>
+{% endblock %}

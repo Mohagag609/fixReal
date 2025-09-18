@@ -86,4 +86,7 @@ urlpatterns = [
     
     # Detail pages
     path('', include('accounting_app.detail_urls')),
+    
+    # Advanced sub-pages
+    path('advanced/', include('accounting_app.advanced_urls')),
 ]

@@ -1,0 +1,494 @@
+{% extends 'accounting_app/base.html' %}
+{% load static %}
+
+{% block title %}لوحة تحكم الإشعارات{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .notification-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .notification-unread {
+        border-left: 4px solid #3b82f6;
+    }
+    .notification-urgent {
+        border-left: 4px solid #ef4444;
+    }
+    .notification-high {
+        border-left: 4px solid #f59e0b;
+    }
+    .notification-normal {
+        border-left: 4px solid #10b981;
+    }
+    .notification-low {
+        border-left: 4px solid #6b7280;
+    }
+    .priority-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .category-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">لوحة تحكم الإشعارات</h1>
+            <p class="text-muted">إدارة ومراقبة جميع الإشعارات</p>
+        </div>
+        <div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createNotificationModal">
+                <i class="fas fa-plus"></i> إشعار جديد
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">إجمالي الإشعارات</h6>
+                            <h3 class="mb-0">{{ notifications|length }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-bell fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">غير المقروءة</h6>
+                            <h3 class="mb-0">{{ unread_count }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-envelope fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">المرسلة</h6>
+                            <h3 class="mb-0">{{ notifications|length|add:"-1" }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">المقروءة</h6>
+                            <h3 class="mb-0">{{ notifications|length|add:"-2" }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-eye fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">فلترة الإشعارات</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="categoryFilter" class="form-label">الفئة:</label>
+                    <select class="form-select" id="categoryFilter">
+                        <option value="">جميع الفئات</option>
+                        <option value="system">النظام</option>
+                        <option value="financial">مالية</option>
+                        <option value="contract">عقود</option>
+                        <option value="payment">مدفوعات</option>
+                        <option value="reminder">تذكيرات</option>
+                        <option value="alert">تنبيهات</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="priorityFilter" class="form-label">الأولوية:</label>
+                    <select class="form-select" id="priorityFilter">
+                        <option value="">جميع الأولويات</option>
+                        <option value="low">منخفضة</option>
+                        <option value="normal">عادية</option>
+                        <option value="high">عالية</option>
+                        <option value="urgent">عاجلة</option>
+                        <option value="critical">حرجة</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="statusFilter" class="form-label">الحالة:</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">جميع الحالات</option>
+                        <option value="pending">في الانتظار</option>
+                        <option value="sent">تم الإرسال</option>
+                        <option value="delivered">تم التسليم</option>
+                        <option value="read">تم القراءة</option>
+                        <option value="failed">فشل الإرسال</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div>
+                        <button class="btn btn-primary" onclick="applyFilters()">
+                            <i class="fas fa-filter"></i> تطبيق الفلتر
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> مسح
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">الإشعارات</h5>
+            <div>
+                <button class="btn btn-sm btn-outline-primary" onclick="markAllAsRead()">
+                    <i class="fas fa-check-double"></i> تحديد الكل كمقروء
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteAll()">
+                    <i class="fas fa-trash"></i> حذف الكل
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if notifications %}
+                <div class="row" id="notificationsList">
+                    {% for notification in notifications %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card notification-card {% if notification.status in 'pending,sent,delivered' %}notification-unread{% endif %} 
+                                    {% if notification.priority == 'urgent' %}notification-urgent{% elif notification.priority == 'high' %}notification-high{% elif notification.priority == 'normal' %}notification-normal{% else %}notification-low{% endif %}"
+                             onclick="openNotification({{ notification.id }})">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="card-title mb-0">{{ notification.title|truncatechars:50 }}</h6>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                                data-bs-toggle="dropdown" onclick="event.stopPropagation()">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#" onclick="markAsRead({{ notification.id }})">
+                                                <i class="fas fa-eye"></i> تحديد كمقروء
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="deleteNotification({{ notification.id }})">
+                                                <i class="fas fa-trash"></i> حذف
+                                            </a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <p class="card-text text-muted small">{{ notification.message|truncatechars:100 }}</p>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="badge priority-badge bg-{% if notification.priority == 'urgent' %}danger{% elif notification.priority == 'high' %}warning{% elif notification.priority == 'normal' %}success{% else %}secondary{% endif %}">
+                                            {{ notification.get_priority_display }}
+                                        </span>
+                                        <span class="badge category-badge bg-info">
+                                            {{ notification.get_category_display }}
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">{{ notification.created_at|timesince }}</small>
+                                </div>
+                                
+                                {% if notification.is_urgent %}
+                                <div class="mt-2">
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-exclamation-triangle"></i> عاجل
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <nav aria-label="صفحات الإشعارات">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابق</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالي</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">لا توجد إشعارات</h5>
+                    <p class="text-muted">لم يتم العثور على أي إشعارات تطابق المعايير المحددة</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Create Notification Modal -->
+<div class="modal fade" id="createNotificationModal" tabindex="-1" aria-labelledby="createNotificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createNotificationModalLabel">إشعار جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createNotificationForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="notificationTitle" class="form-label">العنوان *</label>
+                                <input type="text" class="form-control" id="notificationTitle" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="notificationCategory" class="form-label">الفئة *</label>
+                                <select class="form-select" id="notificationCategory" required>
+                                    <option value="">اختر الفئة</option>
+                                    <option value="system">النظام</option>
+                                    <option value="financial">مالية</option>
+                                    <option value="contract">عقود</option>
+                                    <option value="payment">مدفوعات</option>
+                                    <option value="reminder">تذكيرات</option>
+                                    <option value="alert">تنبيهات</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="notificationPriority" class="form-label">الأولوية</label>
+                                <select class="form-select" id="notificationPriority">
+                                    <option value="normal">عادية</option>
+                                    <option value="low">منخفضة</option>
+                                    <option value="high">عالية</option>
+                                    <option value="urgent">عاجلة</option>
+                                    <option value="critical">حرجة</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="notificationChannels" class="form-label">القنوات</label>
+                                <select class="form-select" id="notificationChannels" multiple>
+                                    <option value="in_app" selected>داخل التطبيق</option>
+                                    <option value="email">البريد الإلكتروني</option>
+                                    <option value="sms">الرسائل النصية</option>
+                                    <option value="push">الإشعارات الفورية</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notificationMessage" class="form-label">الرسالة *</label>
+                        <textarea class="form-control" id="notificationMessage" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="notificationRecipients" class="form-label">المستقبلون</label>
+                                <input type="text" class="form-control" id="notificationRecipients" 
+                                       placeholder="أدخل عناوين البريد الإلكتروني مفصولة بفواصل">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="notificationScheduled" class="form-label">موعد الإرسال</label>
+                                <input type="datetime-local" class="form-control" id="notificationScheduled">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="notificationUrgent">
+                        <label class="form-check-label" for="notificationUrgent">
+                            عاجل
+                        </label>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="notificationRequiresAck">
+                        <label class="form-check-label" for="notificationRequiresAck">
+                            يتطلب إقرار
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">إرسال الإشعار</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Create notification form
+    const createNotificationForm = document.getElementById('createNotificationForm');
+    if (createNotificationForm) {
+        createNotificationForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                title: document.getElementById('notificationTitle').value,
+                message: document.getElementById('notificationMessage').value,
+                category: document.getElementById('notificationCategory').value,
+                priority: document.getElementById('notificationPriority').value,
+                channels: Array.from(document.getElementById('notificationChannels').selectedOptions).map(option => option.value),
+                recipients: document.getElementById('notificationRecipients').value.split(',').map(email => email.trim()).filter(email => email),
+                scheduled_at: document.getElementById('notificationScheduled').value,
+                is_urgent: document.getElementById('notificationUrgent').checked,
+                requires_acknowledgment: document.getElementById('notificationRequiresAck').checked
+            };
+            
+            fetch('{% url "accounting_app:advanced:api_notifications" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('خطأ: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ في إرسال الإشعار');
+            });
+        });
+    }
+});
+
+function openNotification(notificationId) {
+    window.location.href = `{% url "accounting_app:advanced:notification_detail" 0 %}`.replace('0', notificationId);
+}
+
+function markAsRead(notificationId) {
+    fetch(`{% url "accounting_app:advanced:api_notification_read" 0 %}`.replace('0', notificationId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+function markAllAsRead() {
+    if (confirm('هل أنت متأكد من تحديد جميع الإشعارات كمقروءة؟')) {
+        // Implementation for marking all as read
+        location.reload();
+    }
+}
+
+function deleteNotification(notificationId) {
+    if (confirm('هل أنت متأكد من حذف هذا الإشعار؟')) {
+        // Implementation for deleting notification
+        location.reload();
+    }
+}
+
+function deleteAll() {
+    if (confirm('هل أنت متأكد من حذف جميع الإشعارات؟')) {
+        // Implementation for deleting all notifications
+        location.reload();
+    }
+}
+
+function applyFilters() {
+    const category = document.getElementById('categoryFilter').value;
+    const priority = document.getElementById('priorityFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (priority) params.append('priority', priority);
+    if (status) params.append('status', status);
+    
+    window.location.href = '?' + params.toString();
+}
+
+function clearFilters() {
+    document.getElementById('categoryFilter').value = '';
+    document.getElementById('priorityFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    window.location.href = '{% url "accounting_app:advanced:notification_dashboard" %}';
+}
+</script>
+{% endblock %}

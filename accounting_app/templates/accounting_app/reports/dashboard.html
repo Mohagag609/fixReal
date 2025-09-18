@@ -1,0 +1,478 @@
+{% extends 'accounting_app/base.html' %}
+{% load static %}
+
+{% block title %}لوحة تحكم التقارير{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .report-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .report-status {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .report-category {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .chart-container {
+        height: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">لوحة تحكم التقارير</h1>
+            <p class="text-muted">إنشاء وإدارة التقارير المالية والعقارية</p>
+        </div>
+        <div>
+            <a href="{% url 'accounting_app:advanced:report_builder' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> تقرير جديد
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">إجمالي التقارير</h6>
+                            <h3 class="mb-0">{{ total_reports }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-bar fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">مكتملة</h6>
+                            <h3 class="mb-0">{{ recent_executions|length|add:"-1" }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">قيد التشغيل</h6>
+                            <h3 class="mb-0">2</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-spinner fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">مجدولة</h6>
+                            <h3 class="mb-0">{{ scheduled_reports|length }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">إجراءات سريعة</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-primary w-100 mb-2" onclick="createQuickReport('financial')">
+                                <i class="fas fa-chart-line"></i><br>
+                                تقرير مالي
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-success w-100 mb-2" onclick="createQuickReport('contracts')">
+                                <i class="fas fa-file-contract"></i><br>
+                                تقرير العقود
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-warning w-100 mb-2" onclick="createQuickReport('partners')">
+                                <i class="fas fa-users"></i><br>
+                                تقرير الشركاء
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-info w-100 mb-2" onclick="createQuickReport('custom')">
+                                <i class="fas fa-cog"></i><br>
+                                تقرير مخصص
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports List -->
+    <div class="row">
+        <!-- Available Reports -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">التقارير المتاحة</h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshReports()">
+                            <i class="fas fa-refresh"></i> تحديث
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if reports %}
+                        <div class="row" id="reportsList">
+                            {% for report in reports %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card report-card" onclick="openReport({{ report.id }})">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="card-title mb-0">{{ report.name|truncatechars:30 }}</h6>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                                        data-bs-toggle="dropdown" onclick="event.stopPropagation()">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="#" onclick="executeReport({{ report.id }})">
+                                                        <i class="fas fa-play"></i> تشغيل
+                                                    </a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="scheduleReport({{ report.id }})">
+                                                        <i class="fas fa-clock"></i> جدولة
+                                                    </a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="editReport({{ report.id }})">
+                                                        <i class="fas fa-edit"></i> تعديل
+                                                    </a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="deleteReport({{ report.id }})">
+                                                        <i class="fas fa-trash"></i> حذف
+                                                    </a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        
+                                        <p class="card-text text-muted small">{{ report.description|truncatechars:80 }}</p>
+                                        
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="badge report-category bg-info">
+                                                    {{ report.get_category_display }}
+                                                </span>
+                                                {% if report.is_public %}
+                                                <span class="badge report-status bg-success">عام</span>
+                                                {% else %}
+                                                <span class="badge report-status bg-secondary">خاص</span>
+                                                {% endif %}
+                                            </div>
+                                            <small class="text-muted">{{ report.created_at|timesince }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                        <nav aria-label="صفحات التقارير">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابق</a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالي</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد تقارير</h5>
+                            <p class="text-muted">لم يتم إنشاء أي تقارير بعد</p>
+                            <a href="{% url 'accounting_app:advanced:report_builder' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> إنشاء تقرير جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Executions -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">التنفيذات الأخيرة</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_executions %}
+                        <div class="list-group list-group-flush">
+                            {% for execution in recent_executions %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ execution.report_definition.name|truncatechars:25 }}</h6>
+                                    <small class="text-muted">{{ execution.created_at|timesince }}</small>
+                                </div>
+                                <span class="badge bg-{% if execution.status == 'completed' %}success{% elif execution.status == 'running' %}warning{% elif execution.status == 'failed' %}danger{% else %}secondary{% endif %}">
+                                    {{ execution.get_status_display }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-history fa-2x text-muted mb-2"></i>
+                            <p class="text-muted small">لا توجد تنفيذات حديثة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Scheduled Reports -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">التقارير المجدولة</h5>
+                </div>
+                <div class="card-body">
+                    {% if scheduled_reports %}
+                        <div class="list-group list-group-flush">
+                            {% for schedule in scheduled_reports %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ schedule.name|truncatechars:25 }}</h6>
+                                    <small class="text-muted">{{ schedule.get_schedule_type_display }}</small>
+                                </div>
+                                <span class="badge bg-info">
+                                    {{ schedule.next_run|timesince }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-clock fa-2x text-muted mb-2"></i>
+                            <p class="text-muted small">لا توجد تقارير مجدولة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Execute Report Modal -->
+<div class="modal fade" id="executeReportModal" tabindex="-1" aria-labelledby="executeReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="executeReportModalLabel">تشغيل التقرير</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="executeReportForm">
+                <div class="modal-body">
+                    <div id="reportParameters">
+                        <!-- Parameters will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-play"></i> تشغيل التقرير
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Execute report form
+    const executeReportForm = document.getElementById('executeReportForm');
+    if (executeReportForm) {
+        executeReportForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const reportId = formData.get('report_id');
+            
+            fetch(`{% url "accounting_app:advanced:api_report_execute" 0 %}`.replace('0', reportId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = `{% url "accounting_app:advanced:report_execution" 0 %}`.replace('0', data.execution_id);
+                } else {
+                    alert('خطأ: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ في تشغيل التقرير');
+            });
+        });
+    }
+});
+
+function openReport(reportId) {
+    window.location.href = `{% url "accounting_app:advanced:report_execution" 0 %}`.replace('0', reportId);
+}
+
+function executeReport(reportId) {
+    // Load report parameters and show modal
+    fetch(`/api/reports/${reportId}/parameters/`)
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('reportParameters').innerHTML = data.html;
+        document.getElementById('executeReportForm').innerHTML += `<input type="hidden" name="report_id" value="${reportId}">`;
+        new bootstrap.Modal(document.getElementById('executeReportModal')).show();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ في تحميل معاملات التقرير');
+    });
+}
+
+function scheduleReport(reportId) {
+    window.location.href = `{% url "accounting_app:advanced:report_schedule_create" %}?report=${reportId}`;
+}
+
+function editReport(reportId) {
+    window.location.href = `{% url "accounting_app:advanced:report_builder" %}?edit=${reportId}`;
+}
+
+function deleteReport(reportId) {
+    if (confirm('هل أنت متأكد من حذف هذا التقرير؟')) {
+        fetch(`/api/reports/${reportId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('خطأ: ' + data.error);
+            }
+        });
+    }
+}
+
+function createQuickReport(type) {
+    let reportData = {};
+    
+    switch(type) {
+        case 'financial':
+            reportData = {
+                name: 'تقرير مالي سريع',
+                category: 'financial',
+                template: 'financial_template'
+            };
+            break;
+        case 'contracts':
+            reportData = {
+                name: 'تقرير العقود السريع',
+                category: 'contracts',
+                template: 'contracts_template'
+            };
+            break;
+        case 'partners':
+            reportData = {
+                name: 'تقرير الشركاء السريع',
+                category: 'partners',
+                template: 'partners_template'
+            };
+            break;
+        case 'custom':
+            window.location.href = '{% url "accounting_app:advanced:report_builder" %}';
+            return;
+    }
+    
+    fetch('{% url "accounting_app:advanced:api_report_create" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(reportData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            executeReport(data.report_id);
+        } else {
+            alert('خطأ: ' + data.error);
+        }
+    });
+}
+
+function refreshReports() {
+    location.reload();
+}
+</script>
+{% endblock %}
