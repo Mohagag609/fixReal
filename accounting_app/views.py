@@ -12,7 +12,7 @@ import json
 from .models import (
     Customer, Unit, Partner, Contract, Installment, Safe, Voucher, Broker,
     PartnerDebt, BrokerDue, PartnerGroup, UnitPartner, PartnerGroupPartner,
-    UnitPartnerGroup, AuditLog, Settings, KeyVal, Transfer
+    UnitPartnerGroup, AuditLog, Settings, KeyVal, Transfer, Notification
 )
 
 

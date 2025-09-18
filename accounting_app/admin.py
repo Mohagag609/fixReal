@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Customer, Unit, Partner, Contract, Installment, Safe, Voucher, Broker,
     PartnerDebt, BrokerDue, PartnerGroup, UnitPartner, PartnerGroupPartner,
-    UnitPartnerGroup, AuditLog, Settings, KeyVal, Transfer
+    UnitPartnerGroup, AuditLog, Settings, KeyVal, Transfer, Notification
 )
 
 
@@ -143,3 +143,12 @@ class KeyValAdmin(admin.ModelAdmin):
     list_display = ['key', 'value', 'created_at']
     search_fields = ['key']
     ordering = ['key']
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ['title', 'type', 'category', 'acknowledged', 'created_at']
+    list_filter = ['type', 'category', 'acknowledged', 'created_at']
+    search_fields = ['title', 'message']
+    ordering = ['-created_at']
+    readonly_fields = ['created_at', 'updated_at']

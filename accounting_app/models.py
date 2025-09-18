@@ -99,6 +99,7 @@ class UnitPartner(BaseModel):
     """ربط الوحدات بالشركاء"""
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='unit_partners', verbose_name="الوحدة")
     partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='unit_partners', verbose_name="الشريك")
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='unit_partners', null=True, blank=True, verbose_name="العقد")
     percentage = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))], verbose_name="النسبة المئوية")
     
     class Meta:
@@ -108,6 +109,7 @@ class UnitPartner(BaseModel):
         indexes = [
             models.Index(fields=['unit', 'deleted_at']),
             models.Index(fields=['partner', 'deleted_at']),
+            models.Index(fields=['contract', 'deleted_at']),
         ]
     
     def __str__(self):
@@ -170,6 +172,7 @@ class Installment(BaseModel):
     ]
     
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='installments', verbose_name="الوحدة")
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='installments', null=True, blank=True, verbose_name="العقد")
     amount = models.DecimalField(max_digits=15, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))], verbose_name="المبلغ")
     due_date = models.DateTimeField(verbose_name="تاريخ الاستحقاق")
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default="معلق", verbose_name="الحالة")
@@ -180,6 +183,7 @@ class Installment(BaseModel):
         verbose_name_plural = "الأقساط"
         indexes = [
             models.Index(fields=['unit', 'deleted_at']),
+            models.Index(fields=['contract', 'deleted_at']),
             models.Index(fields=['status', 'deleted_at']),
             models.Index(fields=['due_date']),
             models.Index(fields=['amount']),
@@ -198,6 +202,7 @@ class PartnerDebt(BaseModel):
     ]
     
     partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='partner_debts', verbose_name="الشريك")
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='partner_debts', null=True, blank=True, verbose_name="العقد")
     amount = models.DecimalField(max_digits=15, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))], verbose_name="المبلغ")
     due_date = models.DateTimeField(verbose_name="تاريخ الاستحقاق")
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default="معلق", verbose_name="الحالة")
@@ -206,6 +211,12 @@ class PartnerDebt(BaseModel):
     class Meta:
         verbose_name = "دين شريك"
         verbose_name_plural = "ديون الشركاء"
+        indexes = [
+            models.Index(fields=['partner', 'deleted_at']),
+            models.Index(fields=['contract', 'deleted_at']),
+            models.Index(fields=['status', 'deleted_at']),
+            models.Index(fields=['due_date']),
+        ]
     
     def __str__(self):
         return f"دين {self.partner.name} - {self.amount}"
@@ -228,12 +239,19 @@ class Transfer(BaseModel):
     """التحويلات بين الخزائن"""
     from_safe = models.ForeignKey(Safe, on_delete=models.CASCADE, related_name='transfers_from', verbose_name="من خزنة")
     to_safe = models.ForeignKey(Safe, on_delete=models.CASCADE, related_name='transfers_to', verbose_name="إلى خزنة")
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='transfers', null=True, blank=True, verbose_name="العقد")
     amount = models.DecimalField(max_digits=15, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))], verbose_name="المبلغ")
     description = models.TextField(null=True, blank=True, verbose_name="الوصف")
     
     class Meta:
         verbose_name = "تحويل"
         verbose_name_plural = "التحويلات"
+        indexes = [
+            models.Index(fields=['from_safe', 'deleted_at']),
+            models.Index(fields=['to_safe', 'deleted_at']),
+            models.Index(fields=['contract', 'deleted_at']),
+            models.Index(fields=['created_at']),
+        ]
     
     def __str__(self):
         return f"تحويل من {self.from_safe.name} إلى {self.to_safe.name} - {self.amount}"
@@ -250,6 +268,8 @@ class Voucher(BaseModel):
     date = models.DateTimeField(verbose_name="التاريخ")
     amount = models.DecimalField(max_digits=15, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))], verbose_name="المبلغ")
     safe = models.ForeignKey(Safe, on_delete=models.CASCADE, related_name='vouchers', verbose_name="الخزنة")
+    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='vouchers', null=True, blank=True, verbose_name="الوحدة")
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='vouchers', null=True, blank=True, verbose_name="العقد")
     description = models.TextField(verbose_name="الوصف")
     payer = models.CharField(max_length=255, null=True, blank=True, verbose_name="المدفوع له")
     beneficiary = models.CharField(max_length=255, null=True, blank=True, verbose_name="المستفيد")
@@ -258,6 +278,12 @@ class Voucher(BaseModel):
     class Meta:
         verbose_name = "سند"
         verbose_name_plural = "السندات"
+        indexes = [
+            models.Index(fields=['type', 'deleted_at']),
+            models.Index(fields=['date']),
+            models.Index(fields=['unit', 'deleted_at']),
+            models.Index(fields=['contract', 'deleted_at']),
+        ]
     
     def __str__(self):
         return f"{self.get_type_display()} - {self.amount} ({self.date.strftime('%Y-%m-%d')})"
@@ -286,6 +312,7 @@ class BrokerDue(BaseModel):
     ]
     
     broker = models.ForeignKey(Broker, on_delete=models.CASCADE, related_name='broker_dues', verbose_name="السمسار")
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='broker_dues', null=True, blank=True, verbose_name="العقد")
     amount = models.DecimalField(max_digits=15, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))], verbose_name="المبلغ")
     due_date = models.DateTimeField(verbose_name="تاريخ الاستحقاق")
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default="معلق", verbose_name="الحالة")
@@ -294,6 +321,12 @@ class BrokerDue(BaseModel):
     class Meta:
         verbose_name = "دين سمسار"
         verbose_name_plural = "ديون السماسرة"
+        indexes = [
+            models.Index(fields=['broker', 'deleted_at']),
+            models.Index(fields=['contract', 'deleted_at']),
+            models.Index(fields=['status', 'deleted_at']),
+            models.Index(fields=['due_date']),
+        ]
     
     def __str__(self):
         return f"دين {self.broker.name} - {self.amount}"
@@ -331,11 +364,17 @@ class UnitPartnerGroup(BaseModel):
     """ربط الوحدات بمجموعات الشركاء"""
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='unit_partner_groups', verbose_name="الوحدة")
     partner_group = models.ForeignKey(PartnerGroup, on_delete=models.CASCADE, related_name='unit_partner_groups', verbose_name="مجموعة الشركاء")
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='unit_partner_groups', null=True, blank=True, verbose_name="العقد")
     
     class Meta:
         verbose_name = "وحدة مجموعة شركاء"
         verbose_name_plural = "وحدات مجموعات الشركاء"
         unique_together = ['unit', 'partner_group']
+        indexes = [
+            models.Index(fields=['unit', 'deleted_at']),
+            models.Index(fields=['partner_group', 'deleted_at']),
+            models.Index(fields=['contract', 'deleted_at']),
+        ]
     
     def __str__(self):
         return f"{self.unit.code} - {self.partner_group.name}"
@@ -384,3 +423,45 @@ class KeyVal(BaseModel):
     
     def __str__(self):
         return f"{self.key} = {self.value}"
+
+
+class Notification(BaseModel):
+    """الإشعارات"""
+    TYPE_CHOICES = [
+        ('info', 'معلومات'),
+        ('warning', 'تحذير'),
+        ('error', 'خطأ'),
+        ('success', 'نجاح'),
+    ]
+    
+    CATEGORY_CHOICES = [
+        ('contract', 'عقد'),
+        ('installment', 'قسط'),
+        ('payment', 'دفع'),
+        ('debt', 'دين'),
+        ('system', 'نظام'),
+    ]
+    
+    type = models.CharField(max_length=50, choices=TYPE_CHOICES, verbose_name="نوع الإشعار")
+    title = models.CharField(max_length=255, verbose_name="العنوان")
+    message = models.TextField(verbose_name="الرسالة")
+    category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, verbose_name="الفئة")
+    acknowledged = models.BooleanField(default=False, verbose_name="تم الإقرار")
+    acknowledged_at = models.DateTimeField(null=True, blank=True, verbose_name="تاريخ الإقرار")
+    acknowledged_by = models.CharField(max_length=100, null=True, blank=True, verbose_name="المقِر")
+    expires_at = models.DateTimeField(null=True, blank=True, verbose_name="تاريخ الانتهاء")
+    data = models.JSONField(null=True, blank=True, verbose_name="بيانات إضافية")
+    
+    class Meta:
+        verbose_name = "إشعار"
+        verbose_name_plural = "الإشعارات"
+        indexes = [
+            models.Index(fields=['type', 'deleted_at']),
+            models.Index(fields=['category', 'deleted_at']),
+            models.Index(fields=['acknowledged', 'deleted_at']),
+            models.Index(fields=['expires_at']),
+            models.Index(fields=['created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.title} - {self.get_type_display()}"
