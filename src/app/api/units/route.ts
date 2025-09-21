@@ -1,151 +1,95 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getConfig } from '@/lib/db/config'
-import { getPrismaClient } from '@/lib/prisma-clients'
-// import { getSharedAuth } from '@/lib/shared-auth'
-// import { validateUnit } from '@/utils/validation'
-import { cache as cacheClient, CacheKeys, CacheTTL } from '@/lib/cache/redis'
-import { ApiResponse, Unit, PaginatedResponse } from '@/types'
+import { query } from '@/lib/db'
+import { CreateUnitData, UpdateUnitData } from '@/types'
+import { z } from 'zod'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
+// Validation schemas
+const createUnitSchema = z.object({
+  code: z.string().min(1, 'كود الوحدة مطلوب'),
+  name: z.string().optional(),
+  unitType: z.string().default('سكني'),
+  area: z.string().optional(),
+  floor: z.string().optional(),
+  building: z.string().optional(),
+  totalPrice: z.number().min(0, 'السعر يجب أن يكون أكبر من أو يساوي صفر').default(0),
+  status: z.string().default('متاحة'),
+  notes: z.string().optional(),
+})
 
-// GET /api/units - Get units with pagination
+const updateUnitSchema = createUnitSchema.partial().extend({
+  id: z.string().min(1, 'معرف الوحدة مطلوب'),
+})
+
+// GET /api/units - Get all units
 export async function GET(request: NextRequest) {
   try {
-    // Authentication check removed for better performance
-
     const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '1000') // زيادة الحد الأقصى لعرض جميع الوحدات
-    const cursor = searchParams.get('cursor')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
     const search = searchParams.get('search') || ''
-    const refresh = searchParams.get('refresh') === 'true'
-
-    // Create cache key based on parameters
-    const cacheKey = CacheKeys.entityList('units', `limit:${limit},cursor:${cursor || 'null'},search:${search}`)
+    const status = searchParams.get('status') || ''
+    const unitType = searchParams.get('unitType') || ''
     
-    // Try to get cached data first - skip if refresh requested
-    if (!refresh) {
-      try {
-        const cachedData = await cacheClient.get<PaginatedResponse<Unit>>(cacheKey)
-        if (cachedData) {
-          console.log('Using cached units data')
-          return NextResponse.json(cachedData)
-        }
-      } catch (cacheError) {
-        console.log('Cache error, proceeding without cache:', cacheError)
-      }
-    } else {
-      console.log('Refresh requested, skipping cache')
-    }
+    const offset = (page - 1) * limit
 
-    const whereClause: Record<string, unknown> = { deletedAt: null }
+    // Build where clause
+    let whereClause = 'WHERE deleted_at IS NULL'
+    const queryParams: any[] = []
+    let paramIndex = 1
 
     if (search) {
-      whereClause.OR = [
-        { code: { contains: search, mode: 'insensitive' } },
-        { name: { contains: search, mode: 'insensitive' } },
-        { unitType: { contains: search, mode: 'insensitive' } }
-      ]
+      whereClause += ` AND (code ILIKE $${paramIndex} OR name ILIKE $${paramIndex} OR building ILIKE $${paramIndex})`
+      queryParams.push(`%${search}%`)
+      paramIndex++
     }
 
-    if (cursor) {
-      whereClause.id = { lt: cursor }
+    if (status) {
+      whereClause += ` AND status = $${paramIndex}`
+      queryParams.push(status)
+      paramIndex++
     }
 
-    // Get database config and client
-    const config = getConfig()
-    if (!config) {
-      return NextResponse.json(
-        { success: false, error: 'قاعدة البيانات غير مُعدة' },
-        { status: 400 }
-      )
+    if (unitType) {
+      whereClause += ` AND unit_type = $${paramIndex}`
+      queryParams.push(unitType)
+      paramIndex++
     }
 
-    const prisma = getPrismaClient(config)
-    
-    // إعادة الاتصال في حالة انقطاع الاتصال
-    try {
-      await prisma.$connect()
-    } catch (error) {
-      console.log('Reconnecting to database...')
-    }
+    // Get total count
+    const countResult = await query(
+      `SELECT COUNT(*) FROM units ${whereClause}`,
+      queryParams
+    )
+    const total = parseInt(countResult.rows[0].count)
 
-    // Optimized query with compound indexes for better performance
-    const units = await prisma.unit.findMany({
-      where: whereClause,
-      orderBy: { createdAt: 'desc' }, // Use indexed column for sorting
-      take: limit + 1,
-      select: {
-        id: true,
-        code: true,
-        name: true,
-        unitType: true,
-        area: true,
-        floor: true,
-        building: true,
-        totalPrice: true,
-        status: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true,
-        // Add counts for better UX without heavy joins
-        _count: {
-          select: {
-            contracts: {
-              where: { deletedAt: null }
-            },
-            installments: {
-              where: { deletedAt: null }
-            },
-            vouchers: {
-              where: { deletedAt: null }
-            },
-            unitPartners: {
-              where: { deletedAt: null }
-            }
-          }
+    // Get units
+    const result = await query(
+      `SELECT 
+        id, code, name, unit_type, area, floor, building, 
+        total_price, status, notes, created_at, updated_at
+      FROM units 
+      ${whereClause}
+      ORDER BY code ASC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+      [...queryParams, limit, offset]
+    )
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        units: result.rows,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
         }
       }
     })
-
-    const hasMore = units.length > limit
-    const data = hasMore ? units.slice(0, limit) : units
-    const nextCursor = hasMore ? data[data.length - 1].id : null
-
-    const response: PaginatedResponse<Unit> = {
-      success: true,
-      data,
-      pagination: {
-        limit,
-        nextCursor,
-        hasMore
-      }
-    }
-
-    // Cache the response for future requests (with error handling)
-    try {
-      await cacheClient.set(cacheKey, response, { ttl: CacheTTL.ENTITY })
-      console.log('Units data cached successfully')
-    } catch (cacheError) {
-      console.log('Cache set error:', cacheError)
-    }
-
-    await prisma.$disconnect()
-
-    return NextResponse.json(response)
   } catch (error) {
-    console.error('Error getting units:', error)
-    try {
-      const config = getConfig()
-      if (config) {
-        const prisma = getPrismaClient(config)
-        await prisma.$disconnect()
-      }
-    } catch (disconnectError) {
-      console.error('Error disconnecting:', disconnectError)
-    }
+    console.error('Error fetching units:', error)
     return NextResponse.json(
-      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { success: false, error: 'فشل في جلب بيانات الوحدات' },
       { status: 500 }
     )
   }
@@ -154,159 +98,207 @@ export async function GET(request: NextRequest) {
 // POST /api/units - Create new unit
 export async function POST(request: NextRequest) {
   try {
-    // Authentication check removed for better performance
-
     const body = await request.json()
-    const { name, unitType, area, floor, building, totalPrice, status, notes, partnerGroupId } = body
+    const validatedData = createUnitSchema.parse(body)
 
-    // Validate required fields - الاسم فقط مطلوب
-    if (!name) {
+    // Check for duplicate code
+    const codeCheck = await query(
+      'SELECT id FROM units WHERE code = $1 AND deleted_at IS NULL',
+      [validatedData.code]
+    )
+    if (codeCheck.rows.length > 0) {
       return NextResponse.json(
-        { success: false, error: 'اسم الوحدة مطلوب' },
+        { success: false, error: 'كود الوحدة مستخدم بالفعل' },
         { status: 400 }
       )
     }
 
-    // Get database config and client
-    const config = getConfig()
-    if (!config) {
-      return NextResponse.json(
-        { success: false, error: 'قاعدة البيانات غير مُعدة' },
-        { status: 400 }
-      )
-    }
-
-    const prisma = getPrismaClient(config)
-    
-    // إعادة الاتصال في حالة انقطاع الاتصال
-    try {
-      await prisma.$connect()
-    } catch (error) {
-      console.log('Reconnecting to database...')
-    }
-
-    // Generate code from building, floor, and name (reversed order)
-    const sanitizedBuilding = (building || 'غير محدد').replace(/\s/g, '')
-    const sanitizedFloor = (floor || 'غير محدد').replace(/\s/g, '')
-    const sanitizedName = name.replace(/\s/g, '')
-    const code = `${sanitizedName}-${sanitizedFloor}-${sanitizedBuilding}`
-
-    // Check if code already exists
-    const existingUnit = await prisma.unit.findFirst({
-      where: { 
-        code,
-        deletedAt: null
-      }
-    })
-
-    if (existingUnit) {
-      await prisma.$disconnect()
-      return NextResponse.json(
-        { success: false, error: `وحدة بنفس الكود "${code}" موجودة بالفعل` },
-        { status: 400 }
-      )
-    }
-
-    // Check if partner group exists and has 100% total (only if partnerGroupId is provided)
-    let partnerGroup = null
-    if (partnerGroupId && partnerGroupId.trim()) {
-      partnerGroup = await prisma.partnerGroup.findFirst({
-        where: { 
-          id: partnerGroupId,
-          deletedAt: null
-        },
-        include: { partners: true }
-      })
-
-      if (!partnerGroup) {
-        await prisma.$disconnect()
-        return NextResponse.json(
-          { success: false, error: 'مجموعة الشركاء غير موجودة' },
-          { status: 400 }
-        )
-      }
-
-      const totalPercent = partnerGroup.partners.reduce((sum: number, p: { percentage: number }) => sum + p.percentage, 0)
-      if (totalPercent !== 100) {
-        await prisma.$disconnect()
-        return NextResponse.json(
-          { success: false, error: `مجموع نسب الشركاء في هذه المجموعة هو ${totalPercent}% ويجب أن يكون 100% بالضبط` },
-          { status: 400 }
-        )
-      }
-    }
-
-    // Create unit and link partners in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create unit
-      const unit = await tx.unit.create({
-        data: {
-          code,
-          name,
-          unitType: unitType || 'سكني',
-          area: area || null,
-          floor: floor || null,
-          building: building || null,
-          totalPrice: totalPrice ? parseFloat(totalPrice) : 0,
-          status: status || 'متاحة',
-          notes: notes || null
-        }
-      })
-
-      // Link partners from the group to the unit (only if partnerGroup exists)
-      if (partnerGroup) {
-        for (const groupPartner of partnerGroup.partners) {
-          await tx.unitPartner.create({
-            data: {
-              unitId: unit.id,
-              partnerId: groupPartner.partnerId,
-              percentage: groupPartner.percentage
-            }
-          })
-        }
-      }
-
-      return unit
-    })
-
-    await prisma.$disconnect()
-
-    // Invalidate units cache when new unit is created (async to not block response)
-    cacheClient.invalidatePattern('units:list:*').catch(err => 
-      console.log('Cache invalidation error:', err)
+    // Create unit
+    const result = await query(
+      `INSERT INTO units (code, name, unit_type, area, floor, building, total_price, status, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING id, code, name, unit_type, area, floor, building, total_price, status, notes, created_at, updated_at`,
+      [
+        validatedData.code,
+        validatedData.name || null,
+        validatedData.unitType,
+        validatedData.area || null,
+        validatedData.floor || null,
+        validatedData.building || null,
+        validatedData.totalPrice,
+        validatedData.status,
+        validatedData.notes || null,
+      ]
     )
 
-    const response: ApiResponse<Unit> = {
+    return NextResponse.json({
       success: true,
-      data: result,
-      message: 'تم إضافة الوحدة وربط الشركاء بنجاح'
+      data: result.rows[0],
+      message: 'تم إنشاء الوحدة بنجاح'
+    })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, error: 'بيانات غير صحيحة', details: error.errors },
+        { status: 400 }
+      )
+    }
+    
+    console.error('Error creating unit:', error)
+    return NextResponse.json(
+      { success: false, error: 'فشل في إنشاء الوحدة' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT /api/units - Update unit
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const validatedData = updateUnitSchema.parse(body)
+    const { id, ...updateData } = validatedData
+
+    // Check if unit exists
+    const existingUnit = await query(
+      'SELECT id FROM units WHERE id = $1 AND deleted_at IS NULL',
+      [id]
+    )
+    
+    if (existingUnit.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'الوحدة غير موجودة' },
+        { status: 404 }
+      )
     }
 
-    return NextResponse.json(response)
-  } catch (error) {
-    console.error('Error creating unit:', error)
-    
-    // Handle specific Prisma errors
-    if (error && typeof error === 'object' && 'code' in error) {
-      if (error.code === 'P2002') {
+    // Check for duplicate code (excluding current unit)
+    if (updateData.code) {
+      const codeCheck = await query(
+        'SELECT id FROM units WHERE code = $1 AND id != $2 AND deleted_at IS NULL',
+        [updateData.code, id]
+      )
+      if (codeCheck.rows.length > 0) {
         return NextResponse.json(
-          { success: false, error: 'وحدة بنفس الكود موجودة بالفعل' },
+          { success: false, error: 'كود الوحدة مستخدم بالفعل' },
           { status: 400 }
         )
       }
     }
-    
-    try {
-      const config = getConfig()
-      if (config) {
-        const prisma = getPrismaClient(config)
-        await prisma.$disconnect()
+
+    // Build update query
+    const updateFields = []
+    const updateValues = []
+    let paramIndex = 1
+
+    Object.entries(updateData).forEach(([key, value]) => {
+      if (value !== undefined) {
+        const dbField = key === 'unitType' ? 'unit_type' : 
+                       key === 'totalPrice' ? 'total_price' : key
+        updateFields.push(`${dbField} = $${paramIndex}`)
+        updateValues.push(value)
+        paramIndex++
       }
-    } catch (disconnectError) {
-      console.error('Error disconnecting:', disconnectError)
+    })
+
+    updateFields.push(`updated_at = NOW()`)
+    updateValues.push(id)
+
+    const result = await query(
+      `UPDATE units 
+       SET ${updateFields.join(', ')}
+       WHERE id = $${paramIndex} AND deleted_at IS NULL
+       RETURNING id, code, name, unit_type, area, floor, building, total_price, status, notes, created_at, updated_at`,
+      updateValues
+    )
+
+    return NextResponse.json({
+      success: true,
+      data: result.rows[0],
+      message: 'تم تحديث الوحدة بنجاح'
+    })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, error: 'بيانات غير صحيحة', details: error.errors },
+        { status: 400 }
+      )
     }
+    
+    console.error('Error updating unit:', error)
     return NextResponse.json(
-      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { success: false, error: 'فشل في تحديث الوحدة' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE /api/units - Soft delete unit
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'معرف الوحدة مطلوب' },
+        { status: 400 }
+      )
+    }
+
+    // Check if unit exists
+    const existingUnit = await query(
+      'SELECT id FROM units WHERE id = $1 AND deleted_at IS NULL',
+      [id]
+    )
+    
+    if (existingUnit.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'الوحدة غير موجودة' },
+        { status: 404 }
+      )
+    }
+
+    // Check if unit has active contracts
+    const contractsCheck = await query(
+      'SELECT id FROM contracts WHERE unit_id = $1 AND deleted_at IS NULL',
+      [id]
+    )
+    
+    if (contractsCheck.rows.length > 0) {
+      return NextResponse.json(
+        { success: false, error: 'لا يمكن حذف الوحدة لوجود عقود مرتبطة بها' },
+        { status: 400 }
+      )
+    }
+
+    // Check if unit has installments
+    const installmentsCheck = await query(
+      'SELECT id FROM installments WHERE unit_id = $1 AND deleted_at IS NULL',
+      [id]
+    )
+    
+    if (installmentsCheck.rows.length > 0) {
+      return NextResponse.json(
+        { success: false, error: 'لا يمكن حذف الوحدة لوجود أقساط مرتبطة بها' },
+        { status: 400 }
+      )
+    }
+
+    // Soft delete unit
+    await query(
+      'UPDATE units SET deleted_at = NOW(), updated_at = NOW() WHERE id = $1',
+      [id]
+    )
+
+    return NextResponse.json({
+      success: true,
+      message: 'تم حذف الوحدة بنجاح'
+    })
+  } catch (error) {
+    console.error('Error deleting unit:', error)
+    return NextResponse.json(
+      { success: false, error: 'فشل في حذف الوحدة' },
       { status: 500 }
     )
   }

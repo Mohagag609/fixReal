@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
-import { Inter, Cairo } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
-import { Providers } from './providers'
+import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/toaster'
 
 const inter = Inter({ subsets: ['latin'] })
-const cairo = Cairo({ subsets: ['arabic'] })
 
 export const metadata: Metadata = {
-  title: 'مدير الاستثمار العقاري',
-  description: 'تطبيق شامل لإدارة الاستثمارات العقارية مع نظام مراقبة ونسخ احتياطية',
+  title: 'نظام إدارة العقارات المتطور',
+  description: 'نظام شامل لإدارة العقارات والعملاء والعقود والمدفوعات',
 }
 
 export default function RootLayout({
@@ -18,10 +18,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl">
-      <body className={`${cairo.className} antialiased`}>
-        <Providers>
+      <body className={inter.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
           {children}
-        </Providers>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )

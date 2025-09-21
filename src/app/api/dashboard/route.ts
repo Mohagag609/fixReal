@@ -1,177 +1,201 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getConfig } from '@/lib/db/config'
-import { getPrismaClient } from '@/lib/prisma-clients'
-// import { getSharedAuth } from '@/lib/shared-auth'
-import { cache as cacheClient, CacheKeys, CacheTTL } from '@/lib/cache/redis'
-import { ApiResponse, DashboardKPIs } from '@/types'
+import { query } from '@/lib/db'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
-
-// GET /api/dashboard - Get dashboard KPIs
+// GET /api/dashboard - Get dashboard statistics
 export async function GET(request: NextRequest) {
   try {
+    // Get basic counts
+    const [
+      customersResult,
+      unitsResult,
+      contractsResult,
+      safesResult,
+      installmentsResult
+    ] = await Promise.all([
+      query('SELECT COUNT(*) as count FROM customers WHERE deleted_at IS NULL'),
+      query('SELECT COUNT(*) as count FROM units WHERE deleted_at IS NULL'),
+      query('SELECT COUNT(*) as count FROM contracts WHERE deleted_at IS NULL'),
+      query('SELECT COUNT(*) as count, COALESCE(SUM(balance), 0) as total_balance FROM safes WHERE deleted_at IS NULL'),
+      query('SELECT COUNT(*) as count FROM installments WHERE status = \'معلق\' AND deleted_at IS NULL'),
+    ])
 
-    // Get database config and client
-    const config = getConfig()
-    if (!config) {
-      return NextResponse.json(
-        { success: false, error: 'قاعدة البيانات غير مُعدة' },
-        { status: 400 }
-      )
-    }
-
-    const { searchParams } = new URL(request.url)
-    const refresh = searchParams.get('refresh') === 'true'
-    
-    // Try to get cached dashboard data first (with error handling) - skip if refresh requested
-    let kpis: DashboardKPIs | null = null
-    
-    if (!refresh) {
-      try {
-        kpis = await cacheClient.get(CacheKeys.dashboard)
-        if (kpis) {
-          console.log('Using cached dashboard data')
-          return NextResponse.json({
-            success: true,
-            data: kpis,
-            message: 'تم تحميل بيانات لوحة التحكم من الكاش'
-          })
-        }
-      } catch (cacheError) {
-        console.log('Cache error, proceeding without cache:', cacheError)
-      }
-    } else {
-      console.log('Refresh requested, skipping cache')
-    }
-
-    const prisma = getPrismaClient(config)
-
-    // Optimized single query with Redis caching (fast - ~200ms first time, ~10ms cached)
-    console.log('Using optimized raw query for dashboard data')
-    
-    const dashboardData = await prisma.$queryRaw`
-      WITH contract_stats AS (
-        SELECT 
-          COUNT(*) as contract_count,
-          COALESCE(SUM("totalPrice"), 0) as total_contract_value
-        FROM contracts 
-        WHERE "deletedAt" IS NULL
-      ),
-      voucher_stats AS (
-        SELECT 
-          COUNT(*) as voucher_count,
-          COALESCE(SUM(amount), 0) as total_voucher_amount
-        FROM vouchers 
-        WHERE "deletedAt" IS NULL
-      ),
-      installment_stats AS (
-        SELECT 
-          COUNT(*) as installment_count,
-          COUNT(*) FILTER (WHERE status = 'مدفوعة') as paid_installments_count,
-          COUNT(*) FILTER (WHERE status = 'غير مدفوعة') as pending_installments_count
-        FROM installments 
-        WHERE "deletedAt" IS NULL
-      ),
-      unit_stats AS (
-        SELECT COUNT(*) as unit_count
-        FROM units 
-        WHERE "deletedAt" IS NULL
-      ),
-      customer_stats AS (
-        SELECT COUNT(*) as customer_count
-        FROM customers 
-        WHERE "deletedAt" IS NULL
-      )
+    // Get revenue statistics
+    const revenueResult = await query(`
       SELECT 
-        c.contract_count,
-        c.total_contract_value,
-        v.voucher_count,
-        v.total_voucher_amount,
-        i.installment_count,
-        i.paid_installments_count,
-        i.pending_installments_count,
-        u.unit_count,
-        cu.customer_count
-      FROM contract_stats c
-      CROSS JOIN voucher_stats v
-      CROSS JOIN installment_stats i
-      CROSS JOIN unit_stats u
-      CROSS JOIN customer_stats cu
-    ` as unknown[]
+        COALESCE(SUM(CASE WHEN type = 'receipt' THEN amount ELSE 0 END), 0) as total_receipts,
+        COALESCE(SUM(CASE WHEN type = 'payment' THEN amount ELSE 0 END), 0) as total_payments,
+        COALESCE(SUM(CASE WHEN type = 'receipt' AND DATE_TRUNC('month', date) = DATE_TRUNC('month', CURRENT_DATE) THEN amount ELSE 0 END), 0) as monthly_receipts,
+        COALESCE(SUM(CASE WHEN type = 'receipt' AND DATE_TRUNC('year', date) = DATE_TRUNC('year', CURRENT_DATE) THEN amount ELSE 0 END), 0) as yearly_receipts
+      FROM vouchers 
+      WHERE deleted_at IS NULL
+    `)
 
-    // Calculate KPIs using aggregated data from single query
-    const data = dashboardData[0] as any
-    kpis = {
-      totalContracts: Number(data?.contract_count || 0),
-      totalVouchers: Number(data?.voucher_count || 0),
-      totalInstallments: Number(data?.installment_count || 0),
-      totalUnits: Number(data?.unit_count || 0),
-      totalCustomers: Number(data?.customer_count || 0),
-      totalContractValue: Number(data?.total_contract_value || 0),
-      totalVoucherAmount: Number(data?.total_voucher_amount || 0),
-      paidInstallments: Number(data?.paid_installments_count || 0),
-      pendingInstallments: Number(data?.pending_installments_count || 0),
-      activeUnits: Number(data?.unit_count || 0), // Assuming all units are active for now
-      inactiveUnits: 0,
-      totalSales: Number(data?.total_contract_value || 0),
-      totalReceipts: Number(data?.total_voucher_amount || 0),
-      totalExpenses: 0, // Placeholder - would need separate query for expenses
-      netProfit: Number(data?.total_contract_value || 0) - 0 // Placeholder calculation
+    // Get recent activities
+    const activitiesResult = await query(`
+      (SELECT 
+        'contract' as type,
+        'عقد جديد - ' || c.name as title,
+        'وحدة ' || u.code || ' - مبلغ ' || co.total_price || ' ريال' as description,
+        co.created_at,
+        'success' as status
+      FROM contracts co
+      JOIN customers c ON co.customer_id = c.id
+      JOIN units u ON co.unit_id = u.id
+      WHERE co.deleted_at IS NULL
+      ORDER BY co.created_at DESC
+      LIMIT 3)
+      
+      UNION ALL
+      
+      (SELECT 
+        'voucher' as type,
+        CASE WHEN type = 'receipt' THEN 'إيصال جديد' ELSE 'سند دفع جديد' END as title,
+        description || ' - ' || amount || ' ريال' as description,
+        created_at,
+        'success' as status
+      FROM vouchers
+      WHERE deleted_at IS NULL
+      ORDER BY created_at DESC
+      LIMIT 3)
+      
+      ORDER BY created_at DESC
+      LIMIT 5
+    `)
+
+    // Get upcoming installments
+    const upcomingInstallmentsResult = await query(`
+      SELECT 
+        i.id,
+        c.name as customer_name,
+        u.code as unit_code,
+        i.amount,
+        i.due_date,
+        i.status
+      FROM installments i
+      JOIN units u ON i.unit_id = u.id
+      JOIN contracts co ON u.id = co.unit_id
+      JOIN customers c ON co.customer_id = c.id
+      WHERE i.deleted_at IS NULL 
+        AND i.status = 'معلق'
+        AND i.due_date <= CURRENT_DATE + INTERVAL '7 days'
+      ORDER BY i.due_date ASC
+      LIMIT 10
+    `)
+
+    // Get monthly revenue chart data (last 12 months)
+    const monthlyRevenueResult = await query(`
+      SELECT 
+        DATE_TRUNC('month', date) as month,
+        COALESCE(SUM(CASE WHEN type = 'receipt' THEN amount ELSE 0 END), 0) as receipts,
+        COALESCE(SUM(CASE WHEN type = 'payment' THEN amount ELSE 0 END), 0) as payments
+      FROM vouchers 
+      WHERE deleted_at IS NULL 
+        AND date >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '11 months')
+      GROUP BY DATE_TRUNC('month', date)
+      ORDER BY month ASC
+    `)
+
+    // Get unit status distribution
+    const unitStatusResult = await query(`
+      SELECT 
+        status,
+        COUNT(*) as count
+      FROM units 
+      WHERE deleted_at IS NULL
+      GROUP BY status
+    `)
+
+    // Get contract status distribution
+    const contractStatusResult = await query(`
+      SELECT 
+        'نشط' as status,
+        COUNT(*) as count
+      FROM contracts 
+      WHERE deleted_at IS NULL
+    `)
+
+    // Build response
+    const stats = {
+      totalCustomers: parseInt(customersResult.rows[0].count),
+      totalUnits: parseInt(unitsResult.rows[0].count),
+      totalContracts: parseInt(contractsResult.rows[0].count),
+      totalSafes: parseInt(safesResult.rows[0].count),
+      safeBalance: parseFloat(safesResult.rows[0].total_balance || 0),
+      pendingInstallments: parseInt(installmentsResult.rows[0].count),
+      totalRevenue: parseFloat(revenueResult.rows[0].total_receipts || 0),
+      totalExpenses: parseFloat(revenueResult.rows[0].total_payments || 0),
+      monthlyRevenue: parseFloat(revenueResult.rows[0].monthly_receipts || 0),
+      yearlyRevenue: parseFloat(revenueResult.rows[0].yearly_receipts || 0),
+      netRevenue: parseFloat(revenueResult.rows[0].total_receipts || 0) - parseFloat(revenueResult.rows[0].total_payments || 0)
     }
 
-    // Cache the result for future requests (with error handling)
-    try {
-      await cacheClient.set(CacheKeys.dashboard, kpis, { ttl: CacheTTL.DASHBOARD })
-      console.log('Dashboard data cached successfully')
-    } catch (cacheError) {
-      console.log('Cache set error:', cacheError)
-    }
+    const recentActivities = activitiesResult.rows.map(row => ({
+      id: Math.random().toString(36).substr(2, 9),
+      type: row.type,
+      title: row.title,
+      description: row.description,
+      time: getRelativeTime(new Date(row.created_at)),
+      status: row.status
+    }))
 
-    await prisma.$disconnect()
+    const upcomingInstallments = upcomingInstallmentsResult.rows.map(row => ({
+      id: row.id,
+      customer: row.customer_name,
+      unit: row.unit_code,
+      amount: parseFloat(row.amount),
+      dueDate: row.due_date,
+      status: row.status
+    }))
 
-    const response: ApiResponse<DashboardKPIs> = {
+    const monthlyRevenue = monthlyRevenueResult.rows.map(row => ({
+      month: new Date(row.month).toISOString().slice(0, 7), // YYYY-MM format
+      receipts: parseFloat(row.receipts || 0),
+      payments: parseFloat(row.payments || 0),
+      net: parseFloat(row.receipts || 0) - parseFloat(row.payments || 0)
+    }))
+
+    const unitStatusDistribution = unitStatusResult.rows.map(row => ({
+      status: row.status,
+      count: parseInt(row.count)
+    }))
+
+    return NextResponse.json({
       success: true,
-      data: kpis,
-      message: 'تم تحميل بيانات لوحة التحكم بنجاح'
-    }
-
-    return NextResponse.json(response)
-  } catch (error) {
-    console.error('Error getting dashboard data:', error)
-    
-    // التحقق من نوع الخطأ
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    
-    try {
-      const config = getConfig()
-      if (config) {
-        const prisma = getPrismaClient(config)
-        await prisma.$disconnect()
+      data: {
+        stats,
+        recentActivities,
+        upcomingInstallments,
+        monthlyRevenue,
+        unitStatusDistribution
       }
-    } catch (disconnectError) {
-      console.error('Error disconnecting:', disconnectError)
-    }
-    
-    // إذا كان الخطأ متعلق بقاعدة البيانات غير موجودة
-    if (errorMessage.includes('does not exist') || 
-        errorMessage.includes('Database') || 
-        errorMessage.includes('connection') ||
-        errorMessage.includes('PrismaClientInitializationError')) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'خطأ في قاعدة البيانات',
-          redirectTo: '/setup',
-          message: 'قاعدة البيانات غير مُعدة بشكل صحيح. يرجى الذهاب إلى صفحة الإعدادات'
-        },
-        { status: 500 }
-      )
-    }
-    
+    })
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error)
     return NextResponse.json(
-      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { success: false, error: 'فشل في جلب بيانات لوحة التحكم' },
       { status: 500 }
     )
+  }
+}
+
+// Helper function to get relative time
+function getRelativeTime(date: Date): string {
+  const now = new Date()
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+  
+  if (diffInSeconds < 60) {
+    return 'منذ لحظات'
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60)
+    return `منذ ${minutes} ${minutes === 1 ? 'دقيقة' : 'دقائق'}`
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600)
+    return `منذ ${hours} ${hours === 1 ? 'ساعة' : 'ساعات'}`
+  } else if (diffInSeconds < 604800) {
+    const days = Math.floor(diffInSeconds / 86400)
+    return `منذ ${days} ${days === 1 ? 'يوم' : 'أيام'}`
+  } else {
+    const weeks = Math.floor(diffInSeconds / 604800)
+    return `منذ ${weeks} ${weeks === 1 ? 'أسبوع' : 'أسابيع'}`
   }
 }

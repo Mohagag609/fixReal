@@ -1,127 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getConfig } from '@/lib/db/config'
-import { getPrismaClient } from '@/lib/prisma-clients'
-// import { getSharedAuth } from '@/lib/shared-auth'
-import { cache as cacheClient, CacheKeys, CacheTTL } from '@/lib/cache/redis'
-import { ApiResponse, Partner, PaginatedResponse } from '@/types'
+import { query } from '@/lib/db'
+import { CreatePartnerData, UpdatePartnerData } from '@/types'
+import { z } from 'zod'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
+// Validation schemas
+const createPartnerSchema = z.object({
+  name: z.string().min(1, 'الاسم مطلوب'),
+  phone: z.string().optional(),
+  notes: z.string().optional(),
+})
 
-// GET /api/partners - Get partners with pagination
+const updatePartnerSchema = createPartnerSchema.partial().extend({
+  id: z.string().min(1, 'معرف الشريك مطلوب'),
+})
+
+// GET /api/partners - Get all partners
 export async function GET(request: NextRequest) {
   try {
-    // Authentication check removed for better performance
-
     const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
-    const cursor = searchParams.get('cursor')
     const search = searchParams.get('search') || ''
-
-    // Create cache key based on parameters
-    const cacheKey = CacheKeys.entityList('partners', `limit:${limit},cursor:${cursor || 'null'},search:${search}`)
     
-    // Try to get cached data first
-    const cachedData = await cacheClient.get<PaginatedResponse<Partner>>(cacheKey)
-    if (cachedData) {
-      console.log('Using cached partners data')
-      return NextResponse.json(cachedData)
-    }
+    const offset = (page - 1) * limit
 
-    // Get database config and client
-    const config = getConfig()
-    if (!config) {
-      return NextResponse.json(
-        { success: false, error: 'قاعدة البيانات غير مُعدة' },
-        { status: 400 }
-      )
-    }
-
-    const prisma = getPrismaClient(config)
-    
-    // إعادة الاتصال في حالة انقطاع الاتصال
-    try {
-      await prisma.$connect()
-    } catch (error) {
-      console.log('Reconnecting to database...')
-    }
-
-    const whereClause: Record<string, unknown> = { deletedAt: null }
+    // Build where clause
+    let whereClause = 'WHERE deleted_at IS NULL'
+    const queryParams: any[] = []
+    let paramIndex = 1
 
     if (search) {
-      whereClause.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { phone: { contains: search, mode: 'insensitive' } }
-      ]
+      whereClause += ` AND (name ILIKE $${paramIndex} OR phone ILIKE $${paramIndex})`
+      queryParams.push(`%${search}%`)
+      paramIndex++
     }
 
-    if (cursor) {
-      whereClause.id = { lt: cursor }
-    }
+    // Get total count
+    const countResult = await query(
+      `SELECT COUNT(*) FROM partners ${whereClause}`,
+      queryParams
+    )
+    const total = parseInt(countResult.rows[0].count)
 
-    // BEFORE: Complex include with nested relations (slow)
-    // AFTER: Optimized query with select only needed fields (fast)
-    // TODO: Consider implementing separate endpoints for relations if needed
-    
-    const partners = await prisma.partner.findMany({
-      where: whereClause,
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true,
-        // Only include essential relations to avoid N+1 queries
-        _count: {
-          select: {
-            unitPartners: {
-              where: { deletedAt: null }
-            },
-            partnerDebts: {
-              where: { deletedAt: null }
-            }
-          }
-        }
-      },
-      orderBy: { id: 'desc' },
-      take: limit + 1
-    })
+    // Get partners with debt statistics
+    const result = await query(
+      `SELECT 
+        p.id, p.name, p.phone, p.notes, p.created_at, p.updated_at,
+        COALESCE(d.total_debt, 0) as total_debt,
+        COALESCE(d.paid_debt, 0) as paid_debt,
+        COALESCE(d.pending_debt, 0) as pending_debt,
+        COALESCE(d.debt_count, 0) as debt_count
+      FROM partners p
+      LEFT JOIN (
+        SELECT 
+          partner_id,
+          SUM(amount) as total_debt,
+          SUM(CASE WHEN status = 'مدفوع' THEN amount ELSE 0 END) as paid_debt,
+          SUM(CASE WHEN status = 'معلق' THEN amount ELSE 0 END) as pending_debt,
+          COUNT(*) as debt_count
+        FROM partner_debts 
+        WHERE deleted_at IS NULL
+        GROUP BY partner_id
+      ) d ON p.id = d.partner_id
+      ${whereClause}
+      ORDER BY p.created_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+      [...queryParams, limit, offset]
+    )
 
-    await prisma.$disconnect()
-
-    const hasMore = partners.length > limit
-    const data = hasMore ? partners.slice(0, limit) : partners
-    const nextCursor = hasMore && data.length > 0 ? (data[data.length - 1] as any)?.id : null
-
-    const response: PaginatedResponse<Partner> = {
+    return NextResponse.json({
       success: true,
-      data,
-      pagination: {
-        limit,
-        nextCursor,
-        hasMore
+      data: {
+        partners: result.rows,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
       }
-    }
-
-    // Cache the response for future requests
-    await cacheClient.set(cacheKey, response, { ttl: CacheTTL.ENTITY })
-    console.log('Partners data cached successfully')
-
-    return NextResponse.json(response)
+    })
   } catch (error) {
-    console.error('Error getting partners:', error)
-    try {
-      const config = getConfig()
-      if (config) {
-        const prisma = getPrismaClient(config)
-        await prisma.$disconnect()
-      }
-    } catch (disconnectError) {
-      console.error('Error disconnecting:', disconnectError)
-    }
+    console.error('Error fetching partners:', error)
     return NextResponse.json(
-      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { success: false, error: 'فشل في جلب بيانات الشركاء' },
       { status: 500 }
     )
   }
@@ -130,73 +92,160 @@ export async function GET(request: NextRequest) {
 // POST /api/partners - Create new partner
 export async function POST(request: NextRequest) {
   try {
-    // Authentication check removed for better performance
-
     const body = await request.json()
-    const { name, phone, notes } = body
-
-    // Get database config and client
-    const config = getConfig()
-    if (!config) {
-      return NextResponse.json(
-        { success: false, error: 'قاعدة البيانات غير مُعدة' },
-        { status: 400 }
-      )
-    }
-
-    const prisma = getPrismaClient(config)
-    
-    // إعادة الاتصال في حالة انقطاع الاتصال
-    try {
-      await prisma.$connect()
-    } catch (error) {
-      console.log('Reconnecting to database...')
-    }
-
-    // Validation
-    if (!name) {
-      await prisma.$disconnect()
-      return NextResponse.json(
-        { success: false, error: 'اسم الشريك مطلوب' },
-        { status: 400 }
-      )
-    }
+    const validatedData = createPartnerSchema.parse(body)
 
     // Create partner
-    const partner = await prisma.partner.create({
-      data: {
-        name,
-        phone,
-        notes
+    const result = await query(
+      `INSERT INTO partners (name, phone, notes)
+       VALUES ($1, $2, $3)
+       RETURNING id, name, phone, notes, created_at, updated_at`,
+      [
+        validatedData.name,
+        validatedData.phone || null,
+        validatedData.notes || null,
+      ]
+    )
+
+    return NextResponse.json({
+      success: true,
+      data: result.rows[0],
+      message: 'تم إنشاء الشريك بنجاح'
+    })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, error: 'بيانات غير صحيحة', details: error.errors },
+        { status: 400 }
+      )
+    }
+    
+    console.error('Error creating partner:', error)
+    return NextResponse.json(
+      { success: false, error: 'فشل في إنشاء الشريك' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT /api/partners - Update partner
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const validatedData = updatePartnerSchema.parse(body)
+    const { id, ...updateData } = validatedData
+
+    // Check if partner exists
+    const existingPartner = await query(
+      'SELECT id FROM partners WHERE id = $1 AND deleted_at IS NULL',
+      [id]
+    )
+    
+    if (existingPartner.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'الشريك غير موجود' },
+        { status: 404 }
+      )
+    }
+
+    // Build update query
+    const updateFields = []
+    const updateValues = []
+    let paramIndex = 1
+
+    Object.entries(updateData).forEach(([key, value]) => {
+      if (value !== undefined) {
+        updateFields.push(`${key} = $${paramIndex}`)
+        updateValues.push(value)
+        paramIndex++
       }
     })
 
-    await prisma.$disconnect()
+    updateFields.push(`updated_at = NOW()`)
+    updateValues.push(id)
 
-    // Invalidate partners cache when new partner is created
-    await cacheClient.invalidatePattern('partners:list:*')
-    console.log('Partners cache invalidated after creation')
+    const result = await query(
+      `UPDATE partners 
+       SET ${updateFields.join(', ')}
+       WHERE id = $${paramIndex} AND deleted_at IS NULL
+       RETURNING id, name, phone, notes, created_at, updated_at`,
+      updateValues
+    )
 
-    const response: ApiResponse<Partner> = {
+    return NextResponse.json({
       success: true,
-      data: partner,
-      message: 'تم إضافة الشريك بنجاح'
+      data: result.rows[0],
+      message: 'تم تحديث الشريك بنجاح'
+    })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, error: 'بيانات غير صحيحة', details: error.errors },
+        { status: 400 }
+      )
+    }
+    
+    console.error('Error updating partner:', error)
+    return NextResponse.json(
+      { success: false, error: 'فشل في تحديث الشريك' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE /api/partners - Soft delete partner
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'معرف الشريك مطلوب' },
+        { status: 400 }
+      )
     }
 
-    return NextResponse.json(response)
-  } catch (error) {
-    console.error('Error creating partner:', error)
-    try {
-      const config = getConfig()
-      if (config) {
-        const prisma = getPrismaClient(config)
-        await prisma.$disconnect()
-      }
-    } catch (disconnectError) {
-      console.error('Error disconnecting:', disconnectError)
+    // Check if partner exists
+    const existingPartner = await query(
+      'SELECT id FROM partners WHERE id = $1 AND deleted_at IS NULL',
+      [id]
+    )
+    
+    if (existingPartner.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'الشريك غير موجود' },
+        { status: 404 }
+      )
     }
+
+    // Check if partner has debts
+    const debtsCheck = await query(
+      'SELECT id FROM partner_debts WHERE partner_id = $1 AND deleted_at IS NULL',
+      [id]
+    )
+    
+    if (debtsCheck.rows.length > 0) {
+      return NextResponse.json(
+        { success: false, error: 'لا يمكن حذف الشريك لوجود ديون مرتبطة به' },
+        { status: 400 }
+      )
+    }
+
+    // Soft delete partner
+    await query(
+      'UPDATE partners SET deleted_at = NOW(), updated_at = NOW() WHERE id = $1',
+      [id]
+    )
+
+    return NextResponse.json({
+      success: true,
+      message: 'تم حذف الشريك بنجاح'
+    })
+  } catch (error) {
+    console.error('Error deleting partner:', error)
     return NextResponse.json(
-      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { success: false, error: 'فشل في حذف الشريك' },
       { status: 500 }
     )
   }

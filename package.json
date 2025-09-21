@@ -1,131 +1,69 @@
 {
-  "name": "estate-management-system",
-  "version": "2.0.0",
-  "description": "نظام إدارة العقارات المتطور مع دعم متعدد قواعد البيانات",
+  "name": "estate-management-system-v2",
+  "version": "1.0.0",
+  "description": "نظام إدارة العقارات المتطور - إعادة كتابة كاملة",
   "private": true,
-  "main": "electron-main.js",
   "scripts": {
-    "dev": "cross-env WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true next dev",
-    "build": "cross-env NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=2048 WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true next build",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "fresh": "rm -rf .next data var && mkdir data var && npm run dev",
-    "optimize": "node scripts/optimize.js",
-    "quick-optimize": "node scripts/quick-optimize.js",
-    "analyze-bundle": "ANALYZE=true npm run build",
-    "performance-test": "npm run build && npm run start",
-    "monitor-performance": "node scripts/monitor-performance.js",
-    "db-optimize": "psql -d postgres -f src/lib/db/optimizations.sql",
     "type-check": "tsc --noEmit",
-    "type-check:watch": "tsc --noEmit --watch",
-    "fix-any-types": "node fix-any-types.js",
-    "fix-eslint-issues": "node fix-eslint-issues.js",
-    "fix-all-issues": "node fix-all-issues.js",
-    "fix-remaining-errors": "node fix-remaining-errors.js",
-    "electron": "electron .",
-    "electron-dev": "NODE_ENV=development electron .",
-    "electron-build": "next build && next export && electron-builder",
-    "electron-dist": "npm run build && next export && electron-builder --publish=never",
-    "electron-pack": "electron-builder --dir",
-    "electron-make": "electron-builder --win --publish=never"
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "setup-db": "node setup-database.js",
+    "seed-db": "node seed-database.js",
+    "db:setup": "npm run setup-db && npm run seed-db"
   },
   "dependencies": {
-    "@prisma/client": "^6.15.0",
-    "@react-pdf/renderer": "^3.4.4",
-    "@tanstack/react-table": "^8.21.3",
-    "@types/bcryptjs": "^2.4.0",
-    "@types/jsonwebtoken": "^9.0.0",
-    "@types/node": "^20.0.0",
-    "@types/react": "^18.0.0",
-    "@types/react-dom": "^18.0.0",
-    "autoprefixer": "^10.4.21",
-    "bcryptjs": "^2.4.3",
-    "critters": "^0.0.25",
-    "dayjs": "^1.11.18",
-    "exceljs": "^4.4.0",
-    "express": "^5.1.0",
-    "ioredis": "^5.7.0",
-    "jsonwebtoken": "^9.0.0",
-    "next": "^14.0.0",
+    "@hookform/resolvers": "^3.3.0",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-scroll-area": "^1.2.10",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-separator": "^1.1.7",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.2.6",
+    "@tanstack/react-table": "^8.20.0",
+    "@types/node": "^20.12.0",
+    "@types/numeral": "^2.0.5",
+    "@types/pg": "^8.11.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "cmdk": "^0.2.0",
+    "date-fns": "^3.6.0",
+    "framer-motion": "^11.0.0",
+    "lucide-react": "^0.400.0",
+    "next": "^14.2.0",
+    "next-themes": "^0.4.6",
     "numeral": "^2.0.6",
-    "papaparse": "^5.4.1",
-    "postcss": "^8.5.6",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
-    "tailwindcss": "^3.0.0",
-    "tar": "^7.4.3",
-    "typescript": "^5.0.0",
+    "pg": "^8.11.0",
+    "postcss": "^8.4.0",
+    "react": "^18.3.0",
+    "react-day-picker": "^8.10.0",
+    "react-dom": "^18.3.0",
+    "react-hook-form": "^7.49.0",
+    "react-hot-toast": "^2.4.0",
+    "react-select": "^5.8.0",
+    "react-table": "^7.8.0",
+    "recharts": "^2.12.0",
+    "sonner": "^1.4.0",
+    "tailwind-merge": "^2.2.0",
+    "tailwindcss": "^3.4.0",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.4.0",
+    "vaul": "^0.9.0",
     "zod": "^3.22.0"
   },
   "devDependencies": {
-    "@types/numeral": "^2.0.5",
-    "@types/papaparse": "^5.3.16",
-    "@types/xlsx": "^0.0.36",
-    "cross-env": "^10.0.0",
-    "electron": "^38.1.0",
-    "electron-builder": "^26.0.12",
-    "eslint": "8.57.1",
-    "eslint-config-next": "15.5.3",
-    "prisma": "^6.15.0"
-  },
-  "build": {
-    "appId": "com.estate.management",
-    "productName": "Estate Management System",
-    "directories": {
-      "output": "dist-electron",
-      "buildResources": "assets"
-    },
-    "files": [
-      "out/**/*",
-      "electron-main.js",
-      "preload.js",
-      "server.js",
-      "package.json",
-      "prisma/**/*",
-      "data/**/*",
-      "var/**/*",
-      "node_modules/**/*",
-      "!node_modules/.cache",
-      "!node_modules/electron/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "prisma",
-        "to": "prisma"
-      },
-      {
-        "from": "data",
-        "to": "data"
-      }
-    ],
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "requestedExecutionLevel": "asInvoker"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Estate Management System",
-      "deleteAppDataOnUninstall": false
-    },
-    "portable": {
-      "artifactName": "EstateManagementSystem-Portable.exe"
-    },
-    "publish": null
+    "@types/react-table": "^7.7.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.0",
+    "prettier": "^3.2.0",
+    "prettier-plugin-tailwindcss": "^0.6.0"
   }
 }
