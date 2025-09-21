@@ -1,104 +1,86 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getConfig } from '@/lib/db/config'
-import { getPrismaClient } from '@/lib/prisma-clients'
-// import { getSharedAuth } from '@/lib/shared-auth'
-import { ApiResponse, Safe, PaginatedResponse } from '@/types'
+import { query } from '@/lib/db'
+import { CreateSafeData, UpdateSafeData } from '@/types'
+import { z } from 'zod'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
+// Validation schemas
+const createSafeSchema = z.object({
+  name: z.string().min(1, 'اسم الخزنة مطلوب'),
+  balance: z.number().min(0, 'الرصيد يجب أن يكون أكبر من أو يساوي صفر').default(0),
+})
 
-// GET /api/safes - Get safes with pagination
+const updateSafeSchema = createSafeSchema.partial().extend({
+  id: z.string().min(1, 'معرف الخزنة مطلوب'),
+})
+
+// GET /api/safes - Get all safes
 export async function GET(request: NextRequest) {
   try {
-    // Authentication check removed for better performance
-
-    // Get database config and client
-    const config = getConfig()
-    if (!config) {
-      return NextResponse.json(
-        { success: false, error: 'قاعدة البيانات غير مُعدة' },
-        { status: 400 }
-      )
-    }
-
-    const prisma = getPrismaClient(config)
-
     const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
-    const cursor = searchParams.get('cursor')
     const search = searchParams.get('search') || ''
+    
+    const offset = (page - 1) * limit
 
-    const whereClause: Record<string, unknown> = { deletedAt: null }
+    // Build where clause
+    let whereClause = 'WHERE deleted_at IS NULL'
+    const queryParams: any[] = []
+    let paramIndex = 1
 
     if (search) {
-      whereClause.name = { contains: search, mode: 'insensitive' }
+      whereClause += ` AND name ILIKE $${paramIndex}`
+      queryParams.push(`%${search}%`)
+      paramIndex++
     }
 
-    if (cursor) {
-      whereClause.id = { lt: cursor }
-    }
+    // Get total count
+    const countResult = await query(
+      `SELECT COUNT(*) FROM safes ${whereClause}`,
+      queryParams
+    )
+    const total = parseInt(countResult.rows[0].count)
 
-    // BEFORE: Complex include with multiple relations (very slow)
-    // AFTER: Select only essential fields with counts (fast)
-    // TODO: Consider implementing separate endpoints for safe details
-    
-    const safes = await prisma.safe.findMany({
-      where: whereClause,
-      select: {
-        id: true,
-        name: true,
-        balance: true,
-        createdAt: true,
-        updatedAt: true,
-        // Only include counts instead of full relations
-        _count: {
-          select: {
-            vouchers: {
-              where: { deletedAt: null }
-            },
-            transfersFrom: {
-              where: { deletedAt: null }
-            },
-            transfersTo: {
-              where: { deletedAt: null }
-            }
-          }
-        }
-      },
-      orderBy: { id: 'desc' },
-      take: limit + 1
-    })
+    // Get safes with voucher statistics
+    const result = await query(
+      `SELECT 
+        s.id, s.name, s.balance, s.created_at, s.updated_at,
+        COALESCE(v.total_receipts, 0) as total_receipts,
+        COALESCE(v.total_payments, 0) as total_payments,
+        COALESCE(v.voucher_count, 0) as voucher_count
+      FROM safes s
+      LEFT JOIN (
+        SELECT 
+          safe_id,
+          SUM(CASE WHEN type = 'receipt' THEN amount ELSE 0 END) as total_receipts,
+          SUM(CASE WHEN type = 'payment' THEN amount ELSE 0 END) as total_payments,
+          COUNT(*) as voucher_count
+        FROM vouchers 
+        WHERE deleted_at IS NULL
+        GROUP BY safe_id
+      ) v ON s.id = v.safe_id
+      ${whereClause}
+      ORDER BY s.created_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+      [...queryParams, limit, offset]
+    )
 
-    const hasMore = safes.length > limit
-    const data = hasMore ? safes.slice(0, limit) : safes
-    const nextCursor = hasMore && data.length > 0 ? (data[data.length - 1] as any)?.id : null
-
-    const response: PaginatedResponse<Safe> = {
+    return NextResponse.json({
       success: true,
-      data,
-      pagination: {
-        limit,
-        nextCursor,
-        hasMore
+      data: {
+        safes: result.rows,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
       }
-    }
-
-    await prisma.$disconnect()
-
-    return NextResponse.json(response)
+    })
   } catch (error) {
-    console.error('Error getting safes:', error)
-    try {
-      const config = getConfig()
-      if (config) {
-        const prisma = getPrismaClient(config)
-        await prisma.$disconnect()
-      }
-    } catch (disconnectError) {
-      console.error('Error disconnecting:', disconnectError)
-    }
+    console.error('Error fetching safes:', error)
     return NextResponse.json(
-      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { success: false, error: 'فشل في جلب بيانات الخزائن' },
       { status: 500 }
     )
   }
@@ -107,87 +89,205 @@ export async function GET(request: NextRequest) {
 // POST /api/safes - Create new safe
 export async function POST(request: NextRequest) {
   try {
-    // Authentication check removed for better performance
-
-    // Get database config and client
-    const config = getConfig()
-    if (!config) {
-      return NextResponse.json(
-        { success: false, error: 'قاعدة البيانات غير مُعدة' },
-        { status: 400 }
-      )
-    }
-
-    const prisma = getPrismaClient(config)
-
     const body = await request.json()
-    const { name, balance } = body
+    const validatedData = createSafeSchema.parse(body)
 
-    // Validation
-    if (!name) {
-      return NextResponse.json(
-        { success: false, error: 'اسم الخزنة مطلوب' },
-        { status: 400 }
-      )
-    }
-
-    if (balance && balance < 0) {
-      return NextResponse.json(
-        { success: false, error: 'الرصيد لا يمكن أن يكون سالباً' },
-        { status: 400 }
-      )
-    }
-
-    // Check if safe name already exists
-    const existingSafe = await prisma.safe.findUnique({
-      where: { name }
-    })
-
-    if (existingSafe) {
-      await prisma.$disconnect()
+    // Check for duplicate name
+    const nameCheck = await query(
+      'SELECT id FROM safes WHERE name = $1 AND deleted_at IS NULL',
+      [validatedData.name]
+    )
+    if (nameCheck.rows.length > 0) {
       return NextResponse.json(
         { success: false, error: 'اسم الخزنة مستخدم بالفعل' },
         { status: 400 }
       )
     }
 
-    // Create safe with optimized return fields
-    const safe = await prisma.safe.create({
-      data: {
-        name,
-        balance: balance || 0
-      },
-      select: {
-        id: true,
-        name: true,
-        balance: true,
-        createdAt: true,
-        updatedAt: true
+    // Create safe
+    const result = await query(
+      `INSERT INTO safes (name, balance)
+       VALUES ($1, $2)
+       RETURNING id, name, balance, created_at, updated_at`,
+      [validatedData.name, validatedData.balance]
+    )
+
+    return NextResponse.json({
+      success: true,
+      data: result.rows[0],
+      message: 'تم إنشاء الخزنة بنجاح'
+    })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, error: 'بيانات غير صحيحة', details: error.errors },
+        { status: 400 }
+      )
+    }
+    
+    console.error('Error creating safe:', error)
+    return NextResponse.json(
+      { success: false, error: 'فشل في إنشاء الخزنة' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT /api/safes - Update safe
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const validatedData = updateSafeSchema.parse(body)
+    const { id, ...updateData } = validatedData
+
+    // Check if safe exists
+    const existingSafe = await query(
+      'SELECT id FROM safes WHERE id = $1 AND deleted_at IS NULL',
+      [id]
+    )
+    
+    if (existingSafe.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'الخزنة غير موجودة' },
+        { status: 404 }
+      )
+    }
+
+    // Check for duplicate name (excluding current safe)
+    if (updateData.name) {
+      const nameCheck = await query(
+        'SELECT id FROM safes WHERE name = $1 AND id != $2 AND deleted_at IS NULL',
+        [updateData.name, id]
+      )
+      if (nameCheck.rows.length > 0) {
+        return NextResponse.json(
+          { success: false, error: 'اسم الخزنة مستخدم بالفعل' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Build update query
+    const updateFields = []
+    const updateValues = []
+    let paramIndex = 1
+
+    Object.entries(updateData).forEach(([key, value]) => {
+      if (value !== undefined) {
+        updateFields.push(`${key} = $${paramIndex}`)
+        updateValues.push(value)
+        paramIndex++
       }
     })
 
-    await prisma.$disconnect()
+    updateFields.push(`updated_at = NOW()`)
+    updateValues.push(id)
 
-    const response: ApiResponse<Safe> = {
+    const result = await query(
+      `UPDATE safes 
+       SET ${updateFields.join(', ')}
+       WHERE id = $${paramIndex} AND deleted_at IS NULL
+       RETURNING id, name, balance, created_at, updated_at`,
+      updateValues
+    )
+
+    return NextResponse.json({
       success: true,
-      data: safe,
-      message: 'تم إضافة الخزنة بنجاح'
+      data: result.rows[0],
+      message: 'تم تحديث الخزنة بنجاح'
+    })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, error: 'بيانات غير صحيحة', details: error.errors },
+        { status: 400 }
+      )
+    }
+    
+    console.error('Error updating safe:', error)
+    return NextResponse.json(
+      { success: false, error: 'فشل في تحديث الخزنة' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE /api/safes - Soft delete safe
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'معرف الخزنة مطلوب' },
+        { status: 400 }
+      )
     }
 
-    return NextResponse.json(response)
-  } catch (error) {
-    console.error('Error creating safe:', error)
-    try {
-      const config = getConfig()
-      if (config) {
-        const prisma = getPrismaClient(config)
-        await prisma.$disconnect()
-      }
-    } catch (disconnectError) {
-      console.error('Error disconnecting:', disconnectError)
+    // Check if safe exists
+    const existingSafe = await query(
+      'SELECT id, balance FROM safes WHERE id = $1 AND deleted_at IS NULL',
+      [id]
+    )
+    
+    if (existingSafe.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'الخزنة غير موجودة' },
+        { status: 404 }
+      )
     }
+
+    const safeBalance = parseFloat(existingSafe.rows[0].balance)
+
+    // Check if safe has balance
+    if (safeBalance > 0) {
+      return NextResponse.json(
+        { success: false, error: 'لا يمكن حذف الخزنة لوجود رصيد بها' },
+        { status: 400 }
+      )
+    }
+
+    // Check if safe has vouchers
+    const vouchersCheck = await query(
+      'SELECT id FROM vouchers WHERE safe_id = $1 AND deleted_at IS NULL',
+      [id]
+    )
+    
+    if (vouchersCheck.rows.length > 0) {
+      return NextResponse.json(
+        { success: false, error: 'لا يمكن حذف الخزنة لوجود سندات مرتبطة بها' },
+        { status: 400 }
+      )
+    }
+
+    // Check if safe is used in transfers
+    const transfersCheck = await query(
+      'SELECT id FROM transfers WHERE (from_safe_id = $1 OR to_safe_id = $1) AND deleted_at IS NULL',
+      [id]
+    )
+    
+    if (transfersCheck.rows.length > 0) {
+      return NextResponse.json(
+        { success: false, error: 'لا يمكن حذف الخزنة لوجود تحويلات مرتبطة بها' },
+        { status: 400 }
+      )
+    }
+
+    // Soft delete safe
+    await query(
+      'UPDATE safes SET deleted_at = NOW(), updated_at = NOW() WHERE id = $1',
+      [id]
+    )
+
+    return NextResponse.json({
+      success: true,
+      message: 'تم حذف الخزنة بنجاح'
+    })
+  } catch (error) {
+    console.error('Error deleting safe:', error)
     return NextResponse.json(
-      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { success: false, error: 'فشل في حذف الخزنة' },
       { status: 500 }
     )
   }

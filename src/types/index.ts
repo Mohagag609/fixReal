@@ -1,66 +1,92 @@
-// Types مطابقة لـ golden-dataset.json بالحرف
-
-export interface Customer {
+// Base types
+export interface BaseEntity {
   id: string
-  name: string
-  phone?: string | null
-  nationalId?: string | null
-  address?: string | null
-  status: string
-  notes?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
+  createdAt: Date
+  updatedAt: Date
+  deletedAt?: Date
 }
 
-export interface Unit {
+// Customer types
+export interface Customer extends BaseEntity {
+  name: string
+  phone?: string
+  nationalId?: string
+  address?: string
+  status: string
+  notes?: string
+}
+
+export interface CreateCustomerData {
+  name: string
+  phone?: string
+  nationalId?: string
+  address?: string
+  status?: string
+  notes?: string
+}
+
+export interface UpdateCustomerData extends Partial<CreateCustomerData> {
   id: string
+}
+
+// Unit types
+export interface Unit extends BaseEntity {
   code: string
-  name?: string | null
+  name?: string
   unitType: string
-  area?: string | null
-  floor?: string | null
-  building?: string | null
+  area?: string
+  floor?: string
+  building?: string
   totalPrice: number
   status: string
-  notes?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
+  notes?: string
 }
 
-export interface Partner {
+export interface CreateUnitData {
+  code: string
+  name?: string
+  unitType?: string
+  area?: string
+  floor?: string
+  building?: string
+  totalPrice?: number
+  status?: string
+  notes?: string
+}
+
+export interface UpdateUnitData extends Partial<CreateUnitData> {
   id: string
+}
+
+// Partner types
+export interface Partner extends BaseEntity {
   name: string
-  phone?: string | null
-  notes?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
+  phone?: string
+  notes?: string
 }
 
-export interface UnitPartner {
-  id: string
-  unitId: string
-  partnerId: string
-  percentage: number
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
+export interface CreatePartnerData {
+  name: string
+  phone?: string
+  notes?: string
 }
 
-export interface Contract {
+export interface UpdatePartnerData extends Partial<CreatePartnerData> {
   id: string
+}
+
+// Contract types
+export interface Contract extends BaseEntity {
   unitId: string
   customerId: string
-  start: Date | string
+  start: Date
   totalPrice: number
   discountAmount: number
-  brokerName?: string | null
+  brokerName?: string
   brokerPercent: number
   brokerAmount: number
-  commissionSafeId?: string | null
-  downPaymentSafeId?: string | null
+  commissionSafeId?: string
+  downPaymentSafeId?: string
   maintenanceDeposit: number
   installmentType: string
   installmentCount: number
@@ -68,214 +94,216 @@ export interface Contract {
   annualPaymentValue: number
   downPayment: number
   paymentType: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  // Relations
-  unit?: Unit | null | null
-  customer?: Customer | null
-  commissionSafe?: Safe | null
+  unit?: Unit
+  customer?: Customer
 }
 
-export interface Installment {
+export interface CreateContractData {
+  unitId: string
+  customerId: string
+  start: Date
+  totalPrice: number
+  discountAmount?: number
+  brokerName?: string
+  brokerPercent?: number
+  brokerAmount?: number
+  commissionSafeId?: string
+  downPaymentSafeId?: string
+  maintenanceDeposit?: number
+  installmentType?: string
+  installmentCount?: number
+  extraAnnual?: number
+  annualPaymentValue?: number
+  downPayment?: number
+  paymentType?: string
+}
+
+export interface UpdateContractData extends Partial<CreateContractData> {
   id: string
+}
+
+// Installment types
+export interface Installment extends BaseEntity {
   unitId: string
   amount: number
-  dueDate: Date | string
+  dueDate: Date
   status: string
-  notes?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  // Relations
-  unit?: Unit | null
+  notes?: string
+  unit?: Unit
 }
 
-export interface PartnerDebt {
-  id: string
-  partnerId: string
+export interface CreateInstallmentData {
+  unitId: string
   amount: number
-  dueDate: Date | string
-  status: string
-  notes?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  // Relations
-  partner?: Partner | null
+  dueDate: Date
+  status?: string
+  notes?: string
 }
 
-export interface Safe {
+export interface UpdateInstallmentData extends Partial<CreateInstallmentData> {
   id: string
+}
+
+// Safe types
+export interface Safe extends BaseEntity {
   name: string
   balance: number
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
 }
 
-export interface Transfer {
-  id: string
-  fromSafeId: string
-  toSafeId: string
-  amount: number
-  description?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
+export interface CreateSafeData {
+  name: string
+  balance?: number
 }
 
-export interface Voucher {
+export interface UpdateSafeData extends Partial<CreateSafeData> {
   id: string
+}
+
+// Voucher types
+export interface Voucher extends BaseEntity {
   type: string
-  date: Date | string
+  date: Date
   amount: number
   safeId: string
   description: string
-  payer?: string | null
-  beneficiary?: string | null
-  linkedRef?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  // Relations
-  safe?: Safe | null
-  unit?: Unit | null
+  payer?: string
+  beneficiary?: string
+  linkedRef?: string
+  safe?: Safe
+  unit?: Unit
 }
 
-export interface Broker {
-  id: string
-  name: string
-  phone?: string | null
-  notes?: string | null
-  commissionRate?: number
-  status?: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  // Relations
-  brokerDues?: BrokerDue[] | null
-}
-
-export interface BrokerDue {
-  id: string
-  brokerId: string
+export interface CreateVoucherData {
+  type: string
+  date: Date
   amount: number
-  dueDate: Date | string
-  status: string
-  notes?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  // Relations
-  broker?: Broker | null
+  safeId: string
+  description: string
+  payer?: string
+  beneficiary?: string
+  linkedRef?: string
 }
 
-export interface PartnerGroup {
+export interface UpdateVoucherData extends Partial<CreateVoucherData> {
   id: string
+}
+
+// Broker types
+export interface Broker extends BaseEntity {
   name: string
-  notes?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  deletedAt?: Date | string | null
-  partners?: Array<{
-    partnerId: string
-    percentage: number
-    partner?: {
-      id: string
-      name: string
-      phone?: string
-    }
-  }>
+  phone?: string
+  notes?: string
 }
 
-export interface AuditLog {
+export interface CreateBrokerData {
+  name: string
+  phone?: string
+  notes?: string
+}
+
+export interface UpdateBrokerData extends Partial<CreateBrokerData> {
   id: string
-  action: string
-  entityType: string
-  entityId: string
-  oldValues?: string
-  newValues?: string
-  userId?: string
-  ipAddress?: string
-  userAgent?: string
-  createdAt: string
 }
 
-export interface Settings {
+// Partner Debt types
+export interface PartnerDebt extends BaseEntity {
+  partnerId: string
+  amount: number
+  dueDate: Date
+  status: string
+  notes?: string
+  partner?: Partner
+}
+
+export interface CreatePartnerDebtData {
+  partnerId: string
+  amount: number
+  dueDate: Date
+  status?: string
+  notes?: string
+}
+
+export interface UpdatePartnerDebtData extends Partial<CreatePartnerDebtData> {
   id: string
-  key: string
-  value: string
 }
 
-export interface KeyVal {
+// Unit Partner types
+export interface UnitPartner extends BaseEntity {
+  unitId: string
+  partnerId: string
+  percentage: number
+  unit?: Unit
+  partner?: Partner
+}
+
+export interface CreateUnitPartnerData {
+  unitId: string
+  partnerId: string
+  percentage: number
+}
+
+export interface UpdateUnitPartnerData extends Partial<CreateUnitPartnerData> {
   id: string
-  key: string
-  value: string
 }
 
-// API Response Types
-export interface ApiResponse<T = unknown> {
+// Transfer types
+export interface Transfer extends BaseEntity {
+  fromSafeId: string
+  toSafeId: string
+  amount: number
+  description?: string
+  fromSafe?: Safe
+  toSafe?: Safe
+}
+
+export interface CreateTransferData {
+  fromSafeId: string
+  toSafeId: string
+  amount: number
+  description?: string
+}
+
+export interface UpdateTransferData extends Partial<CreateTransferData> {
+  id: string
+}
+
+// API Response types
+export interface ApiResponse<T = any> {
   success: boolean
   data?: T
   error?: string
   message?: string
 }
 
-export interface PaginatedResponse<T> {
-  success: boolean
+export interface PaginatedResponse<T = any> {
   data: T[]
-  pagination: {
-    limit: number
-    nextCursor?: string | null
-    hasMore: boolean
-  }
-  error?: string
+  total: number
+  page: number
+  limit: number
+  totalPages: number
 }
 
-// Dashboard KPIs
-export interface DashboardKPIs {
-  totalContracts: number
-  totalVouchers: number
-  totalInstallments: number
-  totalUnits: number
+// Dashboard types
+export interface DashboardStats {
   totalCustomers: number
-  totalContractValue: number
-  totalVoucherAmount: number
-  paidInstallments: number
+  totalUnits: number
+  totalContracts: number
+  totalRevenue: number
   pendingInstallments: number
-  activeUnits: number
-  inactiveUnits: number
-  totalSales: number
-  totalReceipts: number
-  totalExpenses: number
-  netProfit: number
+  totalSafes: number
+  safeBalance: number
+  monthlyRevenue: number
+  yearlyRevenue: number
 }
 
-// Date Filter
-export interface DateFilter {
-  from?: string
-  to?: string
-}
-
-// User Types
-export interface User {
-  id: string
-  username: string
-  role: 'admin' | 'user'
-}
-
-// Notification Types
-export interface Notification {
-  id: string
-  type: 'critical' | 'important' | 'info'
-  title: string
-  message: string
-  category: string
-  acknowledged: boolean
-  acknowledgedAt?: string
-  acknowledgedBy?: string
-  createdAt: string
-  expiresAt?: string
-  data?: Record<string, unknown>
+// Filter types
+export interface FilterOptions {
+  search?: string
+  status?: string
+  dateFrom?: string
+  dateTo?: string
+  page?: number
+  limit?: number
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
 }

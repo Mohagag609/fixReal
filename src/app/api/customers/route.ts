@@ -1,150 +1,85 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getConfig } from '@/lib/db/config'
-import { getPrismaClient } from '@/lib/prisma-clients'
-// import { getSharedAuth } from '@/lib/shared-auth'
-import { validateCustomer } from '@/utils/validation'
-import { cache as cacheClient, CacheKeys, CacheTTL } from '@/lib/cache/redis'
-import { ApiResponse, Customer, PaginatedResponse } from '@/types'
+import { query } from '@/lib/db'
+import { CreateCustomerData, UpdateCustomerData } from '@/types'
+import { z } from 'zod'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
+// Validation schemas
+const createCustomerSchema = z.object({
+  name: z.string().min(1, 'الاسم مطلوب'),
+  phone: z.string().optional(),
+  nationalId: z.string().optional(),
+  address: z.string().optional(),
+  status: z.string().default('نشط'),
+  notes: z.string().optional(),
+})
 
-// GET /api/customers - Get customers with pagination
+const updateCustomerSchema = createCustomerSchema.partial().extend({
+  id: z.string().min(1, 'معرف العميل مطلوب'),
+})
+
+// GET /api/customers - Get all customers
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    // const { user, token } = await getSharedAuth(request)
-    
-    // For now, allow access without authentication for customers list
-    // You can uncomment the following lines to require authentication
-    // if (!user || !token) {
-    //   return NextResponse.json(
-    //     { success: false, error: 'غير مخول للوصول' },
-    //     { status: 401 }
-    //   )
-    // }
-
     const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '1000') // زيادة الحد الأقصى لعرض جميع العملاء
-    const cursor = searchParams.get('cursor')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
     const search = searchParams.get('search') || ''
-    const refresh = searchParams.get('refresh') === 'true'
-
-    // Create cache key based on parameters
-    const cacheKey = CacheKeys.entityList('customers', `limit:${limit},cursor:${cursor || 'null'},search:${search}`)
+    const status = searchParams.get('status') || ''
     
-    // Try to get cached data first (with error handling) - skip if refresh requested
-    let cachedData = null
-    if (!refresh) {
-      try {
-        cachedData = await cacheClient.get<PaginatedResponse<Customer>>(cacheKey)
-        if (cachedData) {
-          console.log('Using cached customers data')
-          return NextResponse.json(cachedData)
-        }
-      } catch (cacheError) {
-        console.log('Cache error, proceeding without cache:', cacheError)
-      }
-    } else {
-      console.log('Refresh requested, skipping cache')
-    }
+    const offset = (page - 1) * limit
 
-    const whereClause: Record<string, unknown> = { deletedAt: null }
+    // Build where clause
+    let whereClause = 'WHERE deleted_at IS NULL'
+    const queryParams: any[] = []
+    let paramIndex = 1
 
     if (search) {
-      whereClause.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { phone: { contains: search, mode: 'insensitive' } },
-        { nationalId: { contains: search, mode: 'insensitive' } }
-      ]
+      whereClause += ` AND (name ILIKE $${paramIndex} OR phone ILIKE $${paramIndex} OR national_id ILIKE $${paramIndex})`
+      queryParams.push(`%${search}%`)
+      paramIndex++
     }
 
-    if (cursor) {
-      whereClause.id = { lt: cursor }
+    if (status) {
+      whereClause += ` AND status = $${paramIndex}`
+      queryParams.push(status)
+      paramIndex++
     }
 
-    // Get database config and client
-    const config = getConfig()
-    if (!config) {
-      return NextResponse.json(
-        { success: false, error: 'قاعدة البيانات غير مُعدة' },
-        { status: 400 }
-      )
-    }
+    // Get total count
+    const countResult = await query(
+      `SELECT COUNT(*) FROM customers ${whereClause}`,
+      queryParams
+    )
+    const total = parseInt(countResult.rows[0].count)
 
-    const prisma = getPrismaClient(config)
-    
-    // إعادة الاتصال في حالة انقطاع الاتصال
-    try {
-      await prisma.$connect()
-    } catch (error) {
-      console.log('Reconnecting to database...')
-    }
+    // Get customers
+    const result = await query(
+      `SELECT 
+        id, name, phone, national_id, address, status, notes, 
+        created_at, updated_at
+      FROM customers 
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+      [...queryParams, limit, offset]
+    )
 
-    // Optimized query with compound indexes for better performance
-    const customers = await prisma.customer.findMany({
-      where: whereClause,
-      orderBy: { createdAt: 'desc' }, // Use indexed column for sorting
-      take: limit + 1,
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        nationalId: true,
-        address: true,
-        status: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true,
-        // Add counts for better UX without heavy joins
-        _count: {
-          select: {
-            contracts: {
-              where: { deletedAt: null }
-            }
-          }
+    return NextResponse.json({
+      success: true,
+      data: {
+        customers: result.rows,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
         }
       }
     })
-
-    await prisma.$disconnect()
-
-    const hasMore = customers.length > limit
-    const data = hasMore ? customers.slice(0, limit) : customers
-    const nextCursor = hasMore && data.length > 0 ? (data[data.length - 1] as any)?.id : null
-
-    const response: PaginatedResponse<Customer> = {
-      success: true,
-      data,
-      pagination: {
-        limit,
-        nextCursor,
-        hasMore
-      }
-    }
-
-    // Cache the response for future requests (with error handling)
-    try {
-      await cacheClient.set(cacheKey, response, { ttl: CacheTTL.ENTITY })
-      console.log('Customers data cached successfully')
-    } catch (cacheError) {
-      console.log('Cache set error:', cacheError)
-    }
-
-    return NextResponse.json(response)
   } catch (error) {
-    console.error('Error getting customers:', error)
-    try {
-      const config = getConfig()
-      if (config) {
-        const prisma = getPrismaClient(config)
-        await prisma.$disconnect()
-      }
-    } catch (disconnectError) {
-      console.error('Error disconnecting:', disconnectError)
-    }
+    console.error('Error fetching customers:', error)
     return NextResponse.json(
-      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { success: false, error: 'فشل في جلب بيانات العملاء' },
       { status: 500 }
     )
   }
@@ -153,58 +88,16 @@ export async function GET(request: NextRequest) {
 // POST /api/customers - Create new customer
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    // const { user, token } = await getSharedAuth(request)
-
-    // For now, allow access without authentication for customer creation
-    // You can uncomment the following lines to require authentication
-    // if (!user || !token) {
-    //   return NextResponse.json(
-    //     { success: false, error: 'غير مخول للوصول' },
-    //     { status: 401 }
-    //   )
-    // }
-
     const body = await request.json()
-    const { name, phone, nationalId, address, email, notes } = body
+    const validatedData = createCustomerSchema.parse(body)
 
-    // Validate customer data
-    const validation = validateCustomer({ name, phone, nationalId, email })
-    if (!validation.isValid) {
-      return NextResponse.json(
-        { success: false, error: validation.errors.join(', ') },
-        { status: 400 }
+    // Check for duplicate phone or national ID
+    if (validatedData.phone) {
+      const phoneCheck = await query(
+        'SELECT id FROM customers WHERE phone = $1 AND deleted_at IS NULL',
+        [validatedData.phone]
       )
-    }
-
-    // Get database config and client
-    const config = getConfig()
-    if (!config) {
-      return NextResponse.json(
-        { success: false, error: 'قاعدة البيانات غير مُعدة' },
-        { status: 400 }
-      )
-    }
-
-    const prisma = getPrismaClient(config)
-    
-    // إعادة الاتصال في حالة انقطاع الاتصال
-    try {
-      await prisma.$connect()
-    } catch (error) {
-      console.log('Reconnecting to database...')
-    }
-
-    // Check if phone already exists (only if phone is provided)
-    if (phone && phone.trim()) {
-      const existingCustomer = await prisma.customer.findFirst({
-        where: { 
-          phone,
-          deletedAt: null
-        }
-      })
-
-      if (existingCustomer) {
+      if (phoneCheck.rows.length > 0) {
         return NextResponse.json(
           { success: false, error: 'رقم الهاتف مستخدم بالفعل' },
           { status: 400 }
@@ -212,73 +105,201 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check if nationalId already exists (only if nationalId is provided)
-    if (nationalId && nationalId.trim()) {
-      const existingCustomer = await prisma.customer.findFirst({
-        where: { 
-          nationalId,
-          deletedAt: null
-        }
-      })
-
-      if (existingCustomer) {
+    if (validatedData.nationalId) {
+      const nationalIdCheck = await query(
+        'SELECT id FROM customers WHERE national_id = $1 AND deleted_at IS NULL',
+        [validatedData.nationalId]
+      )
+      if (nationalIdCheck.rows.length > 0) {
         return NextResponse.json(
-          { success: false, error: 'الرقم القومي مستخدم بالفعل' },
+          { success: false, error: 'رقم الهوية مستخدم بالفعل' },
           { status: 400 }
         )
       }
     }
 
-    // Create customer with optimized return fields
-    const customer = await prisma.customer.create({
-      data: {
-        name,
-        phone: phone || null,
-        nationalId: nationalId || null,
-        address: address || null,
-        status: status || 'نشط',
-        notes: notes || null
-      },
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        nationalId: true,
-        address: true,
-        status: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true
+    // Create customer
+    const result = await query(
+      `INSERT INTO customers (name, phone, national_id, address, status, notes)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, name, phone, national_id, address, status, notes, created_at, updated_at`,
+      [
+        validatedData.name,
+        validatedData.phone || null,
+        validatedData.nationalId || null,
+        validatedData.address || null,
+        validatedData.status,
+        validatedData.notes || null,
+      ]
+    )
+
+    return NextResponse.json({
+      success: true,
+      data: result.rows[0],
+      message: 'تم إنشاء العميل بنجاح'
+    })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, error: 'بيانات غير صحيحة', details: error.errors },
+        { status: 400 }
+      )
+    }
+    
+    console.error('Error creating customer:', error)
+    return NextResponse.json(
+      { success: false, error: 'فشل في إنشاء العميل' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT /api/customers - Update customer
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const validatedData = updateCustomerSchema.parse(body)
+    const { id, ...updateData } = validatedData
+
+    // Check if customer exists
+    const existingCustomer = await query(
+      'SELECT id FROM customers WHERE id = $1 AND deleted_at IS NULL',
+      [id]
+    )
+    
+    if (existingCustomer.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'العميل غير موجود' },
+        { status: 404 }
+      )
+    }
+
+    // Check for duplicate phone or national ID (excluding current customer)
+    if (updateData.phone) {
+      const phoneCheck = await query(
+        'SELECT id FROM customers WHERE phone = $1 AND id != $2 AND deleted_at IS NULL',
+        [updateData.phone, id]
+      )
+      if (phoneCheck.rows.length > 0) {
+        return NextResponse.json(
+          { success: false, error: 'رقم الهاتف مستخدم بالفعل' },
+          { status: 400 }
+        )
+      }
+    }
+
+    if (updateData.nationalId) {
+      const nationalIdCheck = await query(
+        'SELECT id FROM customers WHERE national_id = $1 AND id != $2 AND deleted_at IS NULL',
+        [updateData.nationalId, id]
+      )
+      if (nationalIdCheck.rows.length > 0) {
+        return NextResponse.json(
+          { success: false, error: 'رقم الهوية مستخدم بالفعل' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Build update query
+    const updateFields = []
+    const updateValues = []
+    let paramIndex = 1
+
+    Object.entries(updateData).forEach(([key, value]) => {
+      if (value !== undefined) {
+        const dbField = key === 'nationalId' ? 'national_id' : key
+        updateFields.push(`${dbField} = $${paramIndex}`)
+        updateValues.push(value)
+        paramIndex++
       }
     })
 
-    await prisma.$disconnect()
+    updateFields.push(`updated_at = NOW()`)
+    updateValues.push(id)
 
-    // Invalidate customers cache when new customer is created (async to not block response)
-    cacheClient.invalidatePattern('customers:list:*').catch(err => 
-      console.log('Cache invalidation error:', err)
+    const result = await query(
+      `UPDATE customers 
+       SET ${updateFields.join(', ')}
+       WHERE id = $${paramIndex} AND deleted_at IS NULL
+       RETURNING id, name, phone, national_id, address, status, notes, created_at, updated_at`,
+      updateValues
     )
 
-    const response: ApiResponse<Customer> = {
+    return NextResponse.json({
       success: true,
-      data: customer,
-      message: 'تم إضافة العميل بنجاح'
+      data: result.rows[0],
+      message: 'تم تحديث العميل بنجاح'
+    })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, error: 'بيانات غير صحيحة', details: error.errors },
+        { status: 400 }
+      )
+    }
+    
+    console.error('Error updating customer:', error)
+    return NextResponse.json(
+      { success: false, error: 'فشل في تحديث العميل' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE /api/customers - Soft delete customer
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'معرف العميل مطلوب' },
+        { status: 400 }
+      )
     }
 
-    return NextResponse.json(response)
-  } catch (error) {
-    console.error('Error creating customer:', error)
-    try {
-      const config = getConfig()
-      if (config) {
-        const prisma = getPrismaClient(config)
-        await prisma.$disconnect()
-      }
-    } catch (disconnectError) {
-      console.error('Error disconnecting:', disconnectError)
+    // Check if customer exists
+    const existingCustomer = await query(
+      'SELECT id FROM customers WHERE id = $1 AND deleted_at IS NULL',
+      [id]
+    )
+    
+    if (existingCustomer.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'العميل غير موجود' },
+        { status: 404 }
+      )
     }
+
+    // Check if customer has active contracts
+    const contractsCheck = await query(
+      'SELECT id FROM contracts WHERE customer_id = $1 AND deleted_at IS NULL',
+      [id]
+    )
+    
+    if (contractsCheck.rows.length > 0) {
+      return NextResponse.json(
+        { success: false, error: 'لا يمكن حذف العميل لوجود عقود مرتبطة به' },
+        { status: 400 }
+      )
+    }
+
+    // Soft delete customer
+    await query(
+      'UPDATE customers SET deleted_at = NOW(), updated_at = NOW() WHERE id = $1',
+      [id]
+    )
+
+    return NextResponse.json({
+      success: true,
+      message: 'تم حذف العميل بنجاح'
+    })
+  } catch (error) {
+    console.error('Error deleting customer:', error)
     return NextResponse.json(
-      { success: false, error: 'خطأ في قاعدة البيانات' },
+      { success: false, error: 'فشل في حذف العميل' },
       { status: 500 }
     )
   }
