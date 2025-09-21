@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
-import { Inter, Cairo } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
-import { Providers } from './providers'
+import { Sidebar } from '@/components/ui/sidebar'
+import { Navbar } from '@/components/ui/navbar'
 
-const inter = Inter({ subsets: ['latin'] })
-const cairo = Cairo({ subsets: ['arabic'] })
+const inter = Inter({ subsets: ['latin', 'arabic'] })
 
 export const metadata: Metadata = {
-  title: 'مدير الاستثمار العقاري',
-  description: 'تطبيق شامل لإدارة الاستثمارات العقارية مع نظام مراقبة ونسخ احتياطية',
+  title: 'لوحة التحكم - Dashboard',
+  description: 'لوحة تحكم حديثة مع Next.js و PostgreSQL',
 }
 
 export default function RootLayout({
@@ -18,10 +18,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl">
-      <body className={`${cairo.className} antialiased`}>
-        <Providers>
-          {children}
-        </Providers>
+      <body className={inter.className}>
+        <div className="flex h-screen bg-background">
+          {/* Sidebar */}
+          <Sidebar />
+          
+          {/* Main content */}
+          <div className="flex-1 flex flex-col overflow-hidden lg:mr-64">
+            {/* Navbar */}
+            <Navbar />
+            
+            {/* Page content */}
+            <main className="flex-1 overflow-auto p-6">
+              {children}
+            </main>
+          </div>
+        </div>
       </body>
     </html>
   )
