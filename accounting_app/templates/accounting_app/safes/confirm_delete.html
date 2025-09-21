@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block page_title %}حذف الخزنة{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+        <!-- Warning Icon -->
+        <div class="flex items-center justify-center w-16 h-16 mx-auto mb-6 bg-red-100 rounded-full">
+            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+        </div>
+        
+        <!-- Content -->
+        <div class="text-center">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">تأكيد الحذف</h2>
+            <p class="text-gray-600 mb-6">
+                هل أنت متأكد من حذف الخزنة <strong>{{ object.name }}</strong>؟
+                <br>
+                <span class="text-sm text-red-600">هذا الإجراء لا يمكن التراجع عنه.</span>
+            </p>
+            
+            <!-- Actions -->
+            <div class="flex items-center justify-center space-x-4 space-x-reverse">
+                <a href="/safes/" class="px-6 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors duration-200">
+                    إلغاء
+                </a>
+                <form method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors duration-200 hover-scale">
+                        حذف
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
